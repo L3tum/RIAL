@@ -1,0 +1,44 @@
+program : FUNCTION_DECL*
+?statement : expression SEMI_COLON
+?expression : NUMBER -> number
+           | STRING -> string
+           | BOOLEAN
+           | NULL
+           | expression "+" expression -> addition
+           | expression "-" expression -> subtraction
+           | expression "*" expression -> multiplication
+           | expression "/" expression -> division
+           | FUNCTION_CALL
+           | VARIABLE_DECLARATION
+           | VARIABLE_ASSIGNMENT
+
+
+VARIABLE_DECLARATION : "var" IDENTIFIER SEMI_COLON
+                     | "var" IDENTIFIER EQUALS expression SEMI_COLON
+VARIABLE_ASSIGNMENT : IDENTIFIER EQUALS expression SEMI_COLON
+
+FUNCTION_CALL : IDENTIFIER OPEN_BRACES FUNCTION_ARGS CLOSE_BRACES
+FUNCTION_ARGS : expression (COMMA expression)*
+
+FUNCTION_DECL : IDENTIFIER IDENTIFIER OPEN_BRACES FUNCTION_PARAMS CLOSE_BRACES OPEN_CURLY_BRACES FUNCTION_BODY CLOSE_CURLY_BRACES
+              | EXTERNAL IDENTIFIER IDENTIFIER OPEN_BRACES FUNCTION_PARAMS CLOSE_BRACES SEMI_COLON
+FUNCTION_PARAMS : IDENTIFIER IDENTIFIER (COMMA IDENTIFIER IDENTIFIER)*
+FUNCTION_BODY : statement*
+
+IDENTIFIER : LETTER (LETTER | DIGIT)*
+BOOLEAN: "true" -> true
+       | "false" -> false
+NULL : "null" -> null
+COMMA : ","
+OPEN_BRACES : "("
+CLOSE_BRACES : ")"
+SEMI_COLON : ";"
+OPEN_CURLY_BRACES : "{"
+CLOSE_CURLY_BRACES : "}"
+EQUALS : "="
+
+
+%import common.ESCAPED_STRING -> STRING
+%import common.SIGNED_NUMBER -> NUMBER
+%import common.WS
+%ignore WS

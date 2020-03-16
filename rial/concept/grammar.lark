@@ -1,0 +1,29 @@
+%import common.ESCAPED_STRING -> STRING
+%import common.SIGNED_NUMBER -> NUMBER
+%import common.LETTER
+%import common.DIGIT
+%import common.WS
+%ignore WS
+
+program : [function_decl*]
+?statement : expression ";"
+?expression : NUMBER -> number
+           | STRING -> string
+           | "true" -> true
+           | "false" -> false
+           | "null" -> null
+           | expression "+" expression -> addition
+           | expression "-" expression -> subtraction
+           | expression "*" expression -> multiplication
+           | expression "/" expression -> division
+           | function_call
+
+
+function_call : IDENTIFIER "(" [expression ("," expression)*] ")"
+
+function_decl : IDENTIFIER IDENTIFIER "(" [PARAMS? IDENTIFIER IDENTIFIER ("," IDENTIFIER IDENTIFIER | "," PARAMS IDENTIFIER IDENTIFIER)*] ")" "{" [statement*] "}"
+              | EXTERNAL IDENTIFIER IDENTIFIER "(" [PARAMS? IDENTIFIER IDENTIFIER ("," IDENTIFIER IDENTIFIER | "," PARAMS IDENTIFIER IDENTIFIER)*] ")" ";"
+
+IDENTIFIER : LETTER (LETTER | DIGIT)*
+EXTERNAL : "external"
+PARAMS: "params"

@@ -1,0 +1,4 @@
+external void printf(CString format, params CString args);
+void main() {
+	printf("Hello world!\n");
+}
