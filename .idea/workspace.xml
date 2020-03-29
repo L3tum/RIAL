@@ -1,7 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="" />
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/generate_standalone_parser.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/ASTVisitor.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/LLVMBlock.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/LLVMFunction.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/LLVMGen.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/compilation_manager.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/concept/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/concept/references.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/configuration.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/platform/IPlatform.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/platform/LinuxPlatform.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/platform/Platform.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/platform/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/profiling.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/util.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/testing/src/print.rial" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_hello_world.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/RIAL.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/RIAL.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/concept/grammar.lark" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/FunctionBodyTransformer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/LLVMTransformer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/ParserState.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ParserState.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/codegen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/codegen.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/linking.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/linking.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing/bin/testing" beforeDir="false" afterPath="$PROJECT_DIR$/testing/bin/testing" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing/cache/main.ll" beforeDir="false" afterPath="$PROJECT_DIR$/testing/cache/main.ll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing/cache/main.o" beforeDir="false" afterPath="$PROJECT_DIR$/testing/cache/main.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing/src/main.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/main.rial" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_1point5millionprintfs.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_1point5millionprintfs.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -15,6 +54,9 @@
       </list>
     </option>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
   <component name="JsFlowSettings">
     <service-enabled>true</service-enabled>
     <exe-path />
@@ -22,6 +64,7 @@
     <auto-save>true</auto-save>
   </component>
   <component name="ProjectId" id="1YLJWYR1DqOQgpsM0IpicjUEcQl" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showExcludedFiles" value="true" />
@@ -29,6 +72,7 @@
   </component>
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/testing/src" />
     <property name="node.js.detected.package.eslint" value="true" />
@@ -88,6 +132,24 @@
       <workItem from="1584224050063" duration="990000" />
       <workItem from="1584284346534" duration="329000" />
       <workItem from="1584284873080" duration="6439000" />
+      <workItem from="1584353945899" duration="10902000" />
+      <workItem from="1584451354102" duration="2623000" />
+      <workItem from="1584455660684" duration="6699000" />
+      <workItem from="1584543657520" duration="3968000" />
+      <workItem from="1584644811129" duration="3243000" />
+      <workItem from="1584712173541" duration="3817000" />
+      <workItem from="1584790631343" duration="2197000" />
+      <workItem from="1584793840908" duration="16915000" />
+      <workItem from="1584875721423" duration="9289000" />
+      <workItem from="1584956568559" duration="14641000" />
+      <workItem from="1584976170034" duration="1983000" />
+      <workItem from="1584997160827" duration="3256000" />
+      <workItem from="1585054478870" duration="15515000" />
+      <workItem from="1585137095228" duration="10795000" />
+      <workItem from="1585235586980" duration="8524000" />
+      <workItem from="1585314265373" duration="6242000" />
+      <workItem from="1585425600818" duration="4408000" />
+      <workItem from="1585485176378" duration="1002000" />
     </task>
     <servers />
   </component>
@@ -95,37 +157,69 @@
     <option name="version" value="1" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1584285349065">
+    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1584886904699">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584285349065" />
-    <state x="1085" y="416" key="#com.intellij.ide.util.MemberChooser" timestamp="1583176021568">
+    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584886904699" />
+    <state x="1085" y="416" key="#com.intellij.ide.util.MemberChooser" timestamp="1585056818881">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="1085" y="416" key="#com.intellij.ide.util.MemberChooser/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1583176021568" />
-    <state x="1010" y="447" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1582980706520">
+    <state x="1085" y="416" key="#com.intellij.ide.util.MemberChooser/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585056818881" />
+    <state x="902" y="0" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog" timestamp="1584481187738">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="1010" y="447" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1582980706520" />
-    <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog" timestamp="1584314961418">
+    <state x="902" y="0" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584481187738" />
+    <state x="1010" y="447" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1584816938427">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584314961418" />
-    <state x="1059" y="474" key="FileChooserDialogImpl" timestamp="1582718533031">
+    <state x="1010" y="447" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584816938427" />
+    <state x="905" y="294" key="CommitChangelistDialog2" timestamp="1585486177153">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="1059" y="474" key="FileChooserDialogImpl/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1582718533031" />
-    <state x="781" y="342" key="SettingsEditor" timestamp="1583695505377">
+    <state x="905" y="294" key="CommitChangelistDialog2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585486177153" />
+    <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog" timestamp="1585348831472">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1583695505377" />
-    <state x="976" y="524" key="com.intellij.ide.util.TipDialog" timestamp="1584284880977">
+    <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585348831472" />
+    <state x="1059" y="474" key="FileChooserDialogImpl" timestamp="1584793819636">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="976" y="524" key="com.intellij.ide.util.TipDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584284880977" />
+    <state x="1059" y="474" key="FileChooserDialogImpl/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584793819636" />
+    <state x="781" y="342" key="SettingsEditor" timestamp="1585434238819">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585434238819" />
+    <state x="92" y="92" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1585249165802">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="92" y="92" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585249165802" />
+    <state x="976" y="524" key="com.intellij.ide.util.TipDialog" timestamp="1585485176050">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="976" y="524" key="com.intellij.ide.util.TipDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585485176050" />
+    <state x="927" y="315" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1584964725960">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="927" y="315" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584964725960" />
+    <state x="691" y="185" width="322" height="445" key="dock-window-1" timestamp="1584965812228">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="691" y="185" width="322" height="445" key="dock-window-1/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584965812228" />
+    <state x="-2447" y="332" width="489" height="559" key="dock-window-2" timestamp="1584965749099">
+      <screen x="-3840" y="0" width="2560" height="1400" />
+    </state>
+    <state x="-2447" y="332" width="489" height="559" key="dock-window-2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584965749099" />
+    <state x="374" y="358" width="565" height="560" key="dock-window-3" timestamp="1584965812228">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="374" y="358" width="565" height="560" key="dock-window-3/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584965812228" />
     <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1582830869919">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1582830869919" />
+    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup" timestamp="1584972994181">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584972994181" />
   </component>
 </project>

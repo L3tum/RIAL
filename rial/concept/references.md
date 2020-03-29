@@ -1,0 +1,1 @@
+- [GetElementPTR / Global Variable](https://wiki.aalto.fi/pages/viewpage.action?pageId=55377710)

@@ -1,29 +1,84 @@
-%import common.ESCAPED_STRING -> STRING
-%import common.SIGNED_NUMBER -> NUMBER
-%import common.LETTER
-%import common.DIGIT
-%import common.WS
-%ignore WS
-
-program : [function_decl*]
-?statement : expression ";"
-?expression : NUMBER -> number
-           | STRING -> string
-           | "true" -> true
-           | "false" -> false
-           | "null" -> null
-           | expression "+" expression -> addition
-           | expression "-" expression -> subtraction
-           | expression "*" expression -> multiplication
-           | expression "/" expression -> division
+start : [(function_decl|using ";")*]
+?statement : conditional_block
+           | for_loop
+           | while_loop
            | function_call
+           | expression ";"
+           | using ";"
+           | continue_rule
+           | break_rule
+           | return_rule
+
+conditional_block : "if" "(" expression ")" "{" [statement*] "}"
+                  | "if" "(" expression ")" "{" [statement*] "}" "else" "{" [statement*] "}"
+
+for_loop : "for" "(" variable_decl ";" expression ";" expression ")" "{" [statement*] "}"
+while_loop : "while" "(" expression ")" "{" [statement*] "}"
+continue_rule : "continue" ";"
+break_rule : "break" ";"
+return_rule : "return" ";"
+            | "return" expression ";"
+
+variable_decl : "var" IDENTIFIER "=" expression
+variable_assignment : IDENTIFIER "=" expression
+
+// Math shortcuts
+?variable_arithmetic : variable_increment
+                     | variable_decrement
+                     | variable_multiplication
+                     | variable_division
+variable_increment : IDENTIFIER "++"
+                   | IDENTIFIER "+=" expression
+variable_decrement : IDENTIFIER "--"
+                   | IDENTIFIER "-=" expression
+variable_multiplication : IDENTIFIER "*=" expression
+variable_division : IDENTIFIER "/=" expression
+
+?function_call : IDENTIFIER "(" [expression ("," expression)*] ")"
+
+?function_decl : ACCESS_MODIFIER? IDENTIFIER IDENTIFIER "(" [PARAMS? IDENTIFIER IDENTIFIER ("," IDENTIFIER IDENTIFIER | "," PARAMS IDENTIFIER IDENTIFIER)*] ")" "{" [statement*] "}"
+               | EXTERNAL IDENTIFIER IDENTIFIER "(" [PARAMS? IDENTIFIER IDENTIFIER ("," IDENTIFIER IDENTIFIER | "," PARAMS IDENTIFIER IDENTIFIER)*] ")" ";"
+
+?expression : expression PLUS expression -> addition
+            | expression MINUS expression -> subtraction
+            | expression MUL expression -> multiplication
+            | expression DIV expression -> division
+            | expression SMALLER expression -> smaller_than
+            | expression BIGGER expression -> bigger_than
+            | function_call 
+            | STRING -> string
+            | "true" -> true
+            | "false" -> false
+            | "null" -> null
+            | NUMBER -> number
+            | IDENTIFIER -> var
+            | variable_decl
+            | variable_assignment
+            | variable_arithmetic
+            | "(" expression ")"
+
+using : "use" IDENTIFIER (":" IDENTIFIER)*
 
 
-function_call : IDENTIFIER "(" [expression ("," expression)*] ")"
+ACCESS_MODIFIER.2 : /private/i | /public/i
 
-function_decl : IDENTIFIER IDENTIFIER "(" [PARAMS? IDENTIFIER IDENTIFIER ("," IDENTIFIER IDENTIFIER | "," PARAMS IDENTIFIER IDENTIFIER)*] ")" "{" [statement*] "}"
-              | EXTERNAL IDENTIFIER IDENTIFIER "(" [PARAMS? IDENTIFIER IDENTIFIER ("," IDENTIFIER IDENTIFIER | "," PARAMS IDENTIFIER IDENTIFIER)*] ")" ";"
+DIV.-2 : "/"
+MUL.-2 : "*"
+MINUS.-3 : "-"
+PLUS.-3 : "+"
+BIGGER.-4 : ">"
+SMALLER.-4 : "<"
 
-IDENTIFIER : LETTER (LETTER | DIGIT)*
+NUMBER.-1 : (INT|HEX_INT)
+HEX_INT : "0x" HEXDIGIT (HEXDIGIT|"_")*
+INT : DIGIT (DIGIT|"_")*
 EXTERNAL : "external"
 PARAMS: "params"
+
+%import common.ESCAPED_STRING -> STRING
+%import common.CNAME -> IDENTIFIER
+%import common.LETTER
+%import common.DIGIT
+%import common.HEXDIGIT
+%import common.WS
+%ignore WS

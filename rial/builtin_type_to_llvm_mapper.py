@@ -4,9 +4,31 @@ from typing import Optional
 from llvmlite import ir
 from llvmlite.ir import Type
 
+NULL = ir.Constant(ir.IntType(8), 0).inttoptr(ir.PointerType(ir.IntType(8)))
+TRUE = ir.Constant(ir.IntType(1), 1)
+FALSE = ir.Constant(ir.IntType(1), 0)
+
+
+def map_shortcut_to_type(shortcut: str) -> str:
+    if shortcut == "int":
+        return "Int32"
+
+    if shortcut == "long":
+        return "Int64"
+
+    if shortcut == "double":
+        return "Double64"
+
+    if shortcut == "float":
+        return "Float32"
+
+    return shortcut
+
 
 def map_type_to_llvm(rial_type: str) -> Optional[Type]:
-    if rial_type == "int":
+    rial_type = map_shortcut_to_type(rial_type)
+
+    if rial_type == "Int32":
         # 32bit integer
         return ir.IntType(32)
 
@@ -23,7 +45,7 @@ def map_type_to_llvm(rial_type: str) -> Optional[Type]:
         return ir.VoidType()
 
     # Variable integer
-    match = re.match(r"^i([0-9]+)$", rial_type)
+    match = re.match(r"^Int([0-9]+)$", rial_type)
 
     if match is not None:
         count = match.group(1)

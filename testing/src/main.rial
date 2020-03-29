@@ -1,4 +1,31 @@
-external void printf(CString format, params CString args);
-void main() {
+use testing:print;
+
+public int main() {
 	printf("Hello world!\n");
+	printf("%i \n", 5 < 5+5);
+
+	if(5 < 10){
+	    printf(null);
+	} else {
+	    printf("Hi");
+	}
+
+	for(var i = 0; i < 5; i++){
+	    var j = 0;
+	    j += i;
+	    printInteger(j);
+	}
+
+	var i = 0;
+
+	while (true){
+	    printf("While loop: %i\n", i);
+	    i++;
+
+	    if (i > 5){
+	        break;
+	    }
+	}
+
+	return 0;
 }

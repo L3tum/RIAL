@@ -1,37 +1,28 @@
-import os
-import pathlib
-from typing import List, Optional
+from typing import List
 import subprocess
 
-from rial.log import log_fail
 from shutil import which
 import shlex
 
+from rial.platform.Platform import Platform
+
 
 class Linker:
-    path: str
-    name: str
-    print_link_command: bool
-
-    def __init__(self, bin_path: str, project_name: str, print_link_command: bool):
-        self.path = bin_path
-        self.name = project_name
-        self.print_link_command = print_link_command
-
     @staticmethod
-    def _check_linker_exists() -> Optional[str]:
-        return which("cc")
+    def link_files(object_files: List[str], exe_file: str, print_link_command: bool, strip: bool):
+        args = Platform.get_link_command(object_files, exe_file)
 
-    def link_files(self, files: List[str]):
-        out_file = os.path.join(self.path, self.name)
-        linker_path = self._check_linker_exists()
+        if print_link_command:
+            print(args)
 
-        if linker_path is not None:
-            args = f"{linker_path} {' '.join(files)} -o {out_file}"
+        subprocess.run(shlex.split(args))
 
-            if self.print_link_command:
-                print(args)
+        if strip:
+            strip_path = which('llvm-strip')
 
-            subprocess.run(shlex.split(args))
-        else:
-            log_fail(f"Could not find Linker {'cc'} in PATH")
+            if strip_path is None:
+                strip_path = which('llvm-strip-7')
+
+            if strip_path is not None:
+                args = f"{strip_path} --strip-all {exe_file}"
+                subprocess.run(shlex.split(args))

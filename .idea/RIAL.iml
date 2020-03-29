@@ -4,7 +4,7 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/rial_old" />
     </content>
-    <orderEntry type="jdk" jdkName="3.6 @ Ubuntu" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="3.8 @ Ubuntu" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>

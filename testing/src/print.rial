@@ -1,0 +1,5 @@
+external void printf(CString format, params CString args);
+
+public void printInteger(int arg){
+    printf("%i\n", arg);
+}
