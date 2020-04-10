@@ -2,6 +2,8 @@ from threading import Lock, Event
 from queue import Queue
 from typing import Dict, List
 
+from llvmlite.binding import ModuleRef
+
 from rial.ParserState import ParserState
 from rial.configuration import Configuration
 from rial.util import _path_from_mod_name
@@ -11,7 +13,7 @@ class CompilationManager:
     files_to_compile: Queue
     files_compiled: Dict[str, Event]
     ps: ParserState
-    object_files: List[str]
+    modules: Dict[str, ModuleRef]
     lock: Lock
     config: Configuration
 
@@ -23,6 +25,10 @@ class CompilationManager:
     @staticmethod
     def init(config: Configuration):
         global _instance
+
+        if _instance is not None:
+            return _instance
+
         _instance = CompilationManager()
         _instance.files_to_compile = Queue()
         _instance.files_compiled = dict()
@@ -30,14 +36,14 @@ class CompilationManager:
         _instance.object_files = list()
         _instance.lock = Lock()
         _instance.config = config
+        _instance.modules = dict()
 
         return _instance
 
     @staticmethod
     def finish_file(path: str):
-        with _instance.lock:
-            if path in _instance.files_compiled:
-                _instance.files_compiled[path].set()
+        if path in _instance.files_compiled:
+            _instance.files_compiled[path].set()
 
     @staticmethod
     def request_module(mod_name: str) -> bool:

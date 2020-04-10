@@ -1,6 +1,7 @@
 import platform
 from typing import List, Dict
 
+from rial.linking.linking_options import LinkingOptions
 from rial.platform.IPlatform import IPlatform
 from rial.platform.LinuxPlatform import LinuxPlatform
 
@@ -35,12 +36,8 @@ class Platform:
         return Platform.get_platform().get_exe_file_extension()
 
     @staticmethod
-    def get_link_command(object_files: List[str], exe_file: str):
-        return Platform.get_platform().get_link_command(object_files, exe_file)
-
-    @staticmethod
-    def get_opt_command(ir_file: str):
-        return Platform.get_platform().get_opt_command(ir_file)
+    def get_link_options() -> LinkingOptions:
+        return Platform.get_platform().get_link_options()
 
     @staticmethod
     def get_platform() -> IPlatform:

@@ -1,5 +1,23 @@
 external void printf(CString format, params CString args);
 
-public void printInteger(int arg){
+internal void printInteger(int arg){
     printf("%i\n", arg);
+}
+
+private struct Test{
+    int a = 5;
+
+    private void printTest(){
+        printf("Test\n");
+    }
+}
+
+private void printTestWrapperWrapper(Test test){
+    test.printTest();
+}
+
+internal void printTestWrapper(){
+    var test = new Test();
+
+    printTestWrapperWrapper(test);
 }

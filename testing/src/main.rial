@@ -1,4 +1,5 @@
 use testing:print;
+use testing:boolean;
 
 public int main() {
 	printf("Hello world!\n");
@@ -26,6 +27,16 @@ public int main() {
 	        break;
 	    }
 	}
+
+	loop {
+	    printf("Loop loop\n");
+
+	    break;
+	}
+
+	printTestWrapper();
+
+	printBoolean(true);
 
 	return 0;
 }

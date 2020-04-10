@@ -1,0 +1,5 @@
+use testing:print;
+
+internal void printBoolean(bool boolean){
+    printf("%s\n", if boolean ? "true" : "false");
+}

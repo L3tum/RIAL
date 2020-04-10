@@ -1,9 +1,13 @@
-from typing import Optional, Union, Tuple, List, Literal
+from typing import Optional, Union, Tuple, List, Literal, Dict
 
 from llvmlite import ir
-from llvmlite.ir import Module, IRBuilder, Function, AllocaInstr, Branch, Block, FunctionType, Type, VoidType
+from llvmlite.ir import Module, IRBuilder, Function, AllocaInstr, Branch, Block, FunctionType, Type, VoidType, Value, \
+    PointerType
 
 from rial.LLVMBlock import LLVMBlock, create_llvm_block
+from rial.LLVMStruct import LLVMStruct
+from rial.rial_types.RIALAccessModifier import RIALAccessModifier
+from rial.rial_types.RIALVariable import RIALVariable
 
 
 class LLVMGen:
@@ -13,6 +17,8 @@ class LLVMGen:
     end_block: Optional[LLVMBlock]
     current_block: Optional[LLVMBlock]
     module: Module
+    current_struct: Optional[LLVMStruct]
+    global_variables: Dict
 
     def __init__(self, module: Module):
         self.module = module
@@ -21,6 +27,8 @@ class LLVMGen:
         self.end_block = None
         self.current_func = None
         self.builder = None
+        self.current_struct = None
+        self.global_variables = dict()
 
     def gen_integer(self, number: int, length: int):
         return ir.Constant(ir.IntType(length), number)
@@ -32,9 +40,10 @@ class LLVMGen:
         arr = bytearray(value.encode("utf-8") + b"\x00")
         const_char_arr = ir.Constant(ir.ArrayType(ir.IntType(8), len(arr)), arr)
         glob = ir.GlobalVariable(self.module, const_char_arr.type, name=name)
-        glob.linkage = 'internal'
+        glob.linkage = 'private'
         glob.global_constant = True
         glob.initializer = const_char_arr
+        glob.unnamed_addr = True
 
         return glob
 
@@ -100,19 +109,26 @@ class LLVMGen:
 
         return mathed
 
-    def declare_variable(self, identifier: str, value, rial_type: str) -> Optional[AllocaInstr]:
+    def declare_variable(self, identifier: str, variable_type, value, rial_type: str) -> Optional[AllocaInstr]:
         variable = self.current_block.get_named_value(identifier)
 
         if variable is not None:
             return None
 
-        variable = self.builder.alloca(value.type)
-        variable.name = identifier
-        variable.set_metadata('type',
-                              self.module.add_metadata((rial_type,)))
+        if isinstance(variable_type, PointerType) and isinstance(value.type, PointerType):
+            variable = self.builder.alloca(variable_type.pointee)
+            loaded_val = self.builder.load(value)
+            self.builder.store(loaded_val, variable)
+            variable.name = identifier
+        else:
+            variable = self.builder.alloca(variable_type)
+            variable.name = identifier
+            variable.set_metadata('type',
+                                  self.module.add_metadata((rial_type,)))
+            if value is not None:
+                self.builder.store(value, variable)
 
-        self.builder.store(value, variable)
-        self.current_block.add_named_value(identifier, variable)
+        self.current_block.add_named_value(identifier, variable is None and value or variable)
 
         return variable
 
@@ -183,20 +199,56 @@ class LLVMGen:
         self.current_block = llvmblock
         self.builder.position_at_start(self.current_block.block)
 
+    def create_identified_struct(self, name: str, linkage: Union[Literal["internal"], Literal["external"]],
+                                 rial_access_modifier: RIALAccessModifier,
+                                 body: List[RIALVariable]):
+        struct = self.module.context.get_identified_type(name)
+        struct.set_body(*tuple([bod.llvm_type for bod in body]))
+        llvm_struct = LLVMStruct(struct, name, rial_access_modifier)
+        self.current_struct = llvm_struct
+
+        # Create base constructor
+        function_type = self.create_function_type(ir.PointerType(struct), [], False)
+        func = self.create_function_with_type(f"{name}.constructor", function_type, linkage, "fastcc", [], True,
+                                              rial_access_modifier, name, [])
+        self_value = self.builder.alloca(struct, name="this")
+
+        # Set initial values
+        for i, bod in enumerate(body):
+            loaded_var = self.builder.gep(self_value, [ir.Constant(ir.IntType(32), i), ir.Constant(ir.IntType(32), 0)])
+            self.builder.store(bod.initial_value, loaded_var)
+
+            # Store reference in llvm_struct
+            llvm_struct.properties[bod.name] = (i, bod)
+
+        # Return self
+        self.builder.ret(self_value)
+        llvm_struct.constructor = self.current_func
+
+        return llvm_struct
+
+    def finish_struct(self):
+        self.current_struct = None
+        self.current_func = None
+        self.current_block = None
+
     def create_function_with_type(self, name: str, ty: FunctionType,
-                                  linkage: Union[Literal["internal"], Literal["external"]], arg_names: List[str],
+                                  linkage: Union[Literal["internal"], Literal["external"]],
+                                  calling_convention: str,
+                                  arg_names: List[str],
                                   generate_body: bool,
-                                  rial_access_modifier: Union[Literal["public"], Literal["private"]],
+                                  rial_access_modifier: RIALAccessModifier,
                                   rial_return_type: str,
                                   rial_arg_types: List[str]):
 
         # Create function with specified linkage (internal -> module only)
         func = ir.Function(self.module, ty, name=name)
         func.linkage = linkage
+        func.calling_convention = calling_convention
 
         if generate_body:
             func.set_metadata('function_definition',
-                              self.module.add_metadata((rial_return_type, rial_access_modifier,)))
+                              self.module.add_metadata((rial_return_type, str(rial_access_modifier),)))
 
         # Set argument names
         for i, arg in enumerate(func.args):
@@ -218,6 +270,9 @@ class LLVMGen:
 
             # Allocate new variables for the passed arguments
             for i, arg in enumerate(func.args):
+                # Don't copy variables that are a pointer
+                if isinstance(arg.type, PointerType):
+                    continue
                 allocated_arg = self.builder.alloca(arg.type)
                 self.builder.store(arg, allocated_arg)
                 self.current_block.named_values[arg.name] = allocated_arg

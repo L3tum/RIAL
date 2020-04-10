@@ -2,44 +2,41 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/generate_standalone_parser.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/ASTVisitor.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/LLVMBlock.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/LLVMFunction.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/LLVMGen.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/compilation_manager.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/concept/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/concept/references.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/configuration.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/platform/IPlatform.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/platform/LinuxPlatform.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/platform/Platform.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/platform/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/profiling.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/util.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/testing/src/print.rial" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_hello_world.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/RIAL.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/RIAL.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compile.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/hello-world/src/main.rial" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/profile.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/LLVMStruct.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/linking/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/linking/linking_options.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/rial_types/RIALAccessModifier.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/rial_types/RIALVariable.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/rial_types/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/testing/src/boolean.rial" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/valgrind.supp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/concept/grammar.lark" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/FunctionBodyTransformer.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/LLVMTransformer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/ASTVisitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ASTVisitor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/LLVMFunction.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMFunction.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/LLVMGen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMGen.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/ParserState.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ParserState.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/codegen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/codegen.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/compilation_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compilation_manager.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/linking.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/linking.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/concept/references.md" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/references.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/configuration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/linking.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/linking/linker.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/platform/IPlatform.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/platform/IPlatform.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/platform/LinuxPlatform.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/platform/LinuxPlatform.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/platform/Platform.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/platform/Platform.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/profiling.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/profiling.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/testing/bin/testing" beforeDir="false" afterPath="$PROJECT_DIR$/testing/bin/testing" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/testing/cache/main.ll" beforeDir="false" afterPath="$PROJECT_DIR$/testing/cache/main.ll" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/testing/cache/main.o" beforeDir="false" afterPath="$PROJECT_DIR$/testing/cache/main.o" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/testing/src/main.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/main.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_1point5millionprintfs.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_1point5millionprintfs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing/src/print.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/print.rial" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_basic_arithmetic.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_basic_arithmetic.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -67,7 +64,6 @@
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
-    <option name="showExcludedFiles" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
@@ -85,12 +81,13 @@
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="C:\Users\Tom\source\repos\RIAL\testing\src" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\Tom\source\repos\RIAL\testing\src" />
       <recent name="C:\Users\Tom\source\repos\RIAL\rial" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Tom\source\repos\RIAL\rial\linking" />
+      <recent name="C:\Users\Tom\source\repos\RIAL\testing\src" />
     </key>
   </component>
   <component name="SvnConfiguration">
@@ -149,18 +146,43 @@
       <workItem from="1585235586980" duration="8524000" />
       <workItem from="1585314265373" duration="6242000" />
       <workItem from="1585425600818" duration="4408000" />
-      <workItem from="1585485176378" duration="1002000" />
+      <workItem from="1585485176378" duration="7030000" />
+      <workItem from="1585567274771" duration="8339000" />
+      <workItem from="1585649717256" duration="9384000" />
+      <workItem from="1585733825408" duration="8755000" />
+      <workItem from="1585816585751" duration="8015000" />
+      <workItem from="1585901071635" duration="7002000" />
+      <workItem from="1586010616363" duration="594000" />
+      <workItem from="1586030342405" duration="1209000" />
+      <workItem from="1586095720550" duration="2733000" />
+      <workItem from="1586177953886" duration="5570000" />
+      <workItem from="1586242577616" duration="2584000" />
+      <workItem from="1586262834359" duration="1777000" />
+      <workItem from="1586362813690" duration="10105000" />
+      <workItem from="1586463481715" duration="596000" />
     </task>
+    <task id="LOCAL-00001" summary="Update">
+      <created>1585486198876</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1585486198876</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="1" />
+    <option name="version" value="2" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Update" />
+    <option name="LAST_COMMIT_MESSAGE" value="Update" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1584886904699">
+    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1586365316981">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584886904699" />
+    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586365316981" />
     <state x="1085" y="416" key="#com.intellij.ide.util.MemberChooser" timestamp="1585056818881">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -169,14 +191,14 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="902" y="0" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584481187738" />
-    <state x="1010" y="447" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1584816938427">
+    <state x="1010" y="447" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1585733928228">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="1010" y="447" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584816938427" />
-    <state x="905" y="294" key="CommitChangelistDialog2" timestamp="1585486177153">
+    <state x="1010" y="447" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585733928228" />
+    <state x="905" y="294" key="CommitChangelistDialog2" timestamp="1585486197798">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="905" y="294" key="CommitChangelistDialog2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585486177153" />
+    <state x="905" y="294" key="CommitChangelistDialog2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585486197798" />
     <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog" timestamp="1585348831472">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -189,18 +211,22 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585434238819" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1585486200643">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585486200643" />
     <state x="92" y="92" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1585249165802">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="92" y="92" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585249165802" />
-    <state x="976" y="524" key="com.intellij.ide.util.TipDialog" timestamp="1585485176050">
+    <state x="976" y="524" key="com.intellij.ide.util.TipDialog" timestamp="1586262835590">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="976" y="524" key="com.intellij.ide.util.TipDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585485176050" />
-    <state x="927" y="315" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1584964725960">
+    <state x="976" y="524" key="com.intellij.ide.util.TipDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586262835590" />
+    <state x="927" y="315" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1586366099288">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="927" y="315" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584964725960" />
+    <state x="927" y="315" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586366099288" />
     <state x="691" y="185" width="322" height="445" key="dock-window-1" timestamp="1584965812228">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -213,13 +239,13 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="374" y="358" width="565" height="560" key="dock-window-3/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584965812228" />
-    <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1582830869919">
+    <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1585735538776">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1582830869919" />
-    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup" timestamp="1584972994181">
+    <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585735538776" />
+    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup" timestamp="1586367209707">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584972994181" />
+    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586367209707" />
   </component>
 </project>

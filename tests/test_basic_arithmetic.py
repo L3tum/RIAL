@@ -41,7 +41,7 @@ class TestBasicArithmetic(unittest.TestCase):
         testargs = ['prog', '--workdir', self.dir_path, '--opt-level', 0, '--print-ir']
         with patch.object(sys, 'argv', testargs):
             opts = parse_arguments()
-            main(opts)
+            main()
 
         with open(os.path.join(os.path.join(self.dir_path, "cache"), "main.ll"), "r") as ir:
             content = ir.read()

@@ -1,12 +1,17 @@
 from llvmlite.ir import FunctionType
 
+from rial.rial_types.RIALAccessModifier import RIALAccessModifier
+
 
 class LLVMFunction:
     function_type: FunctionType
-    access_modifier: str = "private"
+    access_modifier: RIALAccessModifier = RIALAccessModifier.PRIVATE
     module: str
+    rial_return_type: str
 
-    def __init__(self, function_type: FunctionType, access_modifier: str, module: str):
+    def __init__(self, function_type: FunctionType, access_modifier: RIALAccessModifier, module: str,
+                 rial_return_type: str):
         self.function_type = function_type
         self.access_modifier = access_modifier
         self.module = module
+        self.rial_return_type = rial_return_type

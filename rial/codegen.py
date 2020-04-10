@@ -1,8 +1,12 @@
+import traceback
 from threading import Lock
+from typing import Optional
 
 from llvmlite import ir, binding
 from llvmlite.binding import ExecutionEngine, ModuleRef, TargetMachine, PassManagerBuilder, ModulePassManager
 from llvmlite.ir import Module
+
+from rial.log import log_fail
 
 
 class CodeGen:
@@ -25,10 +29,6 @@ class CodeGen:
 
         self._create_execution_engine()
 
-    def __del__(self):
-        self.pm_manager.close()
-        self.pm_module.close()
-
     def _create_execution_engine(self):
         """
         Create an ExecutionEngine suitable for JIT code generation on
@@ -36,8 +36,7 @@ class CodeGen:
         modules.
         """
         target = self.binding.Target.from_default_triple()
-        self.target_machine = target.create_target_machine(
-            opt=self.opt_level in ("0", "1", "2", "3") and int(self.opt_level) or 0)
+        self.target_machine = target.create_target_machine(opt=self.opt_level, reloc="pic")
         self.target_machine.set_asm_verbosity(True)
 
         backing_mod = binding.parse_assembly("")
@@ -46,16 +45,20 @@ class CodeGen:
         self.binding.check_jit_execution()
 
     def _optimize_module(self, module: ModuleRef):
+        """
+        Currently unused as it produces invalid output.
+        Would be great if there'd be any documentation on this....
+        :param module:
+        :return:
+        """
         if self.opt_level > 0:
             pm_manager = self.binding.create_pass_manager_builder()
-            pm_manager.loop_vectorize = True
-            pm_manager.slp_vectorize = True
+            pm_manager.loop_vectorize = self.opt_level > 0
+            pm_manager.slp_vectorize = self.opt_level > 0
             pm_manager.size_level = 0
-            pm_manager.opt_level = self.opt_level in ("0", "1", "2", "3") and int(self.opt_level) or 0
+            pm_manager.opt_level = self.opt_level
             pm_module = self.binding.create_module_pass_manager()
-            self.target_machine.add_analysis_passes(pm_module)
             pm_function = self.binding.create_function_pass_manager(module)
-            self.target_machine.add_analysis_passes(pm_function)
             pm_manager.populate(pm_function)
             pm_manager.populate(pm_module)
 
@@ -66,6 +69,9 @@ class CodeGen:
             pm_function.finalize()
 
             pm_module.run(module)
+
+            pm_module.close()
+            pm_manager.close()
 
     def get_module(self, name: str) -> Module:
         module = ir.Module(name=name)
@@ -78,16 +84,22 @@ class CodeGen:
     def compile_ir(self, module: Module) -> ModuleRef:
         with self.lock:
             llvm_ir = str(module)
-            mod = self.binding.parse_assembly(llvm_ir)
-            mod.verify()
+            try:
+                mod = self.binding.parse_assembly(llvm_ir)
+                mod.verify()
+            except Exception as e:
+                log_fail(llvm_ir)
+                raise e
 
             self._optimize_module(mod)
 
-            self.engine.add_module(mod)
-            self.engine.finalize_object()
-            self.engine.run_static_constructors()
-
         return mod
+
+    def generate_final_module(self, mod: ModuleRef):
+        self.engine.add_module(mod)
+        self.engine.finalize_object()
+        self.engine.run_static_constructors()
+        self.engine.remove_module(mod)
 
     def save_ir(self, dest: str, module: ModuleRef):
         with open(dest, "w") as file:

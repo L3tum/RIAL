@@ -1,36 +1,30 @@
-from contextlib import contextmanager
-from threading import Lock
 from typing import Dict, Optional, List
 
 from rial.LLVMFunction import LLVMFunction
+from rial.LLVMStruct import LLVMStruct
 
 
 class ParserState(object):
     functions: Dict[str, LLVMFunction]
     implemented_functions: List[str]
-    lock: Lock
+    structs: Dict[str, LLVMStruct]
 
     def __init__(self):
         self.functions = dict()
         self.implemented_functions = list()
-        self.lock = Lock()
+        self.structs = dict()
 
-    def get_named_function(self, name: str) -> Optional[LLVMFunction]:
-        ty = None
+    def search_function(self, name: str) -> Optional[LLVMFunction]:
+        if name in self.functions:
+            return self.functions[name]
 
-        with self.lock:
-            if name in self.functions:
-                ty = self.functions[name]
+        return None
 
-        return ty
+    def search_implemented_functions(self, name: str) -> bool:
+        return name in self.implemented_functions
 
-    @contextmanager
-    def lock_and_search_named_function(self, name: str) -> Optional[LLVMFunction]:
-        ty = None
+    def search_structs(self, name: str) -> Optional[LLVMStruct]:
+        if name in self.structs:
+            return self.structs[name]
 
-        with self.lock:
-            if name in self.functions:
-                ty = self.functions[name]
-            yield ty
-
-        return ty
+        return None
