@@ -13,8 +13,12 @@ from colorama import init
 from llvmlite.binding import ModuleRef
 
 from rial.ASTVisitor import ASTVisitor
+from rial.FunctionDeclarationTransformer import FunctionDeclarationTransformer
 from rial.PrimitiveASTTransformer import PrimitiveASTTransformer
+from rial.SingleParserState import SingleParserState
+from rial.StructDeclarationTransformer import StructDeclarationTransformer
 from rial.codegen import CodeGen
+from rial.combined_transformer import CombinedTransformer
 from rial.compilation_manager import CompilationManager
 from rial.configuration import Configuration
 from rial.linking.linker import Linker
@@ -96,6 +100,8 @@ def main(opts):
 def compile_file(opts):
     try:
         primitive_transformer = PrimitiveASTTransformer()
+        function_declaration_transformer = FunctionDeclarationTransformer()
+        struct_declaration_transformer = StructDeclarationTransformer()
 
         while True:
             path = compilation_manager.files_to_compile.get()
@@ -109,10 +115,14 @@ def compile_file(opts):
             file = str(path).replace(str(source_path), "")
             module_name = file.strip('/').replace('.rial', '').replace('/', ':')
             module_name = project_name + ":" + module_name
-            module = codegen.get_module(module_name)
-            transformer = ASTVisitor(compilation_manager.ps, module, file.split('/')[-1], str(source_path))
-            primitive_transformer.init(transformer.llvmgen)
-            parser = Lark_StandAlone(transformer=primitive_transformer)
+            module = codegen.get_module(module_name, file.split('/')[-1], str(source_path))
+            sps = SingleParserState(compilation_manager.ps, module)
+            transformer = ASTVisitor(sps)
+            primitive_transformer.init(sps)
+            function_declaration_transformer.init(sps)
+            struct_declaration_transformer.init(sps, function_declaration_transformer)
+            combined_transformer = CombinedTransformer(primitive_transformer, struct_declaration_transformer)
+            parser = Lark_StandAlone(transformer=combined_transformer)
 
             with run_with_profiling(file, ExecutionStep.READ_FILE):
                 with open(path, "r") as src:
@@ -123,6 +133,9 @@ def compile_file(opts):
 
             if opts.print_tokens:
                 print(ast.pretty())
+
+
+            ast = function_declaration_transformer.transform(ast)
 
             transformer.visit(ast)
 

@@ -9,7 +9,8 @@ target triple = "x86_64-unknown-linux-gnu"
 @".const.string.b'V2hpbGUgbG9vcDogJWlcbg=='" = private unnamed_addr constant [16 x i8] c"While loop: %i\0A\00"
 @".const.string.b'TG9vcCBsb29wXG4='" = private unnamed_addr constant [11 x i8] c"Loop loop\0A\00"
 
-define fastcc i32 @main() !function_definition !1 {
+; Function Attrs: alwaysinline
+define i32 @"testing:main:main."() #0 !function_definition !1 {
 entry:
   call void (i8*, ...) @printf(i8* getelementptr inbounds ([14 x i8], [14 x i8]* @".const.string.b'SGVsbG8gd29ybGQhXG4='", i32 0, i32 0))
   %.3 = add i32 5, 5
@@ -46,7 +47,7 @@ entry.if_else.end.wrapper.body:                   ; preds = %entry.if_else.end.w
   %.24 = add i32 %.23, %.22
   store i32 %.24, i32* %j
   %.26 = load i32, i32* %j
-  call void @printInteger(i32 %.26)
+  call void @"testing:print:printInteger.i32"(i32 %.26)
   %.28 = load i32, i32* %i
   %.29 = add i32 %.28, 1
   store i32 %.29, i32* %i
@@ -87,23 +88,24 @@ entry.if_else.end.wrapper.end.end.body:           ; preds = %entry.if_else.end.w
   br label %entry.if_else.end.wrapper.end.end.end
 
 entry.if_else.end.wrapper.end.end.end:            ; preds = %entry.if_else.end.wrapper.end.end.body
-  call void @printTestWrapper()
-  call void @printBoolean(i1 true)
+  call void @"testing:print:printTestWrapper."()
+  call void @"testing:boolean:printBoolean.i1"(i1 true)
   ret i32 0
 }
 
 declare void @printf(i8*, ...)
 
-declare void @printInteger(i32)
+declare void @"testing:print:printInteger.i32"(i32)
 
-declare void @printTestWrapper()
+declare void @"testing:print:printTestWrapper."()
 
-declare void @printBoolean(i1)
+declare void @"testing:boolean:printBoolean.i1"(i1)
 
 ; Function Attrs: nounwind
-declare void @llvm.stackprotector(i8*, i8**) #0
+declare void @llvm.stackprotector(i8*, i8**) #1
 
-attributes #0 = { nounwind }
+attributes #0 = { alwaysinline }
+attributes #1 = { nounwind }
 
 !compiler = !{!0}
 

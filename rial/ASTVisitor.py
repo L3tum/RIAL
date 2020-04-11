@@ -1,144 +1,31 @@
 from typing import Tuple, List, Optional
 
+import os
 from llvmlite import ir
-from llvmlite.ir import Module, PointerType, Function, BaseStructType, IdentifiedStructType
+from llvmlite.ir import PointerType, IdentifiedStructType, IRBuilder
 
+from rial.LLVMBlock import create_llvm_block
 from rial.LLVMFunction import LLVMFunction
-from rial.LLVMGen import LLVMGen
-from rial.LLVMStruct import LLVMStruct
-from rial.ParserState import ParserState
-from rial.builtin_type_to_llvm_mapper import map_type_to_llvm, NULL
-from rial.compilation_manager import CompilationManager
+from rial.SingleParserState import SingleParserState
+from rial.concept.metadata_token import MetadataToken
+from rial.concept.name_mangler import mangle_function_name
 from rial.log import log_fail
-from rial.concept.parser import Interpreter, Tree, Token
+from rial.concept.parser import Interpreter, Tree, Token, v_args, Meta
 from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 from rial.rial_types.RIALVariable import RIALVariable
 
 
 class ASTVisitor(Interpreter):
-    ps: ParserState
-    usings: List[str]
-    llvmgen: LLVMGen
+    sps: SingleParserState
 
-    def __init__(self, ps: ParserState, module: Module, filename: str, directory: str):
-        di_file = module.add_debug_info("DIFile", {
-            "filename": filename,
-            "directory": directory,
-        })
-        di_compile_unit = module.add_debug_info("DICompileUnit", {
-            "language": ir.DIToken("DW_LANG_C"),
-            "file": di_file,
-            "producer": "RIALC 0.1.0",
-            "runtimeVersion": 1,
-            "isOptimized": False,
-        }, is_distinct=True)
-        self.ps = ps
-        self.usings = list()
-        self.llvmgen = LLVMGen(module)
+    def __init__(self, sps: SingleParserState):
+        self.sps = sps
 
     def transform_helper(self, node):
         if isinstance(node, Tree):
             return self.visit(node)
 
         return node
-
-    def map_type_to_llvm(self, name: str):
-        llvm_type = map_type_to_llvm(name)
-
-        # Check if builtin type
-        if llvm_type is None:
-            llvm_struct = self.find_struct(name)
-
-            if llvm_struct is not None:
-                llvm_type = llvm_struct.struct
-            else:
-                log_fail(f"Referenced unknown type {name}")
-                return None
-
-        return llvm_type
-
-    def find_function(self, full_function_name: str) -> Optional[Function]:
-        func = None
-
-        # Check if function is called with namespace specification
-        if ":" in full_function_name:
-            true_function_name = full_function_name.split(':')[-1]
-            mod_name = full_function_name.replace(":" + true_function_name, "")
-
-            # Check if namespace is actually own namespace
-            # Replace the full definition with the true function name (without namespace)
-            if self.llvmgen.module.name == mod_name:
-                full_function_name = true_function_name
-
-        # If function doesn't contain namespace definition or namespace is own
-        # Try to find function in current module
-        if not ":" in full_function_name:
-            func = next((func for func in self.llvmgen.module.functions if func.name == full_function_name), None)
-
-        # If func isn't in current module
-        if func is None:
-            # Try to find function by full name
-            llvm_function = self.ps.search_function(full_function_name)
-
-            # If couldn't find it, iterate through usings and try to find function
-            if llvm_function is None:
-                functions_found: List[Tuple[str, LLVMFunction]] = list()
-
-                for use in self.usings:
-                    llvm_function = self.ps.search_function(f"{use}:{full_function_name}")
-                    if llvm_function is None:
-                        continue
-                    functions_found.append((use, llvm_function,))
-
-                # Check for number of functions found
-                if len(functions_found) == 0:
-                    return None
-
-                if len(functions_found) > 1:
-                    log_fail(f"Function {full_function_name} has been declared multiple times!")
-                    log_fail(f"Specify the specific function to use by adding the namespace to the function call")
-                    log_fail(f"E.g. {functions_found[0][0]}:{full_function_name}()")
-                    return None
-
-                llvm_function = functions_found[0][1]
-
-            # Function is either:
-            # - public or
-            # - internal and
-            #   - in same TLM
-            if llvm_function.access_modifier != RIALAccessModifier.PUBLIC and \
-                    (llvm_function.access_modifier != RIALAccessModifier.INTERNAL and llvm_function.module.split(':')[0]
-                     == self.llvmgen.module.name.split(':')[0]):
-                log_fail(
-                    f"Cannot access method {full_function_name} in module {llvm_function.module}!")
-                return None
-
-            func = ir.Function(self.llvmgen.module, llvm_function.function_type, name=full_function_name)
-        return func
-
-    def find_struct(self, struct_name: str):
-        struct = self.ps.search_structs(struct_name)
-
-        if struct is None:
-            struct = self.ps.search_structs(f"{self.llvmgen.module.name}:{struct_name}")
-
-        if struct is None:
-            structs_found: List[Tuple] = list()
-            for using in self.usings:
-                s = self.ps.search_structs(f"{using}:{struct_name}")
-
-                if s is not None:
-                    structs_found.append((using, s))
-            if len(structs_found) == 0:
-                return None
-
-            if len(structs_found) > 1:
-                log_fail(f"Multiple declarations found for {struct_name}")
-                log_fail(f"Specify one of them by using {structs_found[0][0]}:{struct_name} for example")
-                return None
-            struct = structs_found[0][1]
-
-        return struct
 
     def load_nested(self, val, name: str):
         if isinstance(val.type, PointerType):
@@ -153,8 +40,9 @@ class ASTVisitor(Interpreter):
                 if prop is None:
                     return None
 
-                return self.llvmgen.builder.gep(val,
-                                                [ir.Constant(ir.IntType(32), prop[0]), ir.Constant(ir.IntType(32), 0)])
+                return self.sps.llvmgen.builder.gep(val,
+                                                    [ir.Constant(ir.IntType(32), prop[0]),
+                                                     ir.Constant(ir.IntType(32), 0)])
 
         return val
 
@@ -163,59 +51,59 @@ class ASTVisitor(Interpreter):
         left = self.transform_helper(nodes[0])
         right = self.transform_helper(nodes[2])
 
-        return self.llvmgen.gen_addition(left, right)
+        return self.sps.llvmgen.gen_addition(left, right)
 
     def subtraction(self, tree: Tree):
         nodes = tree.children
         left = self.transform_helper(nodes[0])
         right = self.transform_helper(nodes[2])
 
-        return self.llvmgen.gen_subtraction(left, right)
+        return self.sps.llvmgen.gen_subtraction(left, right)
 
     def multiplication(self, tree: Tree):
         nodes = tree.children
         left = self.transform_helper(nodes[0])
         right = self.transform_helper(nodes[2])
 
-        return self.llvmgen.gen_multiplication(left, right)
+        return self.sps.llvmgen.gen_multiplication(left, right)
 
     def division(self, tree: Tree):
         nodes = tree.children
         left = self.transform_helper(nodes[0])
         right = self.transform_helper(nodes[2])
 
-        return self.llvmgen.gen_division(left, right)
+        return self.sps.llvmgen.gen_division(left, right)
 
     def smaller_than(self, tree: Tree):
         nodes = tree.children
         left = self.transform_helper(nodes[0])
         right = self.transform_helper(nodes[2])
 
-        return self.llvmgen.gen_comparison('<', left, right)
+        return self.sps.llvmgen.gen_comparison('<', left, right)
 
     def bigger_than(self, tree: Tree):
         nodes = tree.children
         left = self.transform_helper(nodes[0])
         right = self.transform_helper(nodes[2])
 
-        return self.llvmgen.gen_comparison('>', left, right)
+        return self.sps.llvmgen.gen_comparison('>', left, right)
 
     def bigger_equal(self, tree: Tree):
         nodes = tree.children
         left = self.transform_helper(nodes[0])
         right = self.transform_helper(nodes[2])
 
-        return self.llvmgen.gen_comparison('>=', left, right)
+        return self.sps.llvmgen.gen_comparison('>=', left, right)
 
     def smaller_equal(self, tree: Tree):
         nodes = tree.children
         left = self.transform_helper(nodes[0])
         right = self.transform_helper(nodes[2])
 
-        return self.llvmgen.gen_comparison('<=', left, right)
+        return self.sps.llvmgen.gen_comparison('<=', left, right)
 
     def get_var(self, identifier: str):
-        variable = self.llvmgen.current_block.get_named_value(identifier)
+        variable = self.sps.llvmgen.current_block.get_named_value(identifier)
 
         if variable is None:
             log_fail(f"Variable not found {identifier}")
@@ -229,7 +117,7 @@ class ASTVisitor(Interpreter):
         va = self.get_var(nodes[0].value)
 
         if isinstance(va.type, PointerType):
-            return self.llvmgen.builder.load(va)
+            return self.sps.llvmgen.builder.load(va)
 
         return va
 
@@ -247,7 +135,7 @@ class ASTVisitor(Interpreter):
 
             value = ir.Constant(variable_type, 1)
 
-        return self.llvmgen.gen_shorthand(variable, value, '+')
+        return self.sps.llvmgen.gen_shorthand(variable, value, '+')
 
     def variable_decrement(self, tree: Tree):
         nodes = tree.children
@@ -263,21 +151,21 @@ class ASTVisitor(Interpreter):
 
             value = ir.Constant(variable_type, 1)
 
-        return self.llvmgen.gen_shorthand(variable, value, '-')
+        return self.sps.llvmgen.gen_shorthand(variable, value, '-')
 
     def variable_multiplication(self, tree: Tree):
         nodes = tree.children
         variable = self.get_var(nodes[0].value)
         value = self.transform_helper(nodes[1])
 
-        return self.llvmgen.gen_shorthand(variable, value, '*')
+        return self.sps.llvmgen.gen_shorthand(variable, value, '*')
 
     def variable_division(self, tree: Tree):
         nodes = tree.children
         variable = self.get_var(nodes[0].value)
         value = self.transform_helper(nodes[1])
 
-        return self.llvmgen.gen_shorthand(variable, value, '/')
+        return self.sps.llvmgen.gen_shorthand(variable, value, '/')
 
     def variable_assignment(self, tree: Tree):
         nodes = tree.children
@@ -285,7 +173,7 @@ class ASTVisitor(Interpreter):
         value = self.transform_helper(nodes[1])
 
         # TODO: Check if types are matching based on both LLVM value and inferred and metadata RIAL type
-        return self.llvmgen.assign_to_variable(identifier, value)
+        return self.sps.llvmgen.assign_to_variable(identifier, value)
 
     def variable_decl(self, tree: Tree):
         nodes = tree.children
@@ -294,87 +182,82 @@ class ASTVisitor(Interpreter):
         value_type = value.type
 
         # TODO: Infer type based on value, essentially map LLVM type to RIAL type
-        return self.llvmgen.declare_variable(identifier, value_type, value, "")
-
-    def using(self, tree: Tree):
-        mod_name = ':'.join(tree.children)
-        CompilationManager.request_module(mod_name)
-        self.usings.append(mod_name)
+        return self.sps.llvmgen.declare_variable(identifier, value_type, value, "")
 
     def continue_rule(self, tree: Tree):
-        if self.llvmgen.conditional_block is None:
+        if self.sps.llvmgen.conditional_block is None:
             log_fail(f"'continue' outside of loop")
             return None
 
-        return self.llvmgen.create_jump(self.llvmgen.conditional_block)
+        return self.sps.llvmgen.create_jump(self.sps.llvmgen.conditional_block)
 
     def break_rule(self, tree: Tree):
-        if self.llvmgen.end_block is None:
+        if self.sps.llvmgen.end_block is None:
             log_fail(f"'break' outside of loop or conditional block")
             return None
 
-        return self.llvmgen.create_jump(self.llvmgen.end_block)
+        return self.sps.llvmgen.create_jump(self.sps.llvmgen.end_block)
 
     def return_rule(self, tree: Tree):
         nodes = tree.children
 
-        if self.llvmgen.current_block.block.terminator is not None:
+        if self.sps.llvmgen.current_block.block.terminator is not None:
             log_fail(f"'return' after return found!")
             return None
 
-        return self.llvmgen.create_return_statement(self.transform_helper(nodes[0]))
+        return self.sps.llvmgen.create_return_statement(self.transform_helper(nodes[0]))
 
     def loop_loop(self, tree: Tree):
         nodes = tree.children
-        name = self.llvmgen.current_block.block.name
+        name = self.sps.llvmgen.current_block.block.name
 
-        (conditional_block, body_block, end_block) = self.llvmgen.create_loop(name, self.llvmgen.current_block)
+        (conditional_block, body_block, end_block) = self.sps.llvmgen.create_loop(name, self.sps.llvmgen.current_block)
 
         # Remove conditional block again (there's no condition)
-        self.llvmgen.current_func.basic_blocks.remove(conditional_block.block)
-        self.llvmgen.conditional_block = body_block
+        self.sps.llvmgen.current_func.basic_blocks.remove(conditional_block.block)
+        self.sps.llvmgen.conditional_block = body_block
         del conditional_block
 
         # Go into body
-        self.llvmgen.create_jump(body_block)
-        self.llvmgen.enter_block(body_block)
+        self.sps.llvmgen.create_jump(body_block)
+        self.sps.llvmgen.enter_block(body_block)
 
         # Build body
         for node in nodes:
             self.transform_helper(node)
 
         # Jump back into body
-        self.llvmgen.create_jump_if_not_exists(body_block)
+        self.sps.llvmgen.create_jump_if_not_exists(body_block)
 
         # Go out of loop
-        self.llvmgen.enter_block(end_block)
+        self.sps.llvmgen.enter_block(end_block)
 
     def for_loop(self, tree: Tree):
         nodes = tree.children
-        name = self.llvmgen.current_block.block.name
+        name = self.sps.llvmgen.current_block.block.name
         name = f"{name}.wrapper"
 
-        wrapper_block = self.llvmgen.create_block(name, parent=self.llvmgen.current_block)
-        (conditional_block, body_block, end_block) = self.llvmgen.create_loop(name, wrapper_block)
+        wrapper_block = self.sps.llvmgen.create_block(name, parent=self.sps.llvmgen.current_block)
+        (conditional_block, body_block, end_block) = self.sps.llvmgen.create_loop(name, wrapper_block)
 
         # Move end_block out of wrapper block
-        end_block.sibling = self.llvmgen.current_block
+        end_block.sibling = self.sps.llvmgen.current_block
 
         # Create variable in wrapper block
-        self.llvmgen.create_jump(wrapper_block)
-        self.llvmgen.enter_block(wrapper_block)
+        self.sps.llvmgen.create_jump(wrapper_block)
+        self.sps.llvmgen.enter_block(wrapper_block)
         self.transform_helper(nodes[0])
 
         # Enter conditional block
-        self.llvmgen.create_jump(conditional_block)
-        self.llvmgen.enter_block(conditional_block)
+        self.sps.llvmgen.create_jump(conditional_block)
+        self.sps.llvmgen.enter_block(conditional_block)
 
         # Build condition
         condition = self.transform_helper(nodes[1])
-        self.llvmgen.create_conditional_jump(condition, body_block, end_block)
+        self.sps.llvmgen.create_conditional_jump(condition, body_block, end_block)
 
         # Go into body
-        self.llvmgen.enter_block(body_block)
+        self.sps.llvmgen.enter_block(body_block)
 
         # Build body
         i = 3
@@ -383,31 +266,31 @@ class ASTVisitor(Interpreter):
             i += 1
 
         # Build incrementor if no terminator yet
-        if self.llvmgen.current_block.block.terminator is None:
+        if self.sps.llvmgen.current_block.block.terminator is None:
             self.transform_helper(nodes[2])
 
         # Jump back into condition
-        self.llvmgen.create_jump_if_not_exists(conditional_block)
+        self.sps.llvmgen.create_jump_if_not_exists(conditional_block)
 
         # Go out of loop
-        self.llvmgen.enter_block(end_block)
+        self.sps.llvmgen.enter_block(end_block)
 
     def while_loop(self, tree: Tree):
         nodes = tree.children
-        name = self.llvmgen.current_block.block.name
+        name = self.sps.llvmgen.current_block.block.name
 
-        (conditional_block, body_block, end_block) = self.llvmgen.create_loop(name, self.llvmgen.current_block)
+        (conditional_block, body_block, end_block) = self.sps.llvmgen.create_loop(name, self.sps.llvmgen.current_block)
 
         # Enter conditional block
-        self.llvmgen.create_jump(conditional_block)
-        self.llvmgen.enter_block(conditional_block)
+        self.sps.llvmgen.create_jump(conditional_block)
+        self.sps.llvmgen.enter_block(conditional_block)
 
         # Build condition
         condition = self.transform_helper(nodes[0])
-        self.llvmgen.create_conditional_jump(condition, body_block, end_block)
+        self.sps.llvmgen.create_conditional_jump(condition, body_block, end_block)
 
         # Go into body
-        self.llvmgen.enter_block(body_block)
+        self.sps.llvmgen.enter_block(body_block)
 
         # Build body
         i = 1
@@ -416,74 +299,74 @@ class ASTVisitor(Interpreter):
             i += 1
 
         # Jump back into condition
-        self.llvmgen.create_jump_if_not_exists(conditional_block)
+        self.sps.llvmgen.create_jump_if_not_exists(conditional_block)
 
         # Leave loop
-        self.llvmgen.enter_block(end_block)
+        self.sps.llvmgen.enter_block(end_block)
 
     def conditional_block(self, tree: Tree):
         nodes = tree.children
-        name = self.llvmgen.current_block.block.name
+        name = self.sps.llvmgen.current_block.block.name
         else_block = None
 
         if len(nodes) == 2:
             (conditional_block, body_block, end_block) = \
-                self.llvmgen.create_conditional_block(name, self.llvmgen.current_block)
+                self.sps.llvmgen.create_conditional_block(name, self.sps.llvmgen.current_block)
         else:
             (conditional_block, body_block, else_block, end_block) = \
-                self.llvmgen.create_conditional_block_with_else(name, self.llvmgen.current_block)
+                self.sps.llvmgen.create_conditional_block_with_else(name, self.sps.llvmgen.current_block)
 
         # Create condition
-        self.llvmgen.create_jump(conditional_block)
-        self.llvmgen.enter_block(conditional_block)
+        self.sps.llvmgen.create_jump(conditional_block)
+        self.sps.llvmgen.enter_block(conditional_block)
         cond = self.transform_helper(nodes[0])
-        self.llvmgen.create_conditional_jump(cond, body_block, end_block)
+        self.sps.llvmgen.create_conditional_jump(cond, body_block, end_block)
 
         # Create body
-        self.llvmgen.enter_block(body_block)
+        self.sps.llvmgen.enter_block(body_block)
         self.transform_helper(nodes[1])
 
         # Jump out of body
-        self.llvmgen.create_jump_if_not_exists(end_block)
+        self.sps.llvmgen.create_jump_if_not_exists(end_block)
 
         # Create else if necessary
         if len(nodes) > 2:
-            self.llvmgen.enter_block(else_block)
+            self.sps.llvmgen.enter_block(else_block)
             self.transform_helper(nodes[2])
-            self.llvmgen.create_jump_if_not_exists(end_block)
+            self.sps.llvmgen.create_jump_if_not_exists(end_block)
 
         # Leave conditional block
-        self.llvmgen.enter_block(end_block)
+        self.sps.llvmgen.enter_block(end_block)
 
     def shorthand_if(self, tree: Tree):
         nodes = tree.children
-        name = self.llvmgen.current_block.block.name
+        name = self.sps.llvmgen.current_block.block.name
         (conditional_block, body_block, else_block, end_block) = \
-            self.llvmgen.create_conditional_block_with_else(name, self.llvmgen.current_block)
+            self.sps.llvmgen.create_conditional_block_with_else(name, self.sps.llvmgen.current_block)
 
         # Create condition
-        self.llvmgen.create_jump(conditional_block)
-        self.llvmgen.enter_block(conditional_block)
+        self.sps.llvmgen.create_jump(conditional_block)
+        self.sps.llvmgen.enter_block(conditional_block)
         cond = self.transform_helper(nodes[0])
-        self.llvmgen.create_conditional_jump(cond, body_block, else_block)
+        self.sps.llvmgen.create_conditional_jump(cond, body_block, else_block)
 
         # Create body
-        self.llvmgen.enter_block(body_block)
+        self.sps.llvmgen.enter_block(body_block)
         true_value = self.transform_helper(nodes[1])
 
         # Jump out of body
-        self.llvmgen.create_jump_if_not_exists(end_block)
+        self.sps.llvmgen.create_jump_if_not_exists(end_block)
 
         # Create else
-        self.llvmgen.enter_block(else_block)
+        self.sps.llvmgen.enter_block(else_block)
         false_value = self.transform_helper(nodes[2])
-        self.llvmgen.create_jump_if_not_exists(end_block)
+        self.sps.llvmgen.create_jump_if_not_exists(end_block)
 
         # Leave conditional block
-        self.llvmgen.enter_block(end_block)
+        self.sps.llvmgen.enter_block(end_block)
 
         # PHI the values
-        phi = self.llvmgen.builder.phi(true_value.type)
+        phi = self.sps.llvmgen.builder.phi(true_value.type)
         phi.add_incoming(true_value, body_block.block)
         phi.add_incoming(false_value, else_block.block)
 
@@ -491,54 +374,22 @@ class ASTVisitor(Interpreter):
 
     def struct_decl(self, tree: Tree):
         nodes = tree.children
+        node = nodes[0]
+        full_name = node.metadata['struct_name']
+        function_decls = node.metadata['functions']
 
-        if nodes[0].type == "ACCESS_MODIFIER":
-            access_modifier = RIALAccessModifier[nodes[0].value.upper()]
-            name = nodes[1].value
-            start = 2
-        else:
-            access_modifier = RIALAccessModifier.PRIVATE
-            name = nodes[0].value
-            start = 1
+        llvm_struct = self.sps.ps.search_structs(full_name)
 
-        full_name = f"{self.llvmgen.module.name}:{name}"
+        if llvm_struct is None:
+            raise KeyError("Expected a struct but couldn't find it!")
 
-        if self.ps.search_structs(full_name) is not None:
-            log_fail(f"Struct {full_name} has been previously declared!")
-            return None
-
-        body: List[RIALVariable] = list()
-        function_decls: List[Tree] = list()
-
-        # Find body of struct (variables)
-        i = start
-        while i < len(nodes):
-            node: Tree = nodes[i]
-
-            if isinstance(node, Tree) and node.data == "struct_property_declaration":
-                variable = node.children
-                rial_type = variable[0].value
-                variable_name = variable[1].value
-                llvm_type = self.map_type_to_llvm(rial_type)
-                variable_value = None
-
-                if len(variable) > 2:
-                    variable_value = self.transform_helper(variable[2])
-
-                body.append(RIALVariable(variable_name, rial_type, llvm_type, initial_value=variable_value))
-            elif isinstance(node, Tree) and node.data == "function_decl":
-                function_decls.append(node)
-            i += 1
-
-        llvm_struct = self.llvmgen.create_identified_struct(full_name, access_modifier.get_linkage(), access_modifier,
-                                                            body)
-        self.ps.structs[full_name] = llvm_struct
+        self.sps.llvmgen.current_struct = llvm_struct
 
         # Create functions
         for function_decl in function_decls:
             self.visit(function_decl)
 
-        self.llvmgen.finish_struct()
+        self.sps.llvmgen.finish_struct()
 
     def function_call(self, tree: Tree):
         nodes = tree.children
@@ -571,18 +422,6 @@ class ASTVisitor(Interpreter):
         else:
             full_function_name: str = nodes[0].value
 
-        func = self.find_function(full_function_name)
-
-        # Check if it's actually an instantiation
-        if func is None:
-            llvm_struct = self.find_struct(full_function_name)
-
-            if llvm_struct is not None:
-                func = llvm_struct.constructor
-            else:
-                log_fail(f"Undeclared function or constructor {full_function_name} called!")
-                return None
-
         i = start
         arguments: list = list()
 
@@ -596,8 +435,26 @@ class ASTVisitor(Interpreter):
             arguments.append(self.transform_helper(nodes[i]))
             i += 1
 
+        mangled_name = mangle_function_name(full_function_name, [str(arg.type) for arg in arguments])
+        func = self.sps.find_function(mangled_name)
+
+        # Check if it's an external (aka not mangled call)
+        if func is None:
+            func = self.sps.find_function(full_function_name)
+            # TODO: Should we get the LLVMFunction definition and actually check if it's external?
+
+        # Check if it's actually an instantiation
+        if func is None:
+            llvm_struct = self.sps.find_struct(full_function_name)
+
+            if llvm_struct is not None:
+                func = llvm_struct.constructor
+            else:
+                log_fail(f"Undeclared function or constructor {full_function_name} called!")
+                return None
+
         try:
-            return self.llvmgen.builder.call(func, arguments)
+            return self.sps.llvmgen.builder.call(func, arguments)
         except IndexError:
             log_fail("Missing argument in function call")
 
@@ -605,110 +462,23 @@ class ASTVisitor(Interpreter):
 
     def function_decl(self, tree: Tree):
         nodes = tree.children
-        access_modifier: RIALAccessModifier = RIALAccessModifier.PRIVATE
-        linkage = "internal"
-        external = False
-        calling_convention = "ccc"
 
-        if nodes[0].type == "EXTERNAL":
-            return_type = nodes[1]
-            name = nodes[2]
-            start_args = 3
-            external = True
-            linkage = "external"
-            access_modifier = RIALAccessModifier.PUBLIC
-        elif nodes[0].type == "ACCESS_MODIFIER":
-            access_modifier = RIALAccessModifier[nodes[0].value.upper()]
-            return_type = nodes[1]
-            name = nodes[2]
-            start_args = 3
-            linkage = access_modifier.get_linkage()
-        else:
-            return_type = nodes[0]
-            name = nodes[1]
-            start_args = 2
+        node: MetadataToken = nodes[0]
+        body_start = node.metadata['body_start']
+        function_name = node.metadata['full_name']
+        rial_arg_types = node.metadata['rial_arg_types']
+        func = next((func for func in self.sps.llvmgen.module.functions if func.name == function_name), None)
 
-        full_function_name = f"{self.llvmgen.module.name}:{name}"
+        if func is None:
+            raise KeyError("Expected a function but didn't find it!")
 
-        llvm_func: Optional[LLVMFunction] = self.ps.search_function(full_function_name)
-        args: List[Tuple[str, str]] = list()
+        self.sps.llvmgen.create_function_body(func, rial_arg_types)
 
-        i = start_args
-        var_args = False
-        has_body = False
-
+        i = body_start
         while i < len(nodes):
-            if not isinstance(nodes[i], Token):
-                has_body = True
-                break
-            if var_args is True:
-                log_fail("PARAMS must be last in arguments")
-                break
-            if nodes[i].type == "PARAMS":
-                var_args = True
-                i += 1
-            if nodes[i].type == "IDENTIFIER":
-                arg_type = nodes[i]
-                i += 1
-                arg_name = nodes[i]
+            self.transform_helper(nodes[i])
+            i += 1
 
-                if var_args:
-                    arg_name += "..."
-
-                args.append((arg_type, arg_name))
-                i += 1
-            else:
-                break
-
-        if has_body and external:
-            log_fail("External functions cannot have a body!")
-            return None
-
-        if has_body and var_args:
-            log_fail(f"Non-externally defined functions currently cannot have a PARAMS variable length parameter")
-            return None
-
-        if var_args == False and external == False:
-            calling_convention = "fastcc"
-
-        # Function has been previously declared
-        if llvm_func is not None:
-            # Check if either:
-            # - has no body (cannot redeclare functions) or
-            # - is already implemented and
-            #   - is either public or
-            #     - internal and
-            #     - is in same package (cannot reimplement functions)
-            if has_body == False or name in self.ps.implemented_functions and (
-                    llvm_func.access_modifier == "public" or (
-                    llvm_func.access_modifier == "internal" and llvm_func.module.split(':')[0] ==
-                    self.llvmgen.module.name.split(':')[0])):
-                log_fail(f"Function {name} already declared elsewhere")
-                return None
-        else:
-            llvm_args = [self.map_type_to_llvm(arg[0]) for arg in args if not arg[1].endswith("...")]
-            llvm_return_type = self.map_type_to_llvm(return_type)
-
-            if self.llvmgen.current_struct is not None:
-                llvm_args.insert(0, ir.PointerType(self.llvmgen.current_struct.struct))
-                args.insert(0, (self.llvmgen.current_struct.name, "this"))
-
-            func_type = self.llvmgen.create_function_type(llvm_return_type, llvm_args, var_args)
-            llvm_func = LLVMFunction(func_type, access_modifier, self.llvmgen.module.name, return_type)
-            self.ps.functions[full_function_name] = llvm_func
-
-        func = self.llvmgen.create_function_with_type(name, llvm_func.function_type, linkage,
-                                                      calling_convention,
-                                                      list(map(lambda arg: arg[1], args)),
-                                                      has_body, access_modifier,
-                                                      llvm_func.rial_return_type,
-                                                      list(map(lambda arg: arg[0], args)))
-
-        if has_body:
-            while i < len(nodes):
-                self.transform_helper(nodes[i])
-                i += 1
-
-            self.llvmgen.finish_current_block()
+        self.sps.llvmgen.finish_current_block()
 
         return None

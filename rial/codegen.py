@@ -45,12 +45,6 @@ class CodeGen:
         self.binding.check_jit_execution()
 
     def _optimize_module(self, module: ModuleRef):
-        """
-        Currently unused as it produces invalid output.
-        Would be great if there'd be any documentation on this....
-        :param module:
-        :return:
-        """
         if self.opt_level > 0:
             pm_manager = self.binding.create_pass_manager_builder()
             pm_manager.loop_vectorize = self.opt_level > 0
@@ -73,11 +67,23 @@ class CodeGen:
             pm_module.close()
             pm_manager.close()
 
-    def get_module(self, name: str) -> Module:
+    def get_module(self, name: str, filename: str, directory: str) -> Module:
         module = ir.Module(name=name)
         module.triple = self.binding.get_default_triple()
         module.data_layout = self.target_machine.target_data
         module.add_named_metadata('compiler', ('RIALC',))
+
+        di_file = module.add_debug_info("DIFile", {
+            "filename": filename,
+            "directory": directory,
+        })
+        di_compile_unit = module.add_debug_info("DICompileUnit", {
+            "language": ir.DIToken("DW_LANG_C"),
+            "file": di_file,
+            "producer": "RIALC 0.1.0",
+            "runtimeVersion": 1,
+            "isOptimized": False,
+        }, is_distinct=True)
 
         return module
 

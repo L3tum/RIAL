@@ -2,41 +2,22 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/compile.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/examples/hello-world/src/main.rial" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/profile.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/LLVMStruct.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/linking/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/linking/linking_options.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/rial_types/RIALAccessModifier.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/rial_types/RIALVariable.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/rial_types/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/testing/src/boolean.rial" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/valgrind.supp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/SingleParserState.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/combined_transformer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/concept/metadata_token.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/concept/name_mangler.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/ASTVisitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ASTVisitor.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/LLVMFunction.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMFunction.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/LLVMGen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMGen.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/ParserState.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ParserState.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/codegen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/codegen.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/compilation_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compilation_manager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/references.md" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/references.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/configuration.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/linking.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/linking/linker.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/platform/IPlatform.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/platform/IPlatform.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/platform/LinuxPlatform.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/platform/LinuxPlatform.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/platform/Platform.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/platform/Platform.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/profiling.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/profiling.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/bin/testing" beforeDir="false" afterPath="$PROJECT_DIR$/testing/bin/testing" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing/bin/testing" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/testing/cache/main.ll" beforeDir="false" afterPath="$PROJECT_DIR$/testing/cache/main.ll" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/testing/cache/main.o" beforeDir="false" afterPath="$PROJECT_DIR$/testing/cache/main.o" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/src/main.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/main.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/src/print.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/print.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_basic_arithmetic.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_basic_arithmetic.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -160,6 +141,8 @@
       <workItem from="1586262834359" duration="1777000" />
       <workItem from="1586362813690" duration="10105000" />
       <workItem from="1586463481715" duration="596000" />
+      <workItem from="1586532649669" duration="4524000" />
+      <workItem from="1586592933655" duration="10400000" />
     </task>
     <task id="LOCAL-00001" summary="Update">
       <created>1585486198876</created>
@@ -168,7 +151,14 @@
       <option name="project" value="LOCAL" />
       <updated>1585486198876</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Update">
+      <created>1586532722396</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1586532722396</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -195,9 +185,10 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="1010" y="447" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585733928228" />
-    <state x="905" y="294" key="CommitChangelistDialog2" timestamp="1585486197798">
+    <state x="905" y="294" key="CommitChangelistDialog2" timestamp="1586532721340">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
+    <state x="905" y="294" key="CommitChangelistDialog2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532721340" />
     <state x="905" y="294" key="CommitChangelistDialog2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585486197798" />
     <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog" timestamp="1585348831472">
       <screen x="0" y="0" width="2560" height="1400" />
@@ -211,9 +202,10 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585434238819" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1585486200643">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1586532723569">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585486200643" />
     <state x="92" y="92" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1585249165802">
       <screen x="0" y="0" width="2560" height="1400" />
@@ -239,13 +231,18 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="374" y="358" width="565" height="560" key="dock-window-3/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584965812228" />
-    <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1585735538776">
+    <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1586601108475">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585735538776" />
-    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup" timestamp="1586367209707">
+    <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586601108475" />
+    <state x="1123" y="472" key="refactoring.ChangeSignatureDialog" timestamp="1586600798541">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
+    <state x="1123" y="472" key="refactoring.ChangeSignatureDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586600798541" />
+    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup" timestamp="1586543449362">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586543449362" />
     <state x="943" y="315" width="672" height="678" key="search.everywhere.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586367209707" />
   </component>
 </project>

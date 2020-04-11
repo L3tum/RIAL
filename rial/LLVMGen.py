@@ -210,7 +210,8 @@ class LLVMGen:
         # Create base constructor
         function_type = self.create_function_type(ir.PointerType(struct), [], False)
         func = self.create_function_with_type(f"{name}.constructor", function_type, linkage, "fastcc", [], True,
-                                              rial_access_modifier, name, [])
+                                              rial_access_modifier, name)
+        self.create_function_body(func, [])
         self_value = self.builder.alloca(struct, name="this")
 
         # Set initial values
@@ -238,8 +239,7 @@ class LLVMGen:
                                   arg_names: List[str],
                                   generate_body: bool,
                                   rial_access_modifier: RIALAccessModifier,
-                                  rial_return_type: str,
-                                  rial_arg_types: List[str]):
+                                  rial_return_type: str):
 
         # Create function with specified linkage (internal -> module only)
         func = ir.Function(self.module, ty, name=name)
@@ -254,32 +254,31 @@ class LLVMGen:
         for i, arg in enumerate(func.args):
             arg.name = arg_names[i]
 
-        # Generate standard function body
-        if generate_body:
-            self.current_func = func
-
-            # Create entry block
-            bb = func.append_basic_block("entry")
-            llvm_bb = create_llvm_block(bb)
-            self.current_block = llvm_bb
-
-            if self.builder is None:
-                self.builder = IRBuilder(bb)
-
-            self.builder.position_at_start(bb)
-
-            # Allocate new variables for the passed arguments
-            for i, arg in enumerate(func.args):
-                # Don't copy variables that are a pointer
-                if isinstance(arg.type, PointerType):
-                    continue
-                allocated_arg = self.builder.alloca(arg.type)
-                self.builder.store(arg, allocated_arg)
-                self.current_block.named_values[arg.name] = allocated_arg
-                allocated_arg.set_metadata('type',
-                                           self.module.add_metadata((rial_arg_types[i],)))
-
         return func
+
+    def create_function_body(self, func: Function, rial_arg_types: List[str]):
+        self.current_func = func
+
+        # Create entry block
+        bb = func.append_basic_block("entry")
+        llvm_bb = create_llvm_block(bb)
+        self.current_block = llvm_bb
+
+        if self.builder is None:
+            self.builder = IRBuilder(bb)
+
+        self.builder.position_at_start(bb)
+
+        # Allocate new variables for the passed arguments
+        for i, arg in enumerate(func.args):
+            # Don't copy variables that are a pointer
+            if isinstance(arg.type, PointerType):
+                continue
+            allocated_arg = self.builder.alloca(arg.type)
+            self.builder.store(arg, allocated_arg)
+            self.current_block.named_values[arg.name] = allocated_arg
+            allocated_arg.set_metadata('type',
+                                       self.module.add_metadata((rial_arg_types[i],)))
 
     def finish_current_block(self):
         if self.current_block.block.terminator is None:
