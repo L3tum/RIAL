@@ -3,112 +3,104 @@ source_filename = "<string>"
 target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-unknown-linux-gnu"
 
-@".const.string.b'SGVsbG8gd29ybGQhXG4='" = private unnamed_addr constant [14 x i8] c"Hello world!\0A\00"
+%"testing:print:Test" = type { i32 }
+
 @".const.string.b'JWkgXG4='" = private unnamed_addr constant [5 x i8] c"%i \0A\00"
-@".const.string.b'SGk='" = private unnamed_addr constant [3 x i8] c"Hi\00"
 @".const.string.b'V2hpbGUgbG9vcDogJWlcbg=='" = private unnamed_addr constant [16 x i8] c"While loop: %i\0A\00"
-@".const.string.b'TG9vcCBsb29wXG4='" = private unnamed_addr constant [11 x i8] c"Loop loop\0A\00"
+@str = private unnamed_addr constant [13 x i8] c"Hello world!\00", align 1
+@str.1 = private unnamed_addr constant [10 x i8] c"Loop loop\00", align 1
+@".const.string.b'JWlcbg=='" = private unnamed_addr constant [4 x i8] c"%i\0A\00"
+@str.6 = private unnamed_addr constant [5 x i8] c"Test\00", align 1
+@".const.string.b'dHJ1ZQ=='" = private unnamed_addr constant [5 x i8] c"true\00"
+@".const.string.b'ZmFsc2U='" = private unnamed_addr constant [6 x i8] c"false\00"
 
 ; Function Attrs: alwaysinline
-define i32 @"testing:main:main."() #0 !function_definition !1 {
+define i32 @"testing:main:main."() local_unnamed_addr #0 !function_definition !1 {
 entry:
-  call void (i8*, ...) @printf(i8* getelementptr inbounds ([14 x i8], [14 x i8]* @".const.string.b'SGVsbG8gd29ybGQhXG4='", i32 0, i32 0))
-  %.3 = add i32 5, 5
-  %.4 = icmp slt i32 5, %.3
-  call void (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @".const.string.b'JWkgXG4='", i32 0, i32 0), i1 %.4)
-  br label %entry.condition
-
-entry.condition:                                  ; preds = %entry
-  %.7 = icmp slt i32 5, 10
-  br i1 %.7, label %entry.body, label %entry.if_else.end
-
-entry.body:                                       ; preds = %entry.condition
-  call void (i8*, ...) @printf(i8* null)
-  br label %entry.if_else.end
-
-entry.if_else.end:                                ; preds = %entry.body, %entry.condition
-  br label %entry.if_else.end.wrapper
-
-entry.if_else.end.wrapper:                        ; preds = %entry.if_else.end
-  %i = alloca i32, !type !2
-  store i32 0, i32* %i
-  br label %entry.if_else.end.wrapper.condition
-
-entry.if_else.end.wrapper.condition:              ; preds = %entry.if_else.end.wrapper.body, %entry.if_else.end.wrapper
-  %.17 = load i32, i32* %i
-  %.18 = icmp slt i32 %.17, 5
-  br i1 %.18, label %entry.if_else.end.wrapper.body, label %entry.if_else.end.wrapper.end
-
-entry.if_else.end.wrapper.body:                   ; preds = %entry.if_else.end.wrapper.condition
-  %j = alloca i32, !type !2
-  store i32 0, i32* %j
-  %.22 = load i32, i32* %i
-  %.23 = load i32, i32* %j
-  %.24 = add i32 %.23, %.22
-  store i32 %.24, i32* %j
-  %.26 = load i32, i32* %j
-  call void @"testing:print:printInteger.i32"(i32 %.26)
-  %.28 = load i32, i32* %i
-  %.29 = add i32 %.28, 1
-  store i32 %.29, i32* %i
-  br label %entry.if_else.end.wrapper.condition
-
-entry.if_else.end.wrapper.end:                    ; preds = %entry.if_else.end.wrapper.condition
-  %i.1 = alloca i32, !type !2
-  store i32 0, i32* %i.1
-  br label %entry.if_else.end.wrapper.end.condition
-
-entry.if_else.end.wrapper.end.condition:          ; preds = %entry.if_else.end.wrapper.end.body.end, %entry.if_else.end.wrapper.end
-  br i1 true, label %entry.if_else.end.wrapper.end.body, label %entry.if_else.end.wrapper.end.end
-
-entry.if_else.end.wrapper.end.body:               ; preds = %entry.if_else.end.wrapper.end.condition
-  %.36 = load i32, i32* %i.1
-  call void (i8*, ...) @printf(i8* getelementptr inbounds ([16 x i8], [16 x i8]* @".const.string.b'V2hpbGUgbG9vcDogJWlcbg=='", i32 0, i32 0), i32 %.36)
-  %.38 = load i32, i32* %i.1
-  %.39 = add i32 %.38, 1
-  store i32 %.39, i32* %i.1
-  br label %entry.if_else.end.wrapper.end.body.condition
-
-entry.if_else.end.wrapper.end.end:                ; preds = %entry.if_else.end.wrapper.end.body.body, %entry.if_else.end.wrapper.end.condition
-  br label %entry.if_else.end.wrapper.end.end.body
-
-entry.if_else.end.wrapper.end.body.condition:     ; preds = %entry.if_else.end.wrapper.end.body
-  %.42 = load i32, i32* %i.1
-  %.43 = icmp sgt i32 %.42, 5
-  br i1 %.43, label %entry.if_else.end.wrapper.end.body.body, label %entry.if_else.end.wrapper.end.body.end
-
-entry.if_else.end.wrapper.end.body.body:          ; preds = %entry.if_else.end.wrapper.end.body.condition
-  br label %entry.if_else.end.wrapper.end.end
-
-entry.if_else.end.wrapper.end.body.end:           ; preds = %entry.if_else.end.wrapper.end.body.condition
-  br label %entry.if_else.end.wrapper.end.condition
-
-entry.if_else.end.wrapper.end.end.body:           ; preds = %entry.if_else.end.wrapper.end.end
-  call void (i8*, ...) @printf(i8* getelementptr inbounds ([11 x i8], [11 x i8]* @".const.string.b'TG9vcCBsb29wXG4='", i32 0, i32 0))
-  br label %entry.if_else.end.wrapper.end.end.end
-
-entry.if_else.end.wrapper.end.end.end:            ; preds = %entry.if_else.end.wrapper.end.end.body
-  call void @"testing:print:printTestWrapper."()
-  call void @"testing:boolean:printBoolean.i1"(i1 true)
+  %puts = tail call i32 @puts(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @str, i64 0, i64 0))
+  tail call void (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @".const.string.b'JWkgXG4='", i64 0, i64 0), i1 true)
+  tail call void (i8*, ...) @printf(i8* null)
+  tail call void @"testing:print:printInteger.i32"(i32 0)
+  tail call void @"testing:print:printInteger.i32"(i32 1)
+  tail call void @"testing:print:printInteger.i32"(i32 2)
+  tail call void @"testing:print:printInteger.i32"(i32 3)
+  tail call void @"testing:print:printInteger.i32"(i32 4)
+  tail call void (i8*, ...) @printf(i8* getelementptr inbounds ([16 x i8], [16 x i8]* @".const.string.b'V2hpbGUgbG9vcDogJWlcbg=='", i64 0, i64 0), i32 0)
+  tail call void (i8*, ...) @printf(i8* getelementptr inbounds ([16 x i8], [16 x i8]* @".const.string.b'V2hpbGUgbG9vcDogJWlcbg=='", i64 0, i64 0), i32 1)
+  tail call void (i8*, ...) @printf(i8* getelementptr inbounds ([16 x i8], [16 x i8]* @".const.string.b'V2hpbGUgbG9vcDogJWlcbg=='", i64 0, i64 0), i32 2)
+  tail call void (i8*, ...) @printf(i8* getelementptr inbounds ([16 x i8], [16 x i8]* @".const.string.b'V2hpbGUgbG9vcDogJWlcbg=='", i64 0, i64 0), i32 3)
+  tail call void (i8*, ...) @printf(i8* getelementptr inbounds ([16 x i8], [16 x i8]* @".const.string.b'V2hpbGUgbG9vcDogJWlcbg=='", i64 0, i64 0), i32 4)
+  tail call void (i8*, ...) @printf(i8* getelementptr inbounds ([16 x i8], [16 x i8]* @".const.string.b'V2hpbGUgbG9vcDogJWlcbg=='", i64 0, i64 0), i32 5)
+  %puts1 = tail call i32 @puts(i8* getelementptr inbounds ([10 x i8], [10 x i8]* @str.1, i64 0, i64 0))
+  tail call void @"testing:print:printTestWrapper."()
+  tail call void @"testing:boolean:printBoolean.i1"(i1 true)
   ret i32 0
 }
 
-declare void @printf(i8*, ...)
+; Function Attrs: nounwind
+declare void @printf(i8* nocapture readonly, ...) local_unnamed_addr #1
 
-declare void @"testing:print:printInteger.i32"(i32)
+; Function Attrs: nounwind
+declare i32 @puts(i8* nocapture readonly) #1
 
-declare void @"testing:print:printTestWrapper."()
+; Function Attrs: nounwind
+define void @"testing:print:printInteger.i32"(i32 %arg) local_unnamed_addr #1 !function_definition !2 {
+entry:
+  tail call void (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @".const.string.b'JWlcbg=='", i64 0, i64 0), i32 %arg)
+  ret void
+}
 
-declare void @"testing:boolean:printBoolean.i1"(i1)
+; Function Attrs: nounwind
+define void @"testing:print:printTestWrapper."() local_unnamed_addr #1 !function_definition !2 {
+entry:
+  %.2 = tail call fastcc %"testing:print:Test"* @"testing:print:Test.constructor"()
+  %0 = bitcast %"testing:print:Test"* %.2 to i32*
+  %.4.unpack = load i32, i32* %0, align 4
+  %.41 = insertvalue %"testing:print:Test" undef, i32 %.4.unpack, 0
+  tail call fastcc void @"testing:print:printTestWrapperWrapper.testing:print:Test"(%"testing:print:Test" %.41)
+  ret void
+}
+
+; Function Attrs: norecurse nounwind readnone
+define private fastcc noalias nonnull %"testing:print:Test"* @"testing:print:Test.constructor"() unnamed_addr #2 !function_definition !3 {
+entry:
+  %this = alloca %"testing:print:Test", align 8
+  ret %"testing:print:Test"* %this
+}
+
+; Function Attrs: nounwind
+define private fastcc void @"testing:print:printTestWrapperWrapper.testing:print:Test"(%"testing:print:Test" %test) unnamed_addr #1 !function_definition !4 {
+entry:
+  tail call fastcc void @"testing:print:printTest.testing:print:Test*"()
+  ret void
+}
+
+; Function Attrs: nounwind
+define private fastcc void @"testing:print:printTest.testing:print:Test*"() unnamed_addr #1 !function_definition !4 {
+entry:
+  %puts = tail call i32 @puts(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @str.6, i64 0, i64 0))
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @"testing:boolean:printBoolean.i1"(i1 %boolean) local_unnamed_addr #1 !function_definition !2 {
+entry:
+  %.10 = select i1 %boolean, i8* getelementptr inbounds ([5 x i8], [5 x i8]* @".const.string.b'dHJ1ZQ=='", i64 0, i64 0), i8* getelementptr inbounds ([6 x i8], [6 x i8]* @".const.string.b'ZmFsc2U='", i64 0, i64 0)
+  %puts = tail call i32 @puts(i8* %.10)
+  ret void
+}
 
 ; Function Attrs: nounwind
 declare void @llvm.stackprotector(i8*, i8**) #1
 
 attributes #0 = { alwaysinline }
 attributes #1 = { nounwind }
+attributes #2 = { norecurse nounwind readnone }
 
-!compiler = !{!0}
+!compiler = !{!0, !0, !0}
 
 !0 = !{!"RIALC"}
 !1 = !{!"int", !"public"}
-!2 = !{!""}
+!2 = !{!"void", !"internal"}
+!3 = !{!"testing:print:Test", !"private"}
+!4 = !{!"void", !"private"}

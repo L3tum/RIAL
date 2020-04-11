@@ -130,14 +130,11 @@ def compile_file(opts):
 
             with run_with_profiling(file, ExecutionStep.PARSE_FILE):
                 ast = parser.parse(contents)
+                ast = function_declaration_transformer.transform(ast)
+                transformer.visit(ast)
 
             if opts.print_tokens:
                 print(ast.pretty())
-
-
-            ast = function_declaration_transformer.transform(ast)
-
-            transformer.visit(ast)
 
             mod = codegen.compile_ir(module)
             compilation_manager.modules[path] = mod
