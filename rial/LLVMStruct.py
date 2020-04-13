@@ -9,6 +9,7 @@ from rial.rial_types.RIALVariable import RIALVariable
 class LLVMStruct:
     struct: BaseStructType
     name: str
+    module_name: str
     access_modifier: RIALAccessModifier
     properties: Dict[str, Tuple[int, RIALVariable]]
     constructor: Optional[Function]
@@ -16,9 +17,10 @@ class LLVMStruct:
     base_structs: List
     functions: List[Function]
 
-    def __init__(self, struct: BaseStructType, name: str, access_modifier: RIALAccessModifier):
+    def __init__(self, struct: BaseStructType, name: str, module_name: str, access_modifier: RIALAccessModifier):
         self.struct = struct
         self.name = name
+        self.module_name = module_name
         self.access_modifier = access_modifier
         self.properties = dict()
         self.constructor = None

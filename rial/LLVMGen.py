@@ -199,12 +199,13 @@ class LLVMGen:
         self.current_block = llvmblock
         self.builder.position_at_start(self.current_block.block)
 
-    def create_identified_struct(self, name: str, linkage: Union[Literal["internal"], Literal["external"]],
+    def create_identified_struct(self, name: str, module_name: str,
+                                 linkage: Union[Literal["internal"], Literal["external"]],
                                  rial_access_modifier: RIALAccessModifier,
                                  body: List[RIALVariable]):
         struct = self.module.context.get_identified_type(name)
         struct.set_body(*tuple([bod.llvm_type for bod in body]))
-        llvm_struct = LLVMStruct(struct, name, rial_access_modifier)
+        llvm_struct = LLVMStruct(struct, name, module_name, rial_access_modifier)
         self.current_struct = llvm_struct
 
         # Create base constructor

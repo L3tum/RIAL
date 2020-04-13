@@ -436,6 +436,25 @@ class ASTVisitor(Interpreter):
             i += 1
 
         mangled_name = mangle_function_name(full_function_name, [str(arg.type) for arg in arguments])
+        func = None
+
+        if implicit_parameter is not None:
+            # Try get type from parameter
+            ty = implicit_parameter.type.pointee
+            llvm_struct = self.sps.ps.search_structs(ty.name)
+
+            if llvm_struct is not None:
+                # Try find function by struct module name
+                full_name = f"{llvm_struct.module_name}:{mangled_name}"
+
+                func = next((func for func in llvm_struct.functions if func.name == full_name), None)
+
+                # If we found a function we know what module it's in and can speed up the find_function call
+                if func is not None:
+                    mangled_name = full_name
+
+        # We still go the normal route here as it handles the difference between calling a module-local function
+        # vs calling a function in another module (which requires copying the definition into the current module)
         func = self.sps.find_function(mangled_name)
 
         # Check if it's an external (aka not mangled call)

@@ -19,9 +19,12 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Improved name mangling&#10;Improved file and module handling&#10;Added ability to specify modules in function names and resolve them via that method&#10;Moved postlex stuff into a separate Postlexer.py&#10;Added outer main method supplied by RIAL&#10;Added support for nested directories&#10;Improved global Compilation Manager&#10;Added functions list to structs to collect and keep track of their functions">
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Added Boolean to type mapper">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/ASTVisitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ASTVisitor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/LLVMGen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMGen.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/LLVMStruct.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMStruct.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -148,7 +151,7 @@
       <workItem from="1586532649669" duration="4524000" />
       <workItem from="1586592933655" duration="19685000" />
       <workItem from="1586700688831" duration="1785000" />
-      <workItem from="1586764294134" duration="2621000" />
+      <workItem from="1586764294134" duration="3610000" />
     </task>
     <task id="LOCAL-00001" summary="Update">
       <created>1585486198876</created>
@@ -185,7 +188,21 @@
       <option name="project" value="LOCAL" />
       <updated>1586767114831</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Added bool -&gt; Boolean to shortcut mapper">
+      <created>1586767287231</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1586767287231</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Added Boolean to type mapper">
+      <created>1586767498574</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1586767498574</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -207,7 +224,9 @@
     <MESSAGE value="Implements #1" />
     <MESSAGE value="Improved profiling and name mangling" />
     <MESSAGE value="Improved name mangling&#10;Improved file and module handling&#10;Added ability to specify modules in function names and resolve them via that method&#10;Moved postlex stuff into a separate Postlexer.py&#10;Added outer main method supplied by RIAL&#10;Added support for nested directories&#10;Improved global Compilation Manager&#10;Added functions list to structs to collect and keep track of their functions" />
-    <option name="LAST_COMMIT_MESSAGE" value="Improved name mangling&#10;Improved file and module handling&#10;Added ability to specify modules in function names and resolve them via that method&#10;Moved postlex stuff into a separate Postlexer.py&#10;Added outer main method supplied by RIAL&#10;Added support for nested directories&#10;Improved global Compilation Manager&#10;Added functions list to structs to collect and keep track of their functions" />
+    <MESSAGE value="Added bool -&gt; Boolean to shortcut mapper" />
+    <MESSAGE value="Added Boolean to type mapper" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added Boolean to type mapper" />
   </component>
   <component name="WindowStateProjectService">
     <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1586365316981">
@@ -243,11 +262,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585434238819" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1586767117782">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1586767499543">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586767117782" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586767499543" />
     <state x="92" y="92" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1585249165802">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

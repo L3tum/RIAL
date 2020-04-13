@@ -57,7 +57,8 @@ class StructDeclarationTransformer(Transformer_InPlaceRecursive):
                 function_decls.append(node)
             i += 1
 
-        llvm_struct = self.sps.llvmgen.create_identified_struct(full_name, access_modifier.get_linkage(),
+        llvm_struct = self.sps.llvmgen.create_identified_struct(full_name, self.sps.llvmgen.module.name,
+                                                                access_modifier.get_linkage(),
                                                                 access_modifier,
                                                                 body)
         self.sps.ps.structs[full_name] = llvm_struct
