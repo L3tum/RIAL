@@ -1,25 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Improved profiling and name mangling">
-      <change afterPath="$PROJECT_DIR$/rial/builtin/start.rial" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/concept/Postlexer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Improved name mangling&#10;Improved file and module handling&#10;Added ability to specify modules in function names and resolve them via that method&#10;Moved postlex stuff into a separate Postlexer.py&#10;Added outer main method supplied by RIAL&#10;Added support for nested directories&#10;Improved global Compilation Manager&#10;Added functions list to structs to collect and keep track of their functions">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/LLVMStruct.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMStruct.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/ParserState.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ParserState.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/SingleParserState.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/SingleParserState.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/codegen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/codegen.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/compilation_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compilation_manager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/name_mangler.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/name_mangler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/configuration.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/cache/main.ll" beforeDir="false" afterPath="$PROJECT_DIR$/testing/cache/main.ll" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/cache/main.o" beforeDir="false" afterPath="$PROJECT_DIR$/testing/cache/main.o" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -146,7 +148,7 @@
       <workItem from="1586532649669" duration="4524000" />
       <workItem from="1586592933655" duration="19685000" />
       <workItem from="1586700688831" duration="1785000" />
-      <workItem from="1586764294134" duration="2310000" />
+      <workItem from="1586764294134" duration="2621000" />
     </task>
     <task id="LOCAL-00001" summary="Update">
       <created>1585486198876</created>
@@ -176,17 +178,36 @@
       <option name="project" value="LOCAL" />
       <updated>1586604881215</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Improved name mangling&#10;Improved file and module handling&#10;Added ability to specify modules in function names and resolve them via that method&#10;Moved postlex stuff into a separate Postlexer.py&#10;Added outer main method supplied by RIAL&#10;Added support for nested directories&#10;Improved global Compilation Manager&#10;Added functions list to structs to collect and keep track of their functions">
+      <created>1586767114831</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1586767114831</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="2" />
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Update" />
     <MESSAGE value="Implements #1" />
     <MESSAGE value="Improved profiling and name mangling" />
-    <option name="LAST_COMMIT_MESSAGE" value="Improved profiling and name mangling" />
+    <MESSAGE value="Improved name mangling&#10;Improved file and module handling&#10;Added ability to specify modules in function names and resolve them via that method&#10;Moved postlex stuff into a separate Postlexer.py&#10;Added outer main method supplied by RIAL&#10;Added support for nested directories&#10;Improved global Compilation Manager&#10;Added functions list to structs to collect and keep track of their functions" />
+    <option name="LAST_COMMIT_MESSAGE" value="Improved name mangling&#10;Improved file and module handling&#10;Added ability to specify modules in function names and resolve them via that method&#10;Moved postlex stuff into a separate Postlexer.py&#10;Added outer main method supplied by RIAL&#10;Added support for nested directories&#10;Improved global Compilation Manager&#10;Added functions list to structs to collect and keep track of their functions" />
   </component>
   <component name="WindowStateProjectService">
     <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1586365316981">
@@ -205,11 +226,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="1010" y="447" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585733928228" />
-    <state x="905" y="294" key="CommitChangelistDialog2" timestamp="1586764324270">
+    <state x="753" y="288" width="1109" height="863" key="CommitChangelistDialog2" timestamp="1586767099729">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="905" y="294" key="CommitChangelistDialog2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532721340" />
-    <state x="905" y="294" key="CommitChangelistDialog2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586764324270" />
+    <state x="753" y="288" width="1109" height="863" key="CommitChangelistDialog2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586767099729" />
     <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog" timestamp="1585348831472">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -222,11 +243,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585434238819" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1586604882078">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1586767117782">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586604882078" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586767117782" />
     <state x="92" y="92" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1585249165802">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

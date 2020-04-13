@@ -22,6 +22,9 @@ def map_shortcut_to_type(shortcut: str) -> str:
     if shortcut == "float":
         return "Float32"
 
+    if shortcut == "bool":
+        return "Boolean"
+
     return shortcut
 
 
