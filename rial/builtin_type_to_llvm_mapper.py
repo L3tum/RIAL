@@ -33,7 +33,7 @@ def map_type_to_llvm(rial_type: str) -> Optional[Type]:
         # 32bit integer
         return ir.IntType(32)
 
-    if rial_type == "bool":
+    if rial_type == "Boolean":
         # 1 bit
         return ir.IntType(1)
 
