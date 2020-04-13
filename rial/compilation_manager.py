@@ -1,7 +1,9 @@
+from pathlib import Path
 from threading import Lock, Event
 from queue import Queue
-from typing import Dict, List
+from typing import Dict
 
+import os
 from llvmlite.binding import ModuleRef
 
 from rial.ParserState import ParserState
@@ -18,32 +20,41 @@ class CompilationManager:
     config: Configuration
 
     def __init__(self):
-        global _instance
-        if _instance is not None:
-            raise PermissionError()
+        raise PermissionError()
 
     @staticmethod
     def init(config: Configuration):
-        global _instance
-
-        if _instance is not None:
-            return _instance
-
-        _instance = CompilationManager()
-        _instance.files_to_compile = Queue()
-        _instance.files_compiled = dict()
-        _instance.ps = ParserState()
-        _instance.object_files = list()
-        _instance.lock = Lock()
-        _instance.config = config
-        _instance.modules = dict()
-
-        return _instance
+        CompilationManager.files_to_compile = Queue()
+        CompilationManager.files_compiled = dict()
+        CompilationManager.ps = ParserState()
+        CompilationManager.object_files = list()
+        CompilationManager.lock = Lock()
+        CompilationManager.config = config
+        CompilationManager.modules = dict()
 
     @staticmethod
     def finish_file(path: str):
-        if path in _instance.files_compiled:
-            _instance.files_compiled[path].set()
+        if path in CompilationManager.files_compiled:
+            CompilationManager.files_compiled[path].set()
+
+    @staticmethod
+    def check_module_already_compiled(mod_name: str) -> bool:
+        """
+        We check for `files_compiled` rather than the more sensible `modules` because
+        `files_compiled` will always get the filename added even if compilation
+        does not succeed.
+        :param mod_name:
+        :return:
+        """
+        path = _path_from_mod_name(CompilationManager.config.project_name, str(CompilationManager.config.source_path),
+                                   mod_name)
+        with CompilationManager.lock:
+            if path in CompilationManager.files_compiled:
+                CompilationManager.files_compiled[path].wait()
+
+                return True
+
+        return False
 
     @staticmethod
     def request_module(mod_name: str) -> bool:
@@ -53,21 +64,35 @@ class CompilationManager:
         :param mod_name:
         :return:
         """
-        path = _path_from_mod_name(_instance.config.project_name, str(_instance.config.source_path), mod_name)
+        path = _path_from_mod_name(CompilationManager.config.project_name, str(CompilationManager.config.source_path),
+                                   mod_name)
         is_compiling = False
 
-        with _instance.lock:
-            if path in _instance.files_compiled:
+        with CompilationManager.lock:
+            if path in CompilationManager.files_compiled:
                 is_compiling = True
             else:
-                _instance.files_compiled[path] = Event()
+                CompilationManager.files_compiled[path] = Event()
 
         if is_compiling:
-            return _instance.files_compiled[path].wait()
+            return CompilationManager.files_compiled[path].wait()
 
-        _instance.files_to_compile.put(path)
+        CompilationManager.files_to_compile.put(path)
 
-        return _instance.files_compiled[path].wait()
+        return CompilationManager.files_compiled[path].wait()
 
+    @staticmethod
+    def get_cache_path(path: Path) -> Path:
+        return CompilationManager.get_cache_path_str(str(path))
 
-_instance: CompilationManager = None
+    @staticmethod
+    def get_cache_path_str(path: str) -> Path:
+        if path.startswith(str(CompilationManager.config.source_path)):
+            return Path(
+                path.replace(str(CompilationManager.config.source_path), str(CompilationManager.config.cache_path)))
+
+        if path.startswith(str(CompilationManager.config.rial_path)):
+            path = path.split("/rial/")[-1]
+            return CompilationManager.config.cache_path.joinpath(path)
+
+        return Path(path)

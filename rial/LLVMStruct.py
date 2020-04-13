@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Tuple
+from typing import Optional, Dict, Tuple, List
 
 from llvmlite.ir import BaseStructType, Function
 
@@ -13,6 +13,8 @@ class LLVMStruct:
     properties: Dict[str, Tuple[int, RIALVariable]]
     constructor: Optional[Function]
     destructor: Optional[Function]
+    base_structs: List
+    functions: List[Function]
 
     def __init__(self, struct: BaseStructType, name: str, access_modifier: RIALAccessModifier):
         self.struct = struct
@@ -21,3 +23,5 @@ class LLVMStruct:
         self.properties = dict()
         self.constructor = None
         self.destructor = None
+        self.base_structs = list()
+        self.functions = list()

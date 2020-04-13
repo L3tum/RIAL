@@ -8,6 +8,7 @@ class ParserState(object):
     functions: Dict[str, LLVMFunction]
     implemented_functions: List[str]
     structs: Dict[str, LLVMStruct]
+    main_function: LLVMFunction
 
     def __init__(self):
         self.functions = dict()

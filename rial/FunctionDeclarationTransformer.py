@@ -1,9 +1,6 @@
 from typing import List, Tuple
 
-import os
 from llvmlite import ir
-from llvmlite.ir import FunctionAttributes
-
 from rial.LLVMFunction import LLVMFunction
 from rial.SingleParserState import SingleParserState
 from rial.concept.metadata_token import MetadataToken
@@ -90,8 +87,13 @@ class FunctionDeclarationTransformer(Transformer_InPlaceRecursive):
             llvm_args.insert(0, ir.PointerType(self.sps.llvmgen.current_struct.struct))
             args.insert(0, (self.sps.llvmgen.current_struct.name, "this"))
 
+        # Check if main method
         if full_function_name.endswith("main:main") and full_function_name.count(':') == 2:
             main_function = True
+
+            # Check that main method returns either Int32 or void
+            if return_type != "Int32" and return_type != "void":
+                log_fail(f"Main method must return an integer status code or void, {return_type} given!")
 
         # If it's external we need to use the actual defined name instead of the compiler-internal one
         if external:
@@ -99,6 +101,7 @@ class FunctionDeclarationTransformer(Transformer_InPlaceRecursive):
         else:
             full_function_name = mangle_function_name(full_function_name, [str(arg) for arg in llvm_args])
 
+        # Search for function in the archives
         llvm_func = self.sps.ps.search_function(full_function_name)
 
         # Function has been previously declared
@@ -116,22 +119,30 @@ class FunctionDeclarationTransformer(Transformer_InPlaceRecursive):
                 log_fail(f"Function {full_function_name} already declared elsewhere")
                 raise Discard()
         else:
+            # Hasn't been declared previously, redeclare the function type here
             llvm_return_type = self.sps.map_type_to_llvm(return_type)
-
             func_type = self.sps.llvmgen.create_function_type(llvm_return_type, llvm_args, var_args)
             llvm_func = LLVMFunction(full_function_name, func_type, access_modifier, self.sps.llvmgen.module.name,
                                      return_type)
             self.sps.ps.functions[full_function_name] = llvm_func
+            self.sps.ps.main_function = llvm_func
 
+        # Create the actual function in IR
         func = self.sps.llvmgen.create_function_with_type(full_function_name, llvm_func.function_type, linkage,
                                                           calling_convention,
                                                           list(map(lambda arg: arg[1], args)),
                                                           has_body, access_modifier,
                                                           llvm_func.rial_return_type)
 
+        # Always inline the main function into the compiler supplied one
         if main_function:
             func.attributes.add('alwaysinline')
 
+        # If it's in a struct or class we add it to that struct archives
+        if self.sps.llvmgen.current_struct is not None:
+            self.sps.llvmgen.current_struct.functions.append(func)
+
+        # If it has no body we do not need to go through it later as it's already declared with this method.
         if not has_body:
             raise Discard()
 

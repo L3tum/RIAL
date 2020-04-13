@@ -20,6 +20,7 @@ from rial.StructDeclarationTransformer import StructDeclarationTransformer
 from rial.codegen import CodeGen
 from rial.combined_transformer import CombinedTransformer
 from rial.compilation_manager import CompilationManager
+from rial.concept.Postlexer import Postlexer
 from rial.configuration import Configuration
 from rial.linking.linker import Linker
 from rial.log import log_fail
@@ -28,9 +29,12 @@ from rial.profiling import execution_events, ExecutionStep, set_profiling, run_w
 from rial.platform.Platform import Platform
 import tracemalloc
 
+from rial.util import _mod_name_from_path
+
 
 def main(opts):
-    path = source_path.joinpath("main.rial")
+    path = Path(__file__.replace("main.py", "")).joinpath("builtin").joinpath("start.rial")
+    # path = source_path.joinpath("main.rial")
 
     if not path.exists():
         log_fail("Main file not found in source path!")
@@ -38,7 +42,7 @@ def main(opts):
 
     threads = list()
 
-    compilation_manager.files_to_compile.put(path)
+    CompilationManager.files_to_compile.put(path)
 
     for i in range(multiprocessing.cpu_count()):
         t = threading.Thread(target=compile_file, args=(opts,))
@@ -46,7 +50,7 @@ def main(opts):
         t.start()
         threads.append(t)
 
-    compilation_manager.files_to_compile.join()
+    CompilationManager.files_to_compile.join()
 
     modules: Dict[str, ModuleRef] = dict()
 
@@ -54,10 +58,10 @@ def main(opts):
         with run_with_profiling("main", ExecutionStep.COMPILE_MOD):
             # Since the main module is dependent on all other modules, it will be the last to add
             # If it's not the actual main module then that's no big deal either
-            main_module = compilation_manager.modules[list(compilation_manager.modules.keys())[-1]]
+            main_module = CompilationManager.modules[list(CompilationManager.modules.keys())[-1]]
 
-            for key in list(compilation_manager.modules.keys()):
-                mod = compilation_manager.modules[key]
+            for key in list(CompilationManager.modules.keys()):
+                mod = CompilationManager.modules[key]
 
                 # Skip last
                 if main_module == mod:
@@ -68,7 +72,7 @@ def main(opts):
             # "Virtual" main
             modules[str(source_path) + "/main.rial"] = main_module
     else:
-        modules = compilation_manager.modules
+        modules = CompilationManager.modules
 
     object_files: List[str] = list()
 
@@ -77,23 +81,23 @@ def main(opts):
         codegen.generate_final_module(mod)
 
         if opts.print_ir:
-            ir_file = Path(str(path).replace(str(source_path), str(cache_path)).replace(".rial", ".ll"))
+            ir_file = str(CompilationManager.get_cache_path_str(path)).replace(".rial", ".ll")
             codegen.save_ir(ir_file, mod)
 
         if opts.print_asm:
-            asm_file = Path(str(path).replace(str(source_path), str(cache_path)).replace(".rial", ".asm"))
+            asm_file = str(CompilationManager.get_cache_path_str(path)).replace(".rial", ".asm")
             codegen.save_assembly(asm_file, mod)
 
         if opts.print_lbc:
-            llvm_bitcode_file = Path(str(path).replace(str(source_path), str(cache_path)).replace(".rial", ".lbc"))
+            llvm_bitcode_file = str(CompilationManager.get_cache_path_str(path)).replace(".rial", ".lbc")
             codegen.save_llvm_bitcode(llvm_bitcode_file, mod)
 
-        object_file = Path(str(path).replace(str(source_path), str(cache_path)).replace(".rial", ".o"))
+        object_file = str(CompilationManager.get_cache_path_str(path)).replace(".rial", ".o")
         codegen.save_object(object_file, mod)
-        object_files.append(str(object_file))
+        object_files.append(object_file)
 
     with run_with_profiling(project_name, ExecutionStep.LINK_EXE):
-        exe_path = os.path.join(bin_path, f"{project_name}{Platform.get_exe_file_extension()}")
+        exe_path = bin_path.joinpath(f"{project_name}{Platform.get_exe_file_extension()}")
         Linker.link_files(object_files, exe_path, opts.print_link_command, opts.strip)
 
 
@@ -104,25 +108,30 @@ def compile_file(opts):
         struct_declaration_transformer = StructDeclarationTransformer()
 
         while True:
-            path = compilation_manager.files_to_compile.get()
+            path = CompilationManager.files_to_compile.get()
 
             if not Path(path).exists():
                 log_fail(f"Could not find {path}")
-                compilation_manager.finish_file(path)
-                compilation_manager.files_to_compile.task_done()
+                CompilationManager.finish_file(path)
+                CompilationManager.files_to_compile.task_done()
                 continue
 
             file = str(path).replace(str(source_path), "")
-            module_name = file.strip('/').replace('.rial', '').replace('/', ':')
-            module_name = project_name + ":" + module_name
+            file = file.replace(str(CompilationManager.config.rial_path), "")
+            module_name = _mod_name_from_path(file)
+
+            if module_name.startswith("builtin") or module_name.startswith("std"):
+                module_name = f"rial:{module_name}"
+            else:
+                module_name = project_name + ":" + module_name
             module = codegen.get_module(module_name, file.split('/')[-1], str(source_path))
-            sps = SingleParserState(compilation_manager.ps, module)
+            sps = SingleParserState(CompilationManager.ps, module)
             transformer = ASTVisitor(sps)
             primitive_transformer.init(sps)
             function_declaration_transformer.init(sps)
             struct_declaration_transformer.init(sps, function_declaration_transformer)
             combined_transformer = CombinedTransformer(primitive_transformer, struct_declaration_transformer)
-            parser = Lark_StandAlone(transformer=combined_transformer)
+            parser = Lark_StandAlone(transformer=combined_transformer, postlex=Postlexer())
 
             with run_with_profiling(file, ExecutionStep.READ_FILE):
                 with open(path, "r") as src:
@@ -137,10 +146,10 @@ def compile_file(opts):
                 print(ast.pretty())
 
             mod = codegen.compile_ir(module)
-            compilation_manager.modules[path] = mod
+            CompilationManager.modules[str(path)] = mod
 
-            compilation_manager.finish_file(path)
-            compilation_manager.files_to_compile.task_done()
+            CompilationManager.finish_file(path)
+            CompilationManager.files_to_compile.task_done()
     except Exception as e:
         log_fail("Internal Compiler Error: ")
         log_fail(traceback.format_exc())
@@ -206,8 +215,9 @@ if __name__ == "__main__":
         log_fail("Source path does not exist!")
         sys.exit(1)
 
-    config = Configuration(project_name, source_path, cache_path, bin_path, options)
-    compilation_manager = CompilationManager.init(config)
+    config = Configuration(project_name, source_path, cache_path, bin_path, Path(__file__.replace("main.py", "")),
+                           options)
+    CompilationManager.init(config)
     codegen = CodeGen(options.opt_level)
 
     main(options)

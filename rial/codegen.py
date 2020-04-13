@@ -1,4 +1,5 @@
 import traceback
+from pathlib import Path
 from threading import Lock
 from typing import Optional
 
@@ -107,18 +108,26 @@ class CodeGen:
         self.engine.run_static_constructors()
         self.engine.remove_module(mod)
 
+    def _check_dirs_exist(self, dest: str):
+        directory = '/'.join(dest.split("/")[0:-1])
+        Path(directory).mkdir(parents=True, exist_ok=True)
+
     def save_ir(self, dest: str, module: ModuleRef):
+        self._check_dirs_exist(dest)
         with open(dest, "w") as file:
             file.write(str(module))
 
     def save_object(self, dest: str, module: ModuleRef):
+        self._check_dirs_exist(dest)
         with open(dest, "wb") as file:
             file.write(self.target_machine.emit_object(module))
 
     def save_assembly(self, dest: str, module: ModuleRef):
+        self._check_dirs_exist(dest)
         with open(dest, "w") as file:
             file.write(self.target_machine.emit_assembly(module))
 
     def save_llvm_bitcode(self, dest: str, module: ModuleRef):
+        self._check_dirs_exist(dest)
         with open(dest, "wb") as file:
             file.write(module.as_bitcode())
