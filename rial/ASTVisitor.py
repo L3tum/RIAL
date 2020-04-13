@@ -436,7 +436,6 @@ class ASTVisitor(Interpreter):
             i += 1
 
         mangled_name = mangle_function_name(full_function_name, [str(arg.type) for arg in arguments])
-        func = None
 
         if implicit_parameter is not None:
             # Try get type from parameter
