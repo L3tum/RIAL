@@ -1,11 +1,12 @@
 from typing import Optional, Union, Tuple, List, Literal, Dict
 
 from llvmlite import ir
-from llvmlite.ir import Module, IRBuilder, Function, AllocaInstr, Branch, Block, FunctionType, Type, VoidType, Value, \
-    PointerType
+from llvmlite.ir import Module, IRBuilder, Function, AllocaInstr, Branch, FunctionType, Type, VoidType, PointerType, \
+    Block, Instruction, Ret, LoadInstr, StoreInstr, BaseStructType, IdentifiedStructType
 
 from rial.LLVMBlock import LLVMBlock, create_llvm_block
 from rial.LLVMStruct import LLVMStruct
+from rial.ParserState import ParserState
 from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 from rial.rial_types.RIALVariable import RIALVariable
 
@@ -285,6 +286,60 @@ class LLVMGen:
         if self.current_block.block.terminator is None:
             self.builder.position_at_end(self.current_block.block)
             self.builder.ret_void()
+
+    def finish_current_func(self):
+        potential_memory: List[Instruction] = list()
+        loaded_memory: List[Instruction] = list()
+
+        for block in self.current_func.blocks:
+            block: Block
+            for instr in block.instructions:
+                instr: Instruction
+
+                # If instruction is returned remove it from the potential memory allocations
+                if isinstance(instr, Ret):
+                    for op in instr.operands:
+                        try:
+                            potential_memory.remove(op)
+                        except ValueError:
+                            pass
+                    self.builder.position_before(instr)
+                    for mem in potential_memory:
+                        if isinstance(mem, AllocaInstr):
+                            pointee = mem.type.pointee
+
+                            if isinstance(pointee, IdentifiedStructType):
+                                llvm_struct = ParserState.search_structs(pointee.name)
+                                if llvm_struct.destructor is not None:
+                                    self.builder.call(llvm_struct.destructor, (mem,))
+                # If instruction is alloc it may need to be deconstructed
+                elif isinstance(instr, AllocaInstr):
+                    potential_memory.append(instr)
+                # If instruction is load we need to keep track of where the object goes
+                # So that we can avoid calling a deconstructor twice
+                elif isinstance(instr, LoadInstr):
+                    loaded_memory.append(instr)
+                # If instruction is store we can remove the target from the list of deconstructor calls
+                # since it has a reference to the same object
+                elif isinstance(instr, StoreInstr):
+                    stored = instr.operands[0]
+                    if stored in loaded_memory:
+                        target = instr.operands[1]
+                        # Same object
+                        if stored.operands[0] in potential_memory:
+                            if target in potential_memory:
+                                potential_memory.remove(target)
+                        # New untracked object?
+                        else:
+                            if not target in potential_memory:
+                                potential_memory.append(target)
+
+        for instr in potential_memory:
+            if isinstance(instr, AllocaInstr):
+                pointee = instr.type.pointee
+
+                if isinstance(pointee, IdentifiedStructType):
+                    print(ParserState.search_structs(pointee.name))
 
     def create_return_statement(self, statement):
         if isinstance(statement, VoidType):

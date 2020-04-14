@@ -6,6 +6,7 @@ from llvmlite.ir import PointerType, IdentifiedStructType, IRBuilder
 
 from rial.LLVMBlock import create_llvm_block
 from rial.LLVMFunction import LLVMFunction
+from rial.ParserState import ParserState
 from rial.SingleParserState import SingleParserState
 from rial.concept.metadata_token import MetadataToken
 from rial.concept.name_mangler import mangle_function_name
@@ -378,7 +379,7 @@ class ASTVisitor(Interpreter):
         full_name = node.metadata['struct_name']
         function_decls = node.metadata['functions']
 
-        llvm_struct = self.sps.ps.search_structs(full_name)
+        llvm_struct = ParserState.search_structs(full_name)
 
         if llvm_struct is None:
             raise KeyError("Expected a struct but couldn't find it!")
@@ -440,7 +441,7 @@ class ASTVisitor(Interpreter):
         if implicit_parameter is not None:
             # Try get type from parameter
             ty = implicit_parameter.type.pointee
-            llvm_struct = self.sps.ps.search_structs(ty.name)
+            llvm_struct = ParserState.search_structs(ty.name)
 
             if llvm_struct is not None:
                 # Try find function by struct module name
@@ -498,5 +499,6 @@ class ASTVisitor(Interpreter):
             i += 1
 
         self.sps.llvmgen.finish_current_block()
+        self.sps.llvmgen.finish_current_func()
 
         return None

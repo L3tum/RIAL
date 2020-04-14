@@ -3,10 +3,8 @@ from threading import Lock, Event
 from queue import Queue
 from typing import Dict
 
-import os
 from llvmlite.binding import ModuleRef
 
-from rial.ParserState import ParserState
 from rial.configuration import Configuration
 from rial.util import _path_from_mod_name
 
@@ -14,7 +12,6 @@ from rial.util import _path_from_mod_name
 class CompilationManager:
     files_to_compile: Queue
     files_compiled: Dict[str, Event]
-    ps: ParserState
     modules: Dict[str, ModuleRef]
     lock: Lock
     config: Configuration
@@ -26,7 +23,6 @@ class CompilationManager:
     def init(config: Configuration):
         CompilationManager.files_to_compile = Queue()
         CompilationManager.files_compiled = dict()
-        CompilationManager.ps = ParserState()
         CompilationManager.object_files = list()
         CompilationManager.lock = Lock()
         CompilationManager.config = config

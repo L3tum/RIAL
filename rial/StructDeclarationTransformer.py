@@ -2,6 +2,7 @@ from typing import List
 
 from rial.FunctionDeclarationTransformer import FunctionDeclarationTransformer
 from rial.LLVMFunction import LLVMFunction
+from rial.ParserState import ParserState
 from rial.SingleParserState import SingleParserState
 from rial.concept.metadata_token import MetadataToken
 from rial.concept.parser import Transformer_InPlaceRecursive, Tree, Token, Discard
@@ -30,7 +31,7 @@ class StructDeclarationTransformer(Transformer_InPlaceRecursive):
 
         full_name = f"{self.sps.llvmgen.module.name}:{name}"
 
-        if self.sps.ps.search_structs(full_name) is not None:
+        if ParserState.search_structs(full_name) is not None:
             log_fail(f"Struct {full_name} has been previously declared!")
             raise Discard()
 
@@ -61,7 +62,7 @@ class StructDeclarationTransformer(Transformer_InPlaceRecursive):
                                                                 access_modifier.get_linkage(),
                                                                 access_modifier,
                                                                 body)
-        self.sps.ps.structs[full_name] = llvm_struct
+        ParserState.structs[full_name] = llvm_struct
 
         declared_functions = list()
 

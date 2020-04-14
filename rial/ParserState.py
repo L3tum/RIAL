@@ -4,28 +4,35 @@ from rial.LLVMFunction import LLVMFunction
 from rial.LLVMStruct import LLVMStruct
 
 
-class ParserState(object):
+class ParserState:
     functions: Dict[str, LLVMFunction]
     implemented_functions: List[str]
     structs: Dict[str, LLVMStruct]
     main_function: LLVMFunction
 
     def __init__(self):
-        self.functions = dict()
-        self.implemented_functions = list()
-        self.structs = dict()
+        raise PermissionError()
 
-    def search_function(self, name: str) -> Optional[LLVMFunction]:
-        if name in self.functions:
-            return self.functions[name]
+    @staticmethod
+    def init():
+        ParserState.functions = dict()
+        ParserState.implemented_functions = list()
+        ParserState.structs = dict()
+
+    @staticmethod
+    def search_function(name: str) -> Optional[LLVMFunction]:
+        if name in ParserState.functions:
+            return ParserState.functions[name]
 
         return None
 
-    def search_implemented_functions(self, name: str) -> bool:
-        return name in self.implemented_functions
+    @staticmethod
+    def search_implemented_functions(name: str) -> bool:
+        return name in ParserState.implemented_functions
 
-    def search_structs(self, name: str) -> Optional[LLVMStruct]:
-        if name in self.structs:
-            return self.structs[name]
+    @staticmethod
+    def search_structs(name: str) -> Optional[LLVMStruct]:
+        if name in ParserState.structs:
+            return ParserState.structs[name]
 
         return None

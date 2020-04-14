@@ -13,12 +13,10 @@ from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 
 
 class SingleParserState:
-    ps: ParserState
     usings: List[str]
     llvmgen: LLVMGen
 
-    def __init__(self, ps: ParserState, module: Module):
-        self.ps = ps
+    def __init__(self, module: Module):
         self.usings = list()
         self.llvmgen = LLVMGen(module)
 
@@ -34,14 +32,14 @@ class SingleParserState:
         # If func isn't in current module
         if func is None:
             # Try to find function by full name
-            llvm_function = self.ps.search_function(full_function_name)
+            llvm_function = ParserState.search_function(full_function_name)
 
             # If couldn't find it, iterate through usings and try to find function
             if llvm_function is None:
                 functions_found: List[Tuple[str, LLVMFunction]] = list()
 
                 for use in self.usings:
-                    llvm_function = self.ps.search_function(f"{use}:{full_function_name}")
+                    llvm_function = ParserState.search_function(f"{use}:{full_function_name}")
                     if llvm_function is None:
                         continue
                     functions_found.append((use, llvm_function,))
@@ -84,15 +82,15 @@ class SingleParserState:
         return func
 
     def find_struct(self, struct_name: str):
-        struct = self.ps.search_structs(struct_name)
+        struct = ParserState.search_structs(struct_name)
 
         if struct is None:
-            struct = self.ps.search_structs(f"{self.llvmgen.module.name}:{struct_name}")
+            struct = ParserState.search_structs(f"{self.llvmgen.module.name}:{struct_name}")
 
         if struct is None:
             structs_found: List[Tuple] = list()
             for using in self.usings:
-                s = self.ps.search_structs(f"{using}:{struct_name}")
+                s = ParserState.search_structs(f"{using}:{struct_name}")
 
                 if s is not None:
                     structs_found.append((using, s))

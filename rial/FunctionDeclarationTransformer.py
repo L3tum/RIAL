@@ -2,6 +2,7 @@ from typing import List, Tuple
 
 from llvmlite import ir
 from rial.LLVMFunction import LLVMFunction
+from rial.ParserState import ParserState
 from rial.SingleParserState import SingleParserState
 from rial.concept.metadata_token import MetadataToken
 from rial.concept.name_mangler import mangle_function_name
@@ -102,7 +103,7 @@ class FunctionDeclarationTransformer(Transformer_InPlaceRecursive):
             full_function_name = mangle_function_name(full_function_name, [str(arg) for arg in llvm_args])
 
         # Search for function in the archives
-        llvm_func = self.sps.ps.search_function(full_function_name)
+        llvm_func = ParserState.search_function(full_function_name)
 
         # Function has been previously declared
         if llvm_func is not None:
@@ -112,7 +113,7 @@ class FunctionDeclarationTransformer(Transformer_InPlaceRecursive):
             #   - is either public or
             #     - internal and
             #     - is in same package (cannot reimplement functions)
-            if has_body == False or full_function_name in self.sps.ps.implemented_functions and (
+            if has_body == False or full_function_name in ParserState.implemented_functions and (
                     llvm_func.access_modifier == "public" or (
                     llvm_func.access_modifier == "internal" and llvm_func.module.split(':')[0] ==
                     self.sps.llvmgen.module.name.split(':')[0])):
@@ -124,8 +125,8 @@ class FunctionDeclarationTransformer(Transformer_InPlaceRecursive):
             func_type = self.sps.llvmgen.create_function_type(llvm_return_type, llvm_args, var_args)
             llvm_func = LLVMFunction(full_function_name, func_type, access_modifier, self.sps.llvmgen.module.name,
                                      return_type)
-            self.sps.ps.functions[full_function_name] = llvm_func
-            self.sps.ps.main_function = llvm_func
+            ParserState.functions[full_function_name] = llvm_func
+            ParserState.main_function = llvm_func
 
         # Create the actual function in IR
         func = self.sps.llvmgen.create_function_with_type(full_function_name, llvm_func.function_type, linkage,

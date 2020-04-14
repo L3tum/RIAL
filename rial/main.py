@@ -14,6 +14,7 @@ from llvmlite.binding import ModuleRef
 
 from rial.ASTVisitor import ASTVisitor
 from rial.FunctionDeclarationTransformer import FunctionDeclarationTransformer
+from rial.ParserState import ParserState
 from rial.PrimitiveASTTransformer import PrimitiveASTTransformer
 from rial.SingleParserState import SingleParserState
 from rial.StructDeclarationTransformer import StructDeclarationTransformer
@@ -125,7 +126,7 @@ def compile_file(opts):
             else:
                 module_name = project_name + ":" + module_name
             module = codegen.get_module(module_name, file.split('/')[-1], str(source_path))
-            sps = SingleParserState(CompilationManager.ps, module)
+            sps = SingleParserState(module)
             transformer = ASTVisitor(sps)
             primitive_transformer.init(sps)
             function_declaration_transformer.init(sps)
@@ -185,6 +186,7 @@ def parse_arguments():
 if __name__ == "__main__":
     start = timer()
     init()
+    ParserState.init()
     options = parse_arguments()
 
     if options.profile_mem:
