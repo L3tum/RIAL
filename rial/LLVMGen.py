@@ -334,12 +334,12 @@ class LLVMGen:
                             if not target in potential_memory:
                                 potential_memory.append(target)
 
-        for instr in potential_memory:
-            if isinstance(instr, AllocaInstr):
-                pointee = instr.type.pointee
-
-                if isinstance(pointee, IdentifiedStructType):
-                    print(ParserState.search_structs(pointee.name))
+        # for instr in potential_memory:
+        #     if isinstance(instr, AllocaInstr):
+        #         pointee = instr.type.pointee
+        #
+        #         if isinstance(pointee, IdentifiedStructType):
+        #             print(ParserState.search_structs(pointee.name))
 
     def create_return_statement(self, statement):
         if isinstance(statement, VoidType):

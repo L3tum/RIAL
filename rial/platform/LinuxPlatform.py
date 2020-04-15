@@ -28,13 +28,29 @@ class LinuxPlatform(IPlatform):
         opts = LinkingOptions()
         opts.linker_executable = which("cc")
 
+        # Detect underlinking (missing shared libraries)
+        opts.linker_pre_args.append("-Wl,-z,defs")
+
+        # Enable Adress space layout randomization via position-independent-executables
+        # TODO: Disable when building a shared library
+        opts.linker_pre_args.append("-fPIE -Wl,-pie")
+
+        # Use the "new" stack protector
+        opts.linker_pre_args.append("-fstack-protector-strong")
+
+        # Integer overflow wraps around (and isn't undefined)
+        opts.linker_pre_args.append("-fwrapv")
+
+        # Enable link-time-optimizations (LTO)
+        opts.linker_pre_args.append("-flto -ffat-lto-objects")
+
         # We want to be able to strip as much executable code as possible
         # from the linker command line, and this flag indicates to the
         # linker that it can avoid linking in dynamic libraries that don't
         # actually satisfy any symbols up to that point (as with many other
         # resolutions the linker does). This option only applies to all
         # following libraries so we're sure to pass it as one of the first
-        # arguments.
+        # arguments. (Taken from Rust)
         opts.linker_pre_args.append("-Wl,--as-needed")
 
         # Always enable NX protection when it is available

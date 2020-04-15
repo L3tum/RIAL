@@ -102,9 +102,14 @@ PREPRO_FLAG : "#"
 // Taken from common definition, copied to assign -10 priority
 IDENTIFIER.-10 : PREPRO_FLAG? ("_"|LETTER) ("_"|LETTER|DIGIT)*
 
+COMMENT : "//" /[^\n]*/ "\n"
+ML_COMMENT : "/*" /[^*]*/ "*/"
+
 %import common.ESCAPED_STRING -> STRING
 %import common.LETTER
 %import common.DIGIT
 %import common.HEXDIGIT
 %import common.WS
 %ignore WS
+%ignore COMMENT
+%ignore ML_COMMENT
