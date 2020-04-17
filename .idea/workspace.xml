@@ -19,10 +19,10 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Added support for specifying access modifier for external functions&#10;&#10;This in turn revealed a slew of bugs with the current implementation of functions and arguments.&#10;Which have been fixed, but....&#10;...All arguments are now passed as references.&#10;Special cases will need to be added to make this more secure (like specifying a const argument and thus invoking the generation of a new variable).&#10;&#10;Closes #20">
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Added support for &quot;e&quot; scientific notation&#10;Closes #16">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/ASTVisitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ASTVisitor.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/testing/src/main.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/main.rial" afterDir="false" />
@@ -159,7 +159,7 @@
       <workItem from="1586939707677" duration="4038000" />
       <workItem from="1587036588323" duration="2472000" />
       <workItem from="1587121436416" duration="8349000" />
-      <workItem from="1587133543828" duration="1262000" />
+      <workItem from="1587133543828" duration="4374000" />
     </task>
     <task id="LOCAL-00001" summary="Update">
       <created>1585486198876</created>
@@ -252,7 +252,14 @@
       <option name="project" value="LOCAL" />
       <updated>1587129272167</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="Added support for &quot;e&quot; scientific notation&#10;Closes #16">
+      <created>1587144733371</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1587144733371</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -283,7 +290,8 @@
     <MESSAGE value="Added comment support&#10;Added more linker flags&#10;Closes #10" />
     <MESSAGE value="Added float and double support&#10;Added underscore in numbers support&#10;Added binary and hex integer support&#10;Closes #17" />
     <MESSAGE value="Added support for specifying access modifier for external functions&#10;&#10;This in turn revealed a slew of bugs with the current implementation of functions and arguments.&#10;Which have been fixed, but....&#10;...All arguments are now passed as references.&#10;Special cases will need to be added to make this more secure (like specifying a const argument and thus invoking the generation of a new variable).&#10;&#10;Closes #20" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added support for specifying access modifier for external functions&#10;&#10;This in turn revealed a slew of bugs with the current implementation of functions and arguments.&#10;Which have been fixed, but....&#10;...All arguments are now passed as references.&#10;Special cases will need to be added to make this more secure (like specifying a const argument and thus invoking the generation of a new variable).&#10;&#10;Closes #20" />
+    <MESSAGE value="Added support for &quot;e&quot; scientific notation&#10;Closes #16" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added support for &quot;e&quot; scientific notation&#10;Closes #16" />
   </component>
   <component name="WindowStateProjectService">
     <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1586365316981">
@@ -319,11 +327,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586869276582" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1587129273373">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1587144735506">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587129273373" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587144735506" />
     <state x="92" y="92" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1585249165802">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

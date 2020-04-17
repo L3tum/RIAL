@@ -1,4 +1,5 @@
 import base64
+from typing import List
 
 from llvmlite import ir
 from llvmlite.ir import GlobalVariable
@@ -6,7 +7,8 @@ from llvmlite.ir import GlobalVariable
 from rial.SingleParserState import SingleParserState
 from rial.builtin_type_to_llvm_mapper import NULL, TRUE, FALSE
 from rial.compilation_manager import CompilationManager
-from rial.concept.parser import Transformer_InPlaceRecursive
+from rial.concept.parser import Transformer_InPlaceRecursive, Token
+from rial.log import log_warn
 
 
 class PrimitiveASTTransformer(Transformer_InPlaceRecursive):
@@ -29,7 +31,7 @@ class PrimitiveASTTransformer(Transformer_InPlaceRecursive):
     def false(self, nodes):
         return FALSE
 
-    def number(self, nodes):
+    def number(self, nodes: List[Token]):
         value: str = nodes[0].value
         value.replace("_", "")
 
@@ -43,6 +45,16 @@ class PrimitiveASTTransformer(Transformer_InPlaceRecursive):
 
         if value.startswith("0b"):
             return self.sps.llvmgen.gen_integer(int(value), 32)
+
+        if value.endswith("l"):
+            log_warn(
+                f"{self.sps.llvmgen.module.name}[{nodes[0].line}:{nodes[0].column}] WARNING 0001")
+            log_warn("Some fonts display a lowercase 'l' as a one. Please consider using an uppercase 'L' instead.")
+            log_warn(value)
+            value.lower()
+
+        if value.endswith("l"):
+            return self.sps.llvmgen.gen_integer(int(value.strip("l")), 64)
 
         return self.sps.llvmgen.gen_integer(int(nodes[0].value), 32)
 

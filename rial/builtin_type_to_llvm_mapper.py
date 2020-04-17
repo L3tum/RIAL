@@ -16,6 +16,12 @@ def map_shortcut_to_type(shortcut: str) -> str:
     if shortcut == "long":
         return "Int64"
 
+    if shortcut == "ulong":
+        return "UInt64"
+
+    if shortcut == "uint":
+        return "UInt32"
+
     if shortcut == "double":
         return "Double64"
 
@@ -29,11 +35,11 @@ def map_shortcut_to_type(shortcut: str) -> str:
 
 
 def map_type_to_llvm(rial_type: str) -> Optional[Type]:
-    if rial_type == "Int32":
+    if rial_type == "Int32" or rial_type == "UInt32":
         # 32bit integer
         return ir.IntType(32)
 
-    if rial_type == "Int64":
+    if rial_type == "Int64" or rial_type == "UInt64":
         return ir.IntType(64)
 
     if rial_type == "Boolean":
