@@ -5,7 +5,7 @@ internal void printInteger(int arg){
 }
 
 private struct Test{
-    int a = 5;
+    float a = 5.0f;
 
     private void printTest(){
         printf("Test\n");

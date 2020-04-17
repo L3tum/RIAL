@@ -33,6 +33,9 @@ def map_type_to_llvm(rial_type: str) -> Optional[Type]:
         # 32bit integer
         return ir.IntType(32)
 
+    if rial_type == "Int64":
+        return ir.IntType(64)
+
     if rial_type == "Boolean":
         # 1 bit
         return ir.IntType(1)
@@ -44,6 +47,12 @@ def map_type_to_llvm(rial_type: str) -> Optional[Type]:
     if rial_type == "void":
         # Void
         return ir.VoidType()
+
+    if rial_type == "Float32":
+        return ir.FloatType()
+
+    if rial_type == "Double64":
+        return ir.DoubleType()
 
     # Variable integer
     match = re.match(r"^Int([0-9]+)$", rial_type)

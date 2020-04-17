@@ -30,6 +30,20 @@ class PrimitiveASTTransformer(Transformer_InPlaceRecursive):
         return FALSE
 
     def number(self, nodes):
+        value: str = nodes[0].value
+        value.replace("_", "")
+
+        if "." in value:
+            if value.endswith("f"):
+                return self.sps.llvmgen.gen_float(float(value.strip("f")))
+            return self.sps.llvmgen.gen_double(float(value.strip("d")))
+
+        if value.startswith("0x"):
+            return self.sps.llvmgen.gen_integer(int(value), 32)
+
+        if value.startswith("0b"):
+            return self.sps.llvmgen.gen_integer(int(value), 32)
+
         return self.sps.llvmgen.gen_integer(int(nodes[0].value), 32)
 
     def string(self, nodes) -> GlobalVariable:

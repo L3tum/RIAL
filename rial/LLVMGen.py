@@ -34,6 +34,12 @@ class LLVMGen:
     def gen_integer(self, number: int, length: int):
         return ir.Constant(ir.IntType(length), number)
 
+    def gen_float(self, number: float):
+        return ir.Constant(ir.FloatType(), number)
+
+    def gen_double(self, number: float):
+        return ir.Constant(ir.DoubleType(), number)
+
     def gen_string_lit(self, name: str, value: str):
         value = eval("'{}'".format(value))
 
