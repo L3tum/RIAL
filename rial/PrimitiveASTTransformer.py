@@ -33,7 +33,7 @@ class PrimitiveASTTransformer(Transformer_InPlaceRecursive):
         value: str = nodes[0].value
         value.replace("_", "")
 
-        if "." in value:
+        if "." in value or "e" in value:
             if value.endswith("f"):
                 return self.sps.llvmgen.gen_float(float(value.strip("f")))
             return self.sps.llvmgen.gen_double(float(value.strip("d")))

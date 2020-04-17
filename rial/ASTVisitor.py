@@ -467,6 +467,9 @@ class ASTVisitor(Interpreter):
             if llvm_struct is not None:
                 func = llvm_struct.constructor
             else:
+                print(full_function_name)
+                print(mangled_name)
+                print(ParserState.functions.keys())
                 log_fail(f"Undeclared function or constructor {full_function_name} called!")
                 return None
 

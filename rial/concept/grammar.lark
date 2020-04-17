@@ -83,17 +83,18 @@ attribute : "[" function_call "]"
 using : "use" IDENTIFIER (":" IDENTIFIER)* ";"
 ACCESS_MODIFIER.2 : "private" | "public" | "internal"
 
-DIV.-3 : "/"
-MUL.-3 : "*"
-MINUS.-4 : "-"
-PLUS.-4 : "+"
-BIGGER.-5 : ">"
-SMALLER.-5 : "<"
-BIGGER_EQUAL.-5 : ">="
-SMALLER_EQUAL.-5 : "<="
+DIV.-4 : "/"
+MUL.-4 : "*"
+MINUS.-5 : "-"
+PLUS.-5 : "+"
+BIGGER.-6 : ">"
+SMALLER.-6 : "<"
+BIGGER_EQUAL.-7 : ">="
+SMALLER_EQUAL.-7 : "<="
 
-NUMBER.-2 : (FLOAT|INT|HEX_INT|BIN_INT)
-FLOAT.-1 : (INT+ "." INT+|INT+ "."|"." INT+) ("f"|"d")?
+NUMBER.-3 : ("-"|"+")? (FLOAT_SC|FLOAT|INT|HEX_INT|BIN_INT)
+FLOAT_SC.-1 : (FLOAT|INT) "e" ("-"|"+")? INT
+FLOAT.-2 : (INT+ "." INT+|INT+ "."|"." INT+) ("f"|"d")?
 BIN_INT : "0b" ("0"|"1"|"_")+
 HEX_INT : "0x" HEXDIGIT (HEXDIGIT|"_")*
 INT : DIGIT (DIGIT|"_")*

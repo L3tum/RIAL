@@ -39,5 +39,7 @@ public int main() {
 
 	printBoolean(true);
 
+	printDouble(-5.0e4);
+
 	return 0;
 }
