@@ -1,6 +1,8 @@
 from typing import List, Tuple
 
 from llvmlite import ir
+from llvmlite.ir import IdentifiedStructType
+
 from rial.LLVMFunction import LLVMFunction
 from rial.ParserState import ParserState
 from rial.SingleParserState import SingleParserState
@@ -25,12 +27,20 @@ class FunctionDeclarationTransformer(Transformer_InPlaceRecursive):
         calling_convention = "ccc"
 
         if nodes[0].type == "EXTERNAL":
-            return_type = nodes[1].value
-            name = nodes[2].value
-            start_args = 3
-            external = True
-            linkage = "external"
-            access_modifier = RIALAccessModifier.PUBLIC
+            if nodes[1].type == "ACCESS_MODIFIER":
+                return_type = nodes[2].value
+                name = nodes[3].value
+                start_args = 4
+                external = True
+                linkage = "external"
+                access_modifier = RIALAccessModifier[nodes[1].value.upper()]
+            else:
+                return_type = nodes[1].value
+                name = nodes[2].value
+                start_args = 3
+                external = True
+                linkage = "external"
+                access_modifier = RIALAccessModifier.PUBLIC
         elif nodes[0].type == "ACCESS_MODIFIER":
             access_modifier = RIALAccessModifier[nodes[0].value.upper()]
             return_type = nodes[1].value
@@ -83,6 +93,13 @@ class FunctionDeclarationTransformer(Transformer_InPlaceRecursive):
         # Map RIAL args to llvm arg types
         llvm_args = [self.sps.map_type_to_llvm(arg[0]) for arg in args if not arg[1].endswith("...")]
 
+        # Convert struct arguments into reference arguments
+        for llvm_arg in llvm_args:
+            if isinstance(llvm_arg, IdentifiedStructType):
+                index = llvm_args.index(llvm_arg)
+                llvm_args.remove(llvm_arg)
+                llvm_args.insert(index, ir.PointerType(llvm_arg))
+
         # Add class as implicit self parameter
         if self.sps.llvmgen.current_struct is not None:
             llvm_args.insert(0, ir.PointerType(self.sps.llvmgen.current_struct.struct))
@@ -124,7 +141,7 @@ class FunctionDeclarationTransformer(Transformer_InPlaceRecursive):
             llvm_return_type = self.sps.map_type_to_llvm(return_type)
             func_type = self.sps.llvmgen.create_function_type(llvm_return_type, llvm_args, var_args)
             llvm_func = LLVMFunction(full_function_name, func_type, access_modifier, self.sps.llvmgen.module.name,
-                                     return_type)
+                                     return_type, args)
             ParserState.functions[full_function_name] = llvm_func
             ParserState.main_function = llvm_func
 
@@ -132,6 +149,7 @@ class FunctionDeclarationTransformer(Transformer_InPlaceRecursive):
         func = self.sps.llvmgen.create_function_with_type(full_function_name, llvm_func.function_type, linkage,
                                                           calling_convention,
                                                           list(map(lambda arg: arg[1], args)),
+                                                          args,
                                                           has_body, access_modifier,
                                                           llvm_func.rial_return_type)
 

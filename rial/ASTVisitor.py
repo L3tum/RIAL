@@ -2,7 +2,7 @@ from typing import Tuple, List, Optional
 
 import os
 from llvmlite import ir
-from llvmlite.ir import PointerType, IdentifiedStructType, IRBuilder
+from llvmlite.ir import PointerType, IdentifiedStructType, IRBuilder, LoadInstr
 
 from rial.LLVMBlock import create_llvm_block
 from rial.LLVMFunction import LLVMFunction
@@ -116,9 +116,6 @@ class ASTVisitor(Interpreter):
         nodes = tree.children
 
         va = self.get_var(nodes[0].value)
-
-        if isinstance(va.type, PointerType):
-            return self.sps.llvmgen.builder.load(va)
 
         return va
 
@@ -433,7 +430,8 @@ class ASTVisitor(Interpreter):
             if nodes[i] is None:
                 continue
 
-            arguments.append(self.transform_helper(nodes[i]))
+            arg = self.transform_helper(nodes[i])
+            arguments.append(self.sps.llvmgen.gen_var_if_necessary(arg))
             i += 1
 
         mangled_name = mangle_function_name(full_function_name, [str(arg.type) for arg in arguments])

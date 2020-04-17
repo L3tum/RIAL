@@ -67,7 +67,13 @@ class SingleParserState:
                         f"Cannot access method {full_function_name} in module {llvm_function.module}!")
                     return None
 
-                func = ir.Function(self.llvmgen.module, llvm_function.function_type, name=llvm_function.name)
+                # Check if it has been declared previously (by another function call for example)
+                func = next((func for func in self.llvmgen.module.functions if
+                             func.name == llvm_function.name), None)
+
+                # Declare function if not declared in current module
+                if func is None:
+                    func = ir.Function(self.llvmgen.module, llvm_function.function_type, name=llvm_function.name)
 
         # Try request the module that the function might(!) be in
         if func is None:

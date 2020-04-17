@@ -5,5 +5,5 @@ internal void printBoolean(bool boolean){
      uwu
      whats dis
     */
-    printf("%s\n", if boolean ? "true" : "false");
+    println(if boolean ? "true" : "false");
 }

@@ -2,7 +2,7 @@ from typing import Optional, Union, Tuple, List, Literal, Dict
 
 from llvmlite import ir
 from llvmlite.ir import Module, IRBuilder, Function, AllocaInstr, Branch, FunctionType, Type, VoidType, PointerType, \
-    Block, Instruction, Ret, LoadInstr, StoreInstr, BaseStructType, IdentifiedStructType
+    Block, Instruction, Ret, LoadInstr, StoreInstr, BaseStructType, IdentifiedStructType, Argument
 
 from rial.LLVMBlock import LLVMBlock, create_llvm_block
 from rial.LLVMStruct import LLVMStruct
@@ -54,7 +54,28 @@ class LLVMGen:
 
         return glob
 
+    def gen_load_if_necessary(self, value):
+        if isinstance(value, PointerType) or isinstance(value, AllocaInstr) or isinstance(value, Argument):
+            return self.builder.load(value)
+        return value
+
+    def gen_var_if_necessary(self, value):
+        # Check if variable is not:
+        #   - Pointer
+        #   - Alloca (Variable), inherently pointer
+        #   - Argument (always pointer)
+        #   - Type is pointer (e.g. getelementptr instruction)
+        if not (isinstance(value, PointerType) or isinstance(value, AllocaInstr) or isinstance(value, Argument)
+                or isinstance(value.type, PointerType)):
+            allocad = self.builder.alloca(value.type)
+            self.builder.store(value, allocad)
+            return allocad
+        return value
+
     def gen_addition(self, left, right):
+        left = self.gen_load_if_necessary(left)
+        right = self.gen_load_if_necessary(right)
+
         if isinstance(left.type, ir.IntType):
             return self.builder.add(left, right)
 
@@ -64,6 +85,9 @@ class LLVMGen:
         return None
 
     def gen_subtraction(self, left, right):
+        left = self.gen_load_if_necessary(left)
+        right = self.gen_load_if_necessary(right)
+
         if isinstance(left.type, ir.IntType):
             return self.builder.sub(left, right)
 
@@ -73,6 +97,9 @@ class LLVMGen:
         return None
 
     def gen_multiplication(self, left, right):
+        left = self.gen_load_if_necessary(left)
+        right = self.gen_load_if_necessary(right)
+
         if isinstance(left.type, ir.IntType):
             return self.builder.mul(left, right)
 
@@ -82,6 +109,9 @@ class LLVMGen:
         return None
 
     def gen_division(self, left, right):
+        left = self.gen_load_if_necessary(left)
+        right = self.gen_load_if_necessary(right)
+
         if isinstance(left.type, ir.IntType):
             return self.builder.sdiv(left, right)
 
@@ -91,6 +121,9 @@ class LLVMGen:
         return None
 
     def gen_comparison(self, comparison: str, left, right):
+        left = self.gen_load_if_necessary(left)
+        right = self.gen_load_if_necessary(right)
+
         if isinstance(left.type, ir.IntType):
             return self.builder.icmp_signed(comparison, left, right)
 
@@ -101,6 +134,7 @@ class LLVMGen:
 
     def gen_shorthand(self, variable, value, operation):
         loaded = self.builder.load(variable)
+        value = self.gen_load_if_necessary(value)
         mathed = None
 
         if operation == "+":
@@ -197,6 +231,9 @@ class LLVMGen:
         return None
 
     def create_conditional_jump(self, condition, true_block: LLVMBlock, false_block: LLVMBlock):
+        # Check if condition is a variable, we need to load that for LLVM
+        if isinstance(condition, AllocaInstr) or isinstance(condition, PointerType) or isinstance(condition, Argument):
+            condition = self.builder.load(condition)
         return self.builder.cbranch(condition, true_block.block, false_block.block)
 
     def create_jump(self, target_block: LLVMBlock):
@@ -217,7 +254,7 @@ class LLVMGen:
 
         # Create base constructor
         function_type = self.create_function_type(ir.PointerType(struct), [], False)
-        func = self.create_function_with_type(f"{name}.constructor", function_type, linkage, "fastcc", [], True,
+        func = self.create_function_with_type(f"{name}.constructor", function_type, linkage, "fastcc", [], [], True,
                                               rial_access_modifier, name)
         self.create_function_body(func, [])
         self_value = self.builder.alloca(struct, name="this")
@@ -245,6 +282,7 @@ class LLVMGen:
                                   linkage: Union[Literal["internal"], Literal["external"]],
                                   calling_convention: str,
                                   arg_names: List[str],
+                                  rial_args: List[Tuple[str, str]],
                                   generate_body: bool,
                                   rial_access_modifier: RIALAccessModifier,
                                   rial_return_type: str):
@@ -256,7 +294,7 @@ class LLVMGen:
 
         if generate_body:
             func.set_metadata('function_definition',
-                              self.module.add_metadata((rial_return_type, str(rial_access_modifier),)))
+                              self.module.add_metadata((rial_return_type, str(rial_access_modifier), rial_args)))
 
         # Set argument names
         for i, arg in enumerate(func.args):
@@ -281,12 +319,13 @@ class LLVMGen:
         for i, arg in enumerate(func.args):
             # Don't copy variables that are a pointer
             if isinstance(arg.type, PointerType):
+                self.current_block.named_values[arg.name] = arg
                 continue
-            allocated_arg = self.builder.alloca(arg.type)
-            self.builder.store(arg, allocated_arg)
-            self.current_block.named_values[arg.name] = allocated_arg
-            allocated_arg.set_metadata('type',
-                                       self.module.add_metadata((rial_arg_types[i],)))
+            # allocated_arg = self.builder.alloca(arg.type)
+            # self.builder.store(arg, allocated_arg)
+            # self.current_block.named_values[arg.name] = allocated_arg
+            # allocated_arg.set_metadata('type',
+            #                            self.module.add_metadata((rial_arg_types[i],)))
 
     def finish_current_block(self):
         if self.current_block.block.terminator is None:
@@ -358,4 +397,11 @@ class LLVMGen:
         self.end_block = None
 
     def create_function_type(self, llvm_return_type: Type, llvm_arg_types: List[Type], var_args: bool):
+        # All arguments need to be passed as pointers
+        for llvm_arg_type in llvm_arg_types:
+            if not isinstance(llvm_arg_type, PointerType):
+                llvm_arg_type_pointer = ir.PointerType(llvm_arg_type)
+                index = llvm_arg_types.index(llvm_arg_type)
+                llvm_arg_types.remove(llvm_arg_type)
+                llvm_arg_types.insert(index, llvm_arg_type_pointer)
         return ir.FunctionType(llvm_return_type, tuple(llvm_arg_types), var_arg=var_args)

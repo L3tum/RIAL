@@ -2,13 +2,13 @@ use testing:print;
 use testing:boolean;
 
 public int main() {
-	printf("Hello world!\n");
-	printf("%i \n", 5 < 5+5);
+	println("Hello world!");
+	printInteger(5 < 5+5);
 
 	if(5 < 10){
-	    printf(null);
+	    println(null);
 	} else {
-	    printf("Hi");
+	    println("Hi");
 	}
 
 	for(var i = 0; i < 5; i++){
@@ -20,7 +20,8 @@ public int main() {
 	var i = 0;
 
 	while (true){
-	    printf("While loop: %i\n", i);
+	    print("While loop: ");
+	    printInteger(i);
 	    i++;
 
 	    if (i > 5){
@@ -29,7 +30,7 @@ public int main() {
 	}
 
 	loop {
-	    printf("Loop loop\n");
+	    println("Loop loop");
 
 	    break;
 	}

@@ -55,7 +55,7 @@ def map_type_to_llvm(rial_type: str) -> Optional[Type]:
         return ir.DoubleType()
 
     # Variable integer
-    match = re.match(r"^Int([0-9]+)$", rial_type)
+    match = re.match(r"^i([0-9]+)$", rial_type)
 
     if match is not None:
         count = match.group(1)

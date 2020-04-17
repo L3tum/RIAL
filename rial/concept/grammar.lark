@@ -52,7 +52,7 @@ function_call : IDENTIFIER "(" [expression ("," expression)*] ")"
                | IDENTIFIER ("." IDENTIFIER)* "(" [expression ("," expression)*] ")"
                | "new" IDENTIFIER "(" ")"
 function_decl : ACCESS_MODIFIER? IDENTIFIER IDENTIFIER "(" [PARAMS? IDENTIFIER IDENTIFIER ("," IDENTIFIER IDENTIFIER | "," PARAMS IDENTIFIER IDENTIFIER)*] ")" "{" [statement*] "}"
-               | EXTERNAL IDENTIFIER IDENTIFIER "(" [PARAMS? IDENTIFIER IDENTIFIER ("," IDENTIFIER IDENTIFIER | "," PARAMS IDENTIFIER IDENTIFIER)*] ")" ";"
+               | EXTERNAL ACCESS_MODIFIER? IDENTIFIER IDENTIFIER "(" [PARAMS? IDENTIFIER IDENTIFIER ("," IDENTIFIER IDENTIFIER | "," PARAMS IDENTIFIER IDENTIFIER)*] ")" ";"
 
 // Attributes
 attribute : "[" function_call "]"
