@@ -96,6 +96,13 @@ class ASTVisitor(Interpreter):
 
         return self.sps.llvmgen.gen_comparison('<=', left, right)
 
+    def equal(self, tree: Tree):
+        nodes = tree.children
+        left = self.transform_helper(nodes[0])
+        right = self.transform_helper(nodes[2])
+
+        return self.sps.llvmgen.gen_comparison('==', left, right)
+
     def get_var(self, identifier: str):
         variable = self.sps.llvmgen.current_block.get_named_value(identifier)
 

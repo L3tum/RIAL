@@ -68,6 +68,7 @@ attributed_compiler_directive : PREPRO_FLAG attribute
             | expression BIGGER expression -> bigger_than
             | expression BIGGER_EQUAL expression -> bigger_equal
             | expression SMALLER_EQUAL expression -> smaller_equal
+            | expression EQUAL expression -> equal
             | function_call
             | STRING -> string
             | "true" -> true
@@ -93,6 +94,7 @@ BIGGER.-6 : ">"
 SMALLER.-6 : "<"
 BIGGER_EQUAL.-7 : ">="
 SMALLER_EQUAL.-7 : "<="
+EQUAL.-7 : "=="
 
 NUMBER.-3 : (PLUS|MINUS)? (FLOAT_SC|FLOAT|INT|HEX_INT|BIN_INT) ("uL"|"U"|"Ul"|"UL"|"ul"|"l"|"u"|"L")?
 FLOAT_SC.-1 : (FLOAT|INT) "e" ("-"|"+")? INT
