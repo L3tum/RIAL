@@ -21,7 +21,7 @@ internal void printFloat(float arg){
 }
 
 internal void printDouble(double arg){
-    printf("%d\n", arg);
+    printf("%f\n", arg);
 }
 
 internal void println(CString arg){
@@ -33,7 +33,7 @@ internal void print(CString arg){
 }
 
 private struct Test{
-    float a = 5.0f;
+    int a = 5;
 
     private void printTest(){
         println("Test");

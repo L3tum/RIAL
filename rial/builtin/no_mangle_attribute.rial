@@ -1,0 +1,5 @@
+use builtin:attribute;
+
+public struct NoMangleAttribute : Attribute {
+
+}

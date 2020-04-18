@@ -5,6 +5,7 @@ import shutil
 import sys
 import threading
 import traceback
+import tracemalloc
 from pathlib import Path
 from timeit import default_timer as timer
 from typing import List, Dict
@@ -22,15 +23,12 @@ from rial.codegen import CodeGen
 from rial.combined_transformer import CombinedTransformer
 from rial.compilation_manager import CompilationManager
 from rial.concept.Postlexer import Postlexer
+from rial.concept.parser import Lark_StandAlone
 from rial.configuration import Configuration
 from rial.linking.linker import Linker
 from rial.log import log_fail
-from rial.concept.parser import Lark_StandAlone
-from rial.profiling import execution_events, ExecutionStep, set_profiling, run_with_profiling, display_top
 from rial.platform.Platform import Platform
-import tracemalloc
-
-from rial.util import _mod_name_from_path
+from rial.profiling import execution_events, ExecutionStep, set_profiling, run_with_profiling, display_top
 
 
 def main(opts):
@@ -119,7 +117,7 @@ def compile_file(opts):
 
             file = str(path).replace(str(source_path), "")
             file = file.replace(str(CompilationManager.config.rial_path), "")
-            module_name = _mod_name_from_path(file)
+            module_name = CompilationManager.mod_name_from_path(file)
 
             if module_name.startswith("builtin") or module_name.startswith("std"):
                 module_name = f"rial:{module_name}"
@@ -131,8 +129,7 @@ def compile_file(opts):
             primitive_transformer.init(sps)
             function_declaration_transformer.init(sps)
             struct_declaration_transformer.init(sps, function_declaration_transformer)
-            combined_transformer = CombinedTransformer(primitive_transformer, struct_declaration_transformer)
-            parser = Lark_StandAlone(transformer=combined_transformer, postlex=Postlexer())
+            parser = Lark_StandAlone(transformer=primitive_transformer, postlex=Postlexer())
 
             with run_with_profiling(file, ExecutionStep.READ_FILE):
                 with open(path, "r") as src:
@@ -140,7 +137,12 @@ def compile_file(opts):
 
             with run_with_profiling(file, ExecutionStep.PARSE_FILE):
                 ast = parser.parse(contents)
-                ast = function_declaration_transformer.transform(ast)
+                ast = struct_declaration_transformer.transform(ast)
+                ast = function_declaration_transformer.visit(ast)
+
+                # Declarations are all already collected so we can move on.
+                CompilationManager.finish_file(path)
+
                 transformer.visit(ast)
 
             if opts.print_tokens:
@@ -148,8 +150,6 @@ def compile_file(opts):
 
             mod = codegen.compile_ir(module)
             CompilationManager.modules[str(path)] = mod
-
-            CompilationManager.finish_file(path)
             CompilationManager.files_to_compile.task_done()
     except Exception as e:
         log_fail("Internal Compiler Error: ")

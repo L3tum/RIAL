@@ -164,9 +164,7 @@ class LLVMGen:
             return None
 
         if isinstance(variable_type, PointerType) and isinstance(value.type, PointerType):
-            variable = self.builder.alloca(variable_type.pointee)
-            loaded_val = self.builder.load(value)
-            self.builder.store(loaded_val, variable)
+            variable = value
             variable.name = identifier
         else:
             variable = self.builder.alloca(variable_type)
@@ -253,29 +251,47 @@ class LLVMGen:
     def create_identified_struct(self, name: str, module_name: str,
                                  linkage: Union[Literal["internal"], Literal["external"]],
                                  rial_access_modifier: RIALAccessModifier,
+                                 derived: List[LLVMStruct],
                                  body: List[RIALVariable]):
         struct = self.module.context.get_identified_type(name)
-        struct.set_body(*tuple([bod.llvm_type for bod in body]))
+        props = list()
+        for deriv in derived:
+            props.extend([bod[1].llvm_type for bod in deriv.properties.values()])
+
+        props.extend([bod.llvm_type for bod in body])
+
+        struct.set_body(*tuple(props))
         llvm_struct = LLVMStruct(struct, name, module_name, rial_access_modifier)
+        llvm_struct.base_structs = derived
         self.current_struct = llvm_struct
 
         # Create base constructor
-        function_type = self.create_function_type(ir.PointerType(struct), [], False)
-        func = self.create_function_with_type(f"{name}.constructor", function_type, linkage, "fastcc", [], [], True,
+        function_type = self.create_function_type(ir.VoidType(), [ir.PointerType(struct)], False)
+        func = self.create_function_with_type(f"{name}.constructor", function_type, linkage, "", ["this"],
+                                              [("this", name), ], True,
                                               rial_access_modifier, name)
-        self.create_function_body(func, [])
-        self_value = self.builder.alloca(struct, name="this")
+        self.create_function_body(func, [name])
+        self_value = func.args[0]
+
+        # Call derived constructors
+        for deriv in derived:
+            if deriv.constructor is not None:
+                func = next((func for func in self.module.functions if func.name == deriv.constructor.name), None)
+
+                if func is None:
+                    func = ir.Function(self.module, deriv.constructor.function_type, deriv.constructor.name)
+                bitcasted = self.builder.bitcast(self_value, ir.PointerType(deriv.struct))
+                self.builder.call(func, [bitcasted], cconv="fastcc")
 
         # Set initial values
         for i, bod in enumerate(body):
-            loaded_var = self.builder.gep(self_value, [ir.Constant(ir.IntType(32), i), ir.Constant(ir.IntType(32), 0)])
+            loaded_var = self.builder.gep(self_value, [ir.Constant(ir.IntType(32), 0), ir.Constant(ir.IntType(32), i)])
             self.builder.store(bod.initial_value, loaded_var)
 
             # Store reference in llvm_struct
             llvm_struct.properties[bod.name] = (i, bod)
 
-        # Return self
-        self.builder.ret(self_value)
+        self.builder.ret_void()
         llvm_struct.constructor = self.current_func
 
         return llvm_struct
@@ -328,11 +344,11 @@ class LLVMGen:
             if isinstance(arg.type, PointerType):
                 self.current_block.named_values[arg.name] = arg
                 continue
-            # allocated_arg = self.builder.alloca(arg.type)
-            # self.builder.store(arg, allocated_arg)
-            # self.current_block.named_values[arg.name] = allocated_arg
-            # allocated_arg.set_metadata('type',
-            #                            self.module.add_metadata((rial_arg_types[i],)))
+            allocated_arg = self.builder.alloca(arg.type)
+            self.builder.store(arg, allocated_arg)
+            self.current_block.named_values[arg.name] = allocated_arg
+            allocated_arg.set_metadata('type',
+                                       self.module.add_metadata((rial_arg_types[i],)))
 
     def finish_current_block(self):
         if self.current_block.block.terminator is None:
@@ -404,11 +420,4 @@ class LLVMGen:
         self.end_block = None
 
     def create_function_type(self, llvm_return_type: Type, llvm_arg_types: List[Type], var_args: bool):
-        # All arguments need to be passed as pointers
-        for llvm_arg_type in llvm_arg_types:
-            if not isinstance(llvm_arg_type, PointerType):
-                llvm_arg_type_pointer = ir.PointerType(llvm_arg_type)
-                index = llvm_arg_types.index(llvm_arg_type)
-                llvm_arg_types.remove(llvm_arg_type)
-                llvm_arg_types.insert(index, llvm_arg_type_pointer)
         return ir.FunctionType(llvm_return_type, tuple(llvm_arg_types), var_arg=var_args)

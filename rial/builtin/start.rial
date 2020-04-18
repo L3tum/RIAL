@@ -1,3 +1,6 @@
+use builtin:no_mangle_attribute;
+
+[NoMangle()]
 public void main(){
     #programMain();
 }

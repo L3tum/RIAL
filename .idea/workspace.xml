@@ -19,18 +19,22 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Support &quot;u&quot;, &quot;l&quot; and &quot;ul&quot; suffixes&#10;Warning about using lowercase &quot;l&quot; as suffix&#10;Support &quot;long&quot;, &quot;ulong&quot; and &quot;uint&quot; shortcuts">
-      <change afterPath="$PROJECT_DIR$/rial/LLVMUIntType.py" afterDir="false" />
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Adds support for unsigned integers in math operations&#10;Closes #18&#10;&#10;Improves name mangling and error messages">
+      <change afterPath="$PROJECT_DIR$/rial/builtin/attribute.rial" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/builtin/no_mangle_attribute.rial" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/concept/TransformerInterpreter.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/ASTVisitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ASTVisitor.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/LLVMGen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMGen.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/builtin/start.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin/start.rial" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/compilation_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compilation_manager.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/name_mangler.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/name_mangler.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/log.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/log.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/util.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/testing/src/main.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/main.rial" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/testing/src/print.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/print.rial" afterDir="false" />
     </list>
@@ -166,7 +170,7 @@
       <workItem from="1587036588323" duration="2472000" />
       <workItem from="1587121436416" duration="8349000" />
       <workItem from="1587133543828" duration="5069000" />
-      <workItem from="1587199045602" duration="4870000" />
+      <workItem from="1587199045602" duration="20213000" />
     </task>
     <task id="LOCAL-00001" summary="Update">
       <created>1585486198876</created>
@@ -273,7 +277,14 @@
       <option name="project" value="LOCAL" />
       <updated>1587156524860</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="Adds support for unsigned integers in math operations&#10;Closes #18&#10;&#10;Improves name mangling and error messages">
+      <created>1587209575616</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1587209575616</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -306,13 +317,14 @@
     <MESSAGE value="Added support for specifying access modifier for external functions&#10;&#10;This in turn revealed a slew of bugs with the current implementation of functions and arguments.&#10;Which have been fixed, but....&#10;...All arguments are now passed as references.&#10;Special cases will need to be added to make this more secure (like specifying a const argument and thus invoking the generation of a new variable).&#10;&#10;Closes #20" />
     <MESSAGE value="Added support for &quot;e&quot; scientific notation&#10;Closes #16" />
     <MESSAGE value="Support &quot;u&quot;, &quot;l&quot; and &quot;ul&quot; suffixes&#10;Warning about using lowercase &quot;l&quot; as suffix&#10;Support &quot;long&quot;, &quot;ulong&quot; and &quot;uint&quot; shortcuts" />
-    <option name="LAST_COMMIT_MESSAGE" value="Support &quot;u&quot;, &quot;l&quot; and &quot;ul&quot; suffixes&#10;Warning about using lowercase &quot;l&quot; as suffix&#10;Support &quot;long&quot;, &quot;ulong&quot; and &quot;uint&quot; shortcuts" />
+    <MESSAGE value="Adds support for unsigned integers in math operations&#10;Closes #18&#10;&#10;Improves name mangling and error messages" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adds support for unsigned integers in math operations&#10;Closes #18&#10;&#10;Improves name mangling and error messages" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1586365316981">
+    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1587209813482">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586365316981" />
+    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587209813482" />
     <state x="1085" y="416" key="#com.intellij.ide.util.MemberChooser" timestamp="1585056818881">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -330,10 +342,10 @@
     </state>
     <state x="905" y="294" key="CommitChangelistDialog2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532721340" />
     <state x="753" y="288" width="1109" height="863" key="CommitChangelistDialog2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586767099729" />
-    <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog" timestamp="1587125896806">
+    <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog" timestamp="1587219454116">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587125896806" />
+    <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587219454116" />
     <state x="1059" y="474" key="FileChooserDialogImpl" timestamp="1584793819636">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -342,11 +354,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586869276582" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1587156525836">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1587209576599">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587156525836" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587209576599" />
     <state x="92" y="92" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1585249165802">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -375,10 +387,10 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="374" y="358" width="565" height="560" key="dock-window-3/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584965812228" />
-    <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1587127092835">
+    <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1587228521758">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587127092835" />
+    <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587228521758" />
     <state x="1123" y="472" key="refactoring.ChangeSignatureDialog" timestamp="1586600798541">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

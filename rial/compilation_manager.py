@@ -1,12 +1,11 @@
 from pathlib import Path
-from threading import Lock, Event
 from queue import Queue
+from threading import Lock, Event
 from typing import Dict
 
 from llvmlite.binding import ModuleRef
 
 from rial.configuration import Configuration
-from rial.util import _path_from_mod_name
 
 
 class CompilationManager:
@@ -42,8 +41,7 @@ class CompilationManager:
         :param mod_name:
         :return:
         """
-        path = _path_from_mod_name(CompilationManager.config.project_name, str(CompilationManager.config.source_path),
-                                   mod_name)
+        path = CompilationManager.path_from_mod_name(mod_name)
         with CompilationManager.lock:
             if path in CompilationManager.files_compiled:
                 CompilationManager.files_compiled[path].wait()
@@ -60,8 +58,7 @@ class CompilationManager:
         :param mod_name:
         :return:
         """
-        path = _path_from_mod_name(CompilationManager.config.project_name, str(CompilationManager.config.source_path),
-                                   mod_name)
+        path = CompilationManager.path_from_mod_name(mod_name)
         is_compiling = False
 
         with CompilationManager.lock:
@@ -92,3 +89,20 @@ class CompilationManager:
             return CompilationManager.config.cache_path.joinpath(path)
 
         return Path(path)
+
+    @staticmethod
+    def path_from_mod_name(mod_name: str) -> str:
+        mod_name = mod_name.replace(':', '/') + ".rial"
+
+        if mod_name.startswith(CompilationManager.config.project_name):
+            mod_name = mod_name.replace(CompilationManager.config.project_name,
+                                        str(CompilationManager.config.source_path))
+        elif mod_name.startswith("rial"):
+            mod_name = mod_name.replace("rial", str(CompilationManager.config.rial_path), 1)
+
+        return mod_name
+
+    @staticmethod
+    def mod_name_from_path(path: str) -> str:
+        s = path.strip('/').replace('.rial', '').replace('/', ':')
+        return s

@@ -19,6 +19,10 @@ class PrimitiveASTTransformer(Transformer_InPlaceRecursive):
 
     def using(self, nodes):
         mod_name = ':'.join(nodes)
+
+        if mod_name.startswith("builtin") or mod_name.startswith("std"):
+            mod_name = f"rial:{mod_name}"
+
         CompilationManager.request_module(mod_name)
         self.sps.usings.append(mod_name)
 

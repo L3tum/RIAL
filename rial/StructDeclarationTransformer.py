@@ -1,7 +1,6 @@
 from typing import List
 
 from rial.FunctionDeclarationTransformer import FunctionDeclarationTransformer
-from rial.LLVMFunction import LLVMFunction
 from rial.ParserState import ParserState
 from rial.SingleParserState import SingleParserState
 from rial.concept.metadata_token import MetadataToken
@@ -37,6 +36,7 @@ class StructDeclarationTransformer(Transformer_InPlaceRecursive):
 
         body: List[RIALVariable] = list()
         function_decls: List[Tree] = list()
+        bases: List[str] = list()
 
         # Find body of struct (variables)
         i = start
@@ -56,11 +56,20 @@ class StructDeclarationTransformer(Transformer_InPlaceRecursive):
                 body.append(RIALVariable(variable_name, rial_type, llvm_type, initial_value=variable_value))
             elif isinstance(node, Tree) and node.data == "function_decl":
                 function_decls.append(node)
+            elif isinstance(node, Token) and node.type == "IDENTIFIER":
+                bases.append(node.value)
             i += 1
+
+        base_llvm_structs = list()
+
+        for base in bases:
+            llvm_struct = self.sps.find_struct(base)
+            base_llvm_structs.append(llvm_struct)
 
         llvm_struct = self.sps.llvmgen.create_identified_struct(full_name, self.sps.llvmgen.module.name,
                                                                 access_modifier.get_linkage(),
                                                                 access_modifier,
+                                                                base_llvm_structs,
                                                                 body)
         ParserState.structs[full_name] = llvm_struct
 
@@ -68,7 +77,7 @@ class StructDeclarationTransformer(Transformer_InPlaceRecursive):
 
         # Create functions
         for function_decl in function_decls:
-            metadata_node = self.fdt.transform(function_decl)
+            metadata_node = self.fdt.visit(function_decl)
             nodes.remove(function_decl)
             declared_functions.append(metadata_node)
 

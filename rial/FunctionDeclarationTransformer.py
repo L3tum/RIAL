@@ -6,20 +6,46 @@ from llvmlite.ir import IdentifiedStructType
 from rial.LLVMFunction import LLVMFunction
 from rial.ParserState import ParserState
 from rial.SingleParserState import SingleParserState
+from rial.concept.TransformerInterpreter import TransformerInterpreter
 from rial.concept.metadata_token import MetadataToken
 from rial.concept.name_mangler import mangle_function_name
-from rial.concept.parser import Transformer_InPlaceRecursive, Token, Discard, Tree
+from rial.concept.parser import Token, Discard, Tree
 from rial.log import log_fail
 from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 
 
-class FunctionDeclarationTransformer(Transformer_InPlaceRecursive):
+class FunctionDeclarationTransformer(TransformerInterpreter):
     sps: SingleParserState
+    mangling: bool
 
     def init(self, sps: SingleParserState):
-        self.sps = sps
+        self.sps = sps  #
+        self.mangling = True
 
-    def function_decl(self, nodes):
+    def attributed_func_decl(self, tree: Tree):
+        nodes = tree.children
+        attributes: List[Tree] = list()
+        func_decl: Tree = None
+
+        for node in nodes:
+            if not isinstance(node, Tree):
+                continue
+            if node.data == "function_decl":
+                func_decl = node
+                break
+            attributes.append(node)
+
+        # TODO: Support actually implemented attributes
+        for attribute in attributes:
+            if attribute.children[0].value == "NoMangle":
+                self.mangling = False
+
+        func_decl = self.function_decl(func_decl)
+        self.mangling = True
+        return func_decl
+
+    def function_decl(self, tree: Tree):
+        nodes = tree.children
         access_modifier: RIALAccessModifier = RIALAccessModifier.PRIVATE
         linkage = "internal"
         external = False
@@ -114,7 +140,7 @@ class FunctionDeclarationTransformer(Transformer_InPlaceRecursive):
                 log_fail(f"Main method must return an integer status code or void, {return_type} given!")
 
         # If it's external we need to use the actual defined name instead of the compiler-internal one
-        if external:
+        if external or self.mangling == False:
             full_function_name = name
         else:
             full_function_name = mangle_function_name(full_function_name, llvm_args)
@@ -170,7 +196,6 @@ class FunctionDeclarationTransformer(Transformer_InPlaceRecursive):
         metadata_token.metadata["full_name"] = full_function_name
         metadata_token.metadata["body_start"] = i
         metadata_token.metadata['rial_arg_types'] = [arg[0] for arg in args]
-        nodes: List
         nodes.remove(token)
         nodes.insert(0, metadata_token)
 

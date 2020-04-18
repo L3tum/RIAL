@@ -1,5 +1,5 @@
 from llvmlite import ir
-from llvmlite.ir import PointerType, IdentifiedStructType
+from llvmlite.ir import PointerType, IdentifiedStructType, IntType
 
 from rial.ParserState import ParserState
 from rial.SingleParserState import SingleParserState
@@ -387,6 +387,7 @@ class ASTVisitor(Interpreter):
         full_function_name: str
         start = 1
         implicit_parameter = None
+        instantiation = False
 
         if len(nodes) > 1 and not isinstance(nodes[1], Tree) and nodes[1].type == "IDENTIFIER":
             full_function_name = nodes[1].value
@@ -422,9 +423,7 @@ class ASTVisitor(Interpreter):
         while i < len(nodes):
             if nodes[i] is None:
                 continue
-
-            arg = self.transform_helper(nodes[i])
-            arguments.append(self.sps.llvmgen.gen_var_if_necessary(arg))
+            arguments.append(self.transform_helper(nodes[i]))
             i += 1
 
         mangled_name = mangle_function_name(full_function_name, [arg.type for arg in arguments])
@@ -459,6 +458,8 @@ class ASTVisitor(Interpreter):
 
             if llvm_struct is not None:
                 func = llvm_struct.constructor
+                arguments.append(self.sps.llvmgen.builder.alloca(llvm_struct.struct))
+                instantiation = True
             else:
                 print(self.sps.llvmgen.module.name)
                 print(nodes[0].line)
@@ -469,8 +470,34 @@ class ASTVisitor(Interpreter):
                 log_fail(f"Undeclared function or constructor {full_function_name} called!")
                 return None
 
+        args = list()
+
+        llvm_func = ParserState.search_function(func.name)
+
+        for i, arg in enumerate(arguments):
+            # var args
+            if len(func.args) <= i:
+                # Only gen a load if the parameter is either:
+                #   - not a string or
+                #   - the passed argument is not a string
+                if llvm_func.rial_args[i][0] != "CString" or (
+                        not isinstance(arg.type, PointerType) or not isinstance(arg.type.pointee,
+                                                                                IntType) or arg.type.pointee.width != 8):
+                    args.append(self.sps.llvmgen.gen_load_if_necessary(arg))
+                else:
+                    args.append(arg)
+
+            elif not isinstance(func.args[i].type, PointerType):
+                args.append(self.sps.llvmgen.gen_load_if_necessary(arg))
+            else:
+                args.append(arg)
+
         try:
-            return self.sps.llvmgen.builder.call(func, arguments)
+            call_instr = self.sps.llvmgen.builder.call(func, args)
+
+            if instantiation:
+                return arguments[0]
+            return call_instr
         except IndexError:
             log_fail("Missing argument in function call")
 
