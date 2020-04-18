@@ -41,7 +41,7 @@ public int main() {
 
 	printDouble(-5.0e4);
 
-	printInteger(50000000l);
+	printInteger(50000000uL + 1uL);
 
 	return 0;
 }

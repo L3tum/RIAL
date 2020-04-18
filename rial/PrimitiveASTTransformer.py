@@ -8,7 +8,7 @@ from rial.SingleParserState import SingleParserState
 from rial.builtin_type_to_llvm_mapper import NULL, TRUE, FALSE
 from rial.compilation_manager import CompilationManager
 from rial.concept.parser import Transformer_InPlaceRecursive, Token
-from rial.log import log_warn
+from rial.log import log_warn, log_warn_short
 
 
 class PrimitiveASTTransformer(Transformer_InPlaceRecursive):
@@ -34,6 +34,7 @@ class PrimitiveASTTransformer(Transformer_InPlaceRecursive):
     def number(self, nodes: List[Token]):
         value: str = nodes[0].value
         value.replace("_", "")
+        value_lowered = value.lower()
 
         if "." in value or "e" in value:
             if value.endswith("f"):
@@ -49,12 +50,18 @@ class PrimitiveASTTransformer(Transformer_InPlaceRecursive):
         if value.endswith("l"):
             log_warn(
                 f"{self.sps.llvmgen.module.name}[{nodes[0].line}:{nodes[0].column}] WARNING 0001")
-            log_warn("Some fonts display a lowercase 'l' as a one. Please consider using an uppercase 'L' instead.")
-            log_warn(value)
-            value.lower()
+            log_warn_short(
+                "Some fonts display a lowercase 'l' as a one. Please consider using an uppercase 'L' instead.")
+            log_warn_short(value)
 
-        if value.endswith("l"):
-            return self.sps.llvmgen.gen_integer(int(value.strip("l")), 64)
+        if value_lowered.endswith("ul"):
+            return self.sps.llvmgen.gen_integer(int(value_lowered.strip("ul")), 64, True)
+
+        if value_lowered.endswith("u"):
+            return self.sps.llvmgen.gen_integer(int(value_lowered.strip("u")), 32, True)
+
+        if value_lowered.endswith("l"):
+            return self.sps.llvmgen.gen_integer(int(value_lowered.strip("l")), 64)
 
         return self.sps.llvmgen.gen_integer(int(nodes[0].value), 32)
 

@@ -1,19 +1,12 @@
-from typing import Tuple, List, Optional
-
-import os
 from llvmlite import ir
-from llvmlite.ir import PointerType, IdentifiedStructType, IRBuilder, LoadInstr
+from llvmlite.ir import PointerType, IdentifiedStructType
 
-from rial.LLVMBlock import create_llvm_block
-from rial.LLVMFunction import LLVMFunction
 from rial.ParserState import ParserState
 from rial.SingleParserState import SingleParserState
 from rial.concept.metadata_token import MetadataToken
 from rial.concept.name_mangler import mangle_function_name
+from rial.concept.parser import Interpreter, Tree
 from rial.log import log_fail
-from rial.concept.parser import Interpreter, Tree, Token, v_args, Meta
-from rial.rial_types.RIALAccessModifier import RIALAccessModifier
-from rial.rial_types.RIALVariable import RIALVariable
 
 
 class ASTVisitor(Interpreter):
@@ -434,7 +427,7 @@ class ASTVisitor(Interpreter):
             arguments.append(self.sps.llvmgen.gen_var_if_necessary(arg))
             i += 1
 
-        mangled_name = mangle_function_name(full_function_name, [str(arg.type) for arg in arguments])
+        mangled_name = mangle_function_name(full_function_name, [arg.type for arg in arguments])
 
         if implicit_parameter is not None:
             # Try get type from parameter
@@ -467,9 +460,12 @@ class ASTVisitor(Interpreter):
             if llvm_struct is not None:
                 func = llvm_struct.constructor
             else:
-                print(full_function_name)
+                print(self.sps.llvmgen.module.name)
+                print(nodes[0].line)
+                print(nodes[0].column)
+                print(arguments)
                 print(mangled_name)
-                print(ParserState.functions.keys())
+                print(full_function_name)
                 log_fail(f"Undeclared function or constructor {full_function_name} called!")
                 return None
 

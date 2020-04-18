@@ -2,10 +2,11 @@ from typing import Optional, Union, Tuple, List, Literal, Dict
 
 from llvmlite import ir
 from llvmlite.ir import Module, IRBuilder, Function, AllocaInstr, Branch, FunctionType, Type, VoidType, PointerType, \
-    Block, Instruction, Ret, LoadInstr, StoreInstr, BaseStructType, IdentifiedStructType, Argument
+    Block, Instruction, Ret, LoadInstr, StoreInstr, IdentifiedStructType, Argument
 
 from rial.LLVMBlock import LLVMBlock, create_llvm_block
 from rial.LLVMStruct import LLVMStruct
+from rial.LLVMUIntType import LLVMUIntType
 from rial.ParserState import ParserState
 from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 from rial.rial_types.RIALVariable import RIALVariable
@@ -31,8 +32,8 @@ class LLVMGen:
         self.current_struct = None
         self.global_variables = dict()
 
-    def gen_integer(self, number: int, length: int):
-        return ir.Constant(ir.IntType(length), number)
+    def gen_integer(self, number: int, length: int, unsigned: bool = False):
+        return ir.Constant((unsigned and LLVMUIntType(length) or ir.IntType(length)), number)
 
     def gen_float(self, number: float):
         return ir.Constant(ir.FloatType(), number)
@@ -112,6 +113,9 @@ class LLVMGen:
         left = self.gen_load_if_necessary(left)
         right = self.gen_load_if_necessary(right)
 
+        if isinstance(left.type, LLVMUIntType):
+            return self.builder.udiv(left, right)
+
         if isinstance(left.type, ir.IntType):
             return self.builder.sdiv(left, right)
 
@@ -123,6 +127,9 @@ class LLVMGen:
     def gen_comparison(self, comparison: str, left, right):
         left = self.gen_load_if_necessary(left)
         right = self.gen_load_if_necessary(right)
+
+        if isinstance(left.type, LLVMUIntType):
+            return self.builder.icmp_unsigned(comparison, left, right)
 
         if isinstance(left.type, ir.IntType):
             return self.builder.icmp_signed(comparison, left, right)

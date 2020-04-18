@@ -117,7 +117,7 @@ class FunctionDeclarationTransformer(Transformer_InPlaceRecursive):
         if external:
             full_function_name = name
         else:
-            full_function_name = mangle_function_name(full_function_name, [str(arg) for arg in llvm_args])
+            full_function_name = mangle_function_name(full_function_name, llvm_args)
 
         # Search for function in the archives
         llvm_func = ParserState.search_function(full_function_name)

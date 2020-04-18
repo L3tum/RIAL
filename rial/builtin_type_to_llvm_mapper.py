@@ -4,6 +4,8 @@ from typing import Optional
 from llvmlite import ir
 from llvmlite.ir import Type
 
+from rial.LLVMUIntType import LLVMUIntType
+
 NULL = ir.Constant(ir.IntType(8), 0).inttoptr(ir.PointerType(ir.IntType(8)))
 TRUE = ir.Constant(ir.IntType(1), 1)
 FALSE = ir.Constant(ir.IntType(1), 0)
@@ -35,12 +37,18 @@ def map_shortcut_to_type(shortcut: str) -> str:
 
 
 def map_type_to_llvm(rial_type: str) -> Optional[Type]:
-    if rial_type == "Int32" or rial_type == "UInt32":
+    if rial_type == "Int32":
         # 32bit integer
         return ir.IntType(32)
 
-    if rial_type == "Int64" or rial_type == "UInt64":
+    if rial_type == "UInt32":
+        return LLVMUIntType(32)
+
+    if rial_type == "Int64":
         return ir.IntType(64)
+
+    if rial_type == "UInt64":
+        return LLVMUIntType(64)
 
     if rial_type == "Boolean":
         # 1 bit

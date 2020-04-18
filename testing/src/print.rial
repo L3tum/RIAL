@@ -12,6 +12,10 @@ internal void printInteger(long arg){
     printf("%i\n", arg);
 }
 
+internal void printInteger(ulong arg){
+    printf("%i\n", arg);
+}
+
 internal void printFloat(float arg){
     printf("%f\n", arg);
 }
