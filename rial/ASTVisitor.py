@@ -1,5 +1,5 @@
 from llvmlite import ir
-from llvmlite.ir import PointerType, IdentifiedStructType, IntType
+from llvmlite.ir import PointerType, IdentifiedStructType
 
 from rial.ParserState import ParserState
 from rial.SingleParserState import SingleParserState
@@ -481,19 +481,15 @@ class ASTVisitor(Interpreter):
 
         llvm_func = ParserState.search_function(func.name)
 
-        for i, arg in enumerate(arguments):
-            # var args
-            if len(func.args) <= i:
-                # Only gen a load if the parameter is either:
-                #   - not a string or
-                #   - the passed argument is not a string
-                if llvm_func.rial_args[i][0] != "CString" or (
-                        not isinstance(arg.type, PointerType) or not isinstance(arg.type.pointee,
-                                                                                IntType) or arg.type.pointee.width != 8):
-                    args.append(self.sps.llvmgen.gen_load_if_necessary(arg))
-                else:
-                    args.append(arg)
+        if llvm_func is None:
+            log_fail(f"Undeclared function {func.name} called!")
+            return None
 
+        for i, arg in enumerate(arguments):
+            # Don't gen a load when it's a CString parameter (pointer)
+            if llvm_func.rial_args[i][0] == "CString":
+                args.append(arg)
+            # Gen a load when the parameter is not supposed to be a pointer
             elif not isinstance(func.args[i].type, PointerType):
                 args.append(self.sps.llvmgen.gen_load_if_necessary(arg))
             else:

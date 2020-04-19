@@ -43,6 +43,8 @@ class PrimitiveASTTransformer(Transformer_InPlaceRecursive):
         if "." in value or "e" in value:
             if value.endswith("f"):
                 return self.sps.llvmgen.gen_float(float(value.strip("f")))
+            if value.endswith("h"):
+                return self.sps.llvmgen.gen_half(float(value.strip("h")))
             return self.sps.llvmgen.gen_double(float(value.strip("d")))
 
         if value.startswith("0x"):
@@ -57,6 +59,9 @@ class PrimitiveASTTransformer(Transformer_InPlaceRecursive):
             log_warn_short(
                 "Some fonts display a lowercase 'l' as a one. Please consider using an uppercase 'L' instead.")
             log_warn_short(value)
+
+        if value_lowered.endswith("b"):
+            return self.sps.llvmgen.gen_integer(int(value_lowered.strip("b")), 8, True)
 
         if value_lowered.endswith("ul"):
             return self.sps.llvmgen.gen_integer(int(value_lowered.strip("ul")), 64, True)

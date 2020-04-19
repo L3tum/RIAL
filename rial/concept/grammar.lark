@@ -96,9 +96,9 @@ BIGGER_EQUAL.-7 : ">="
 SMALLER_EQUAL.-7 : "<="
 EQUAL.-7 : "=="
 
-NUMBER.-3 : (PLUS|MINUS)? (FLOAT_SC|FLOAT|INT|HEX_INT|BIN_INT) ("uL"|"U"|"Ul"|"UL"|"ul"|"l"|"u"|"L")?
+NUMBER.-3 : (PLUS|MINUS)? (FLOAT_SC|FLOAT|INT|HEX_INT|BIN_INT) ("uL"|"U"|"Ul"|"UL"|"ul"|"l"|"u"|"L"|"b"|"B")?
 FLOAT_SC.-1 : (FLOAT|INT) "e" ("-"|"+")? INT
-FLOAT.-2 : (INT+ "." INT+|INT+ "."|"." INT+) ("f"|"d")?
+FLOAT.-2 : (INT+ "." INT+|INT+ "."|"." INT+) ("f"|"d"|"h")?
 BIN_INT : "0b" ("0"|"1"|"_")+
 HEX_INT : "0x" HEXDIGIT (HEXDIGIT|"_")*
 INT : DIGIT (DIGIT|"_")*

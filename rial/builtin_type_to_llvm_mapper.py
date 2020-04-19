@@ -33,6 +33,15 @@ def map_shortcut_to_type(shortcut: str) -> str:
     if shortcut == "bool":
         return "Boolean"
 
+    if shortcut == "byte":
+        return "Byte"
+
+    if shortcut == "char":
+        return "Char"
+
+    if shortcut == "half":
+        return "Half"
+
     return shortcut
 
 
@@ -67,6 +76,15 @@ def map_type_to_llvm(rial_type: str) -> Optional[Type]:
 
     if rial_type == "Double64":
         return ir.DoubleType()
+
+    if rial_type == "Byte":
+        return LLVMUIntType(8)
+
+    if rial_type == "Char":
+        return ir.IntType(8)
+
+    if rial_type == "Half":
+        return ir.HalfType()
 
     # Variable integer
     match = re.match(r"^i([0-9]+)$", rial_type)

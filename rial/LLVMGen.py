@@ -35,6 +35,9 @@ class LLVMGen:
     def gen_integer(self, number: int, length: int, unsigned: bool = False):
         return ir.Constant((unsigned and LLVMUIntType(length) or ir.IntType(length)), number)
 
+    def gen_half(self, number: float):
+        return ir.Constant(ir.HalfType(), number)
+
     def gen_float(self, number: float):
         return ir.Constant(ir.FloatType(), number)
 
