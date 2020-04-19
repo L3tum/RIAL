@@ -1,7 +1,5 @@
-import traceback
 from pathlib import Path
 from threading import Lock
-from typing import Optional
 
 from llvmlite import ir, binding
 from llvmlite.binding import ExecutionEngine, ModuleRef, TargetMachine, PassManagerBuilder, ModulePassManager
@@ -48,10 +46,11 @@ class CodeGen:
     def _optimize_module(self, module: ModuleRef):
         if self.opt_level > 0:
             pm_manager = self.binding.create_pass_manager_builder()
-            pm_manager.loop_vectorize = self.opt_level > 0
-            pm_manager.slp_vectorize = self.opt_level > 0
+            pm_manager.loop_vectorize = True
+            pm_manager.slp_vectorize = True
             pm_manager.size_level = 0
             pm_manager.opt_level = self.opt_level
+            pm_manager.inlining_threshold = 9999
             pm_module = self.binding.create_module_pass_manager()
             pm_function = self.binding.create_function_pass_manager(module)
             pm_manager.populate(pm_function)
@@ -62,6 +61,7 @@ class CodeGen:
                 if not func.is_declaration:
                     pm_function.run(func)
             pm_function.finalize()
+            pm_function.close()
 
             pm_module.run(module)
 

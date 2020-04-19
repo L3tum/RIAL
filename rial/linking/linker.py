@@ -25,7 +25,7 @@ class Linker:
             strip_path = which('llvm-strip')
 
             if strip_path is None:
-                strip_path = which('llvm-strip-7')
+                strip_path = which('llvm-strip-8')
 
             if strip_path is not None:
                 args = f"{strip_path} --strip-all {exe_file}"

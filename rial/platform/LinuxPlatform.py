@@ -1,5 +1,4 @@
 from shutil import which
-from typing import List
 
 from rial.linking.linking_options import LinkingOptions
 from rial.platform.IPlatform import IPlatform

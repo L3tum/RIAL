@@ -5,6 +5,7 @@ from typing import Dict
 
 from llvmlite.binding import ModuleRef
 
+from rial.codegen import CodeGen
 from rial.configuration import Configuration
 
 
@@ -14,6 +15,7 @@ class CompilationManager:
     modules: Dict[str, ModuleRef]
     lock: Lock
     config: Configuration
+    codegen: CodeGen
 
     def __init__(self):
         raise PermissionError()
@@ -26,6 +28,7 @@ class CompilationManager:
         CompilationManager.lock = Lock()
         CompilationManager.config = config
         CompilationManager.modules = dict()
+        CompilationManager.codegen = CodeGen(config.raw_opts.opt_level)
 
     @staticmethod
     def finish_file(path: str):

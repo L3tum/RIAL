@@ -1,190 +1,27 @@
 import argparse
-import multiprocessing
 import os
 import shutil
 import sys
-import threading
-import traceback
 import tracemalloc
 from pathlib import Path
 from timeit import default_timer as timer
-from typing import List, Dict
 
+import anyconfig
 from colorama import init
-from llvmlite.binding import ModuleRef
+from munch import munchify
 
-from rial.ASTVisitor import ASTVisitor
-from rial.FunctionDeclarationTransformer import FunctionDeclarationTransformer
 from rial.ParserState import ParserState
-from rial.PrimitiveASTTransformer import PrimitiveASTTransformer
-from rial.StructDeclarationTransformer import StructDeclarationTransformer
-from rial.codegen import CodeGen
 from rial.compilation_manager import CompilationManager
-from rial.concept.Postlexer import Postlexer
-from rial.concept.parser import Lark_StandAlone
+from rial.compiler import compiler
 from rial.configuration import Configuration
-from rial.linking.linker import Linker
 from rial.log import log_fail
-from rial.platform.Platform import Platform
-from rial.profiling import execution_events, ExecutionStep, set_profiling, run_with_profiling, display_top
+from rial.profiling import set_profiling, execution_events, display_top
 
 
-def main(opts):
-    path = Path(__file__.replace("main.py", "")).joinpath("builtin").joinpath("start.rial")
-    # path = source_path.joinpath("main.rial")
-
-    if not path.exists():
-        log_fail("Main file not found in source path!")
-        sys.exit(1)
-
-    threads = list()
-
-    CompilationManager.files_to_compile.put(path)
-
-    for i in range(multiprocessing.cpu_count()):
-        t = threading.Thread(target=compile_file, args=(opts,))
-        t.daemon = True
-        t.start()
-        threads.append(t)
-
-    CompilationManager.files_to_compile.join()
-
-    modules: Dict[str, ModuleRef] = dict()
-
-    if opts.release:
-        with run_with_profiling("main", ExecutionStep.COMPILE_MOD):
-            # Since the main module is dependent on all other modules, it will be the last to add
-            # If it's not the actual main module then that's no big deal either
-            main_module = CompilationManager.modules[list(CompilationManager.modules.keys())[-1]]
-
-            for key in list(CompilationManager.modules.keys()):
-                mod = CompilationManager.modules[key]
-
-                # Skip last
-                if main_module == mod:
-                    continue
-
-                main_module.link_in(mod, False)
-
-            # "Virtual" main
-            modules[str(source_path) + "/main.rial"] = main_module
-    else:
-        modules = CompilationManager.modules
-
-    object_files: List[str] = list()
-
-    for path in list(modules.keys()):
-        mod = modules[path]
-        codegen.generate_final_module(mod)
-
-        if opts.print_ir:
-            ir_file = str(CompilationManager.get_cache_path_str(path)).replace(".rial", ".ll")
-            codegen.save_ir(ir_file, mod)
-
-        if opts.print_asm:
-            asm_file = str(CompilationManager.get_cache_path_str(path)).replace(".rial", ".asm")
-            codegen.save_assembly(asm_file, mod)
-
-        if opts.print_lbc:
-            llvm_bitcode_file = str(CompilationManager.get_cache_path_str(path)).replace(".rial", ".lbc")
-            codegen.save_llvm_bitcode(llvm_bitcode_file, mod)
-
-        object_file = str(CompilationManager.get_cache_path_str(path)).replace(".rial", ".o")
-        codegen.save_object(object_file, mod)
-        object_files.append(object_file)
-
-    with run_with_profiling(project_name, ExecutionStep.LINK_EXE):
-        exe_path = bin_path.joinpath(f"{project_name}{Platform.get_exe_file_extension()}")
-        Linker.link_files(object_files, exe_path, opts.print_link_command, opts.strip)
-
-
-def compile_file(opts):
-    try:
-        while True:
-            path = CompilationManager.files_to_compile.get()
-
-            if not Path(path).exists():
-                log_fail(f"Could not find {path}")
-                CompilationManager.finish_file(path)
-                CompilationManager.files_to_compile.task_done()
-                continue
-
-            file = str(path).replace(str(source_path), "")
-            file = file.replace(str(CompilationManager.config.rial_path), "")
-            module_name = CompilationManager.mod_name_from_path(file)
-
-            if module_name.startswith("builtin") or module_name.startswith("std"):
-                module_name = f"rial:{module_name}"
-            else:
-                module_name = project_name + ":" + module_name
-            module = codegen.get_module(module_name, file.split('/')[-1], str(source_path))
-            ParserState.reset_usings()
-            ParserState.set_module(module)
-
-            primitive_transformer = PrimitiveASTTransformer()
-            function_declaration_transformer = FunctionDeclarationTransformer()
-            struct_declaration_transformer = StructDeclarationTransformer()
-            transformer = ASTVisitor()
-
-            parser = Lark_StandAlone(transformer=primitive_transformer, postlex=Postlexer())
-
-            with run_with_profiling(file, ExecutionStep.READ_FILE):
-                with open(path, "r") as src:
-                    contents = src.read()
-
-            with run_with_profiling(file, ExecutionStep.PARSE_FILE):
-                ast = parser.parse(contents)
-                ast = struct_declaration_transformer.transform(ast)
-                ast = function_declaration_transformer.visit(ast)
-
-                # Declarations are all already collected so we can move on.
-                CompilationManager.finish_file(path)
-
-                transformer.visit(ast)
-
-            if opts.print_tokens:
-                print(ast.pretty())
-
-            mod = codegen.compile_ir(module)
-            CompilationManager.modules[str(path)] = mod
-            CompilationManager.files_to_compile.task_done()
-    except Exception as e:
-        log_fail("Internal Compiler Error: ")
-        log_fail(traceback.format_exc())
-        os._exit(-1)
-    finally:
-        del parser
-
-
-def parse_arguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-w', '--workdir', help="Overwrite working directory", type=str, default=os.getcwd())
-    parser.add_argument('--print-tokens', help="Prints the list of tokens to stdout", action="store_true",
-                        default=False)
-    parser.add_argument('--print-ir', help="Prints the LLVM IR", action="store_true",
-                        default=False)
-    parser.add_argument('--print-asm', help="Prints the native assembly", action="store_true",
-                        default=False)
-    parser.add_argument('--print-lbc', help="Prints the LLVM bitcode", action="store_true",
-                        default=False)
-    parser.add_argument('--opt-level', type=str, default="0", help="Optimization level to use",
-                        choices=("0", "1", "2", "3", "s", "z"))
-    parser.add_argument('--print-link-command', action='store_true', default=False,
-                        help="Prints the command used for linking the object files")
-    parser.add_argument('--release', action='store_true', default=False, help="Release mode")
-    parser.add_argument('--profile', action='store_true', default=False, help="Profile own execution steps")
-    parser.add_argument('--profile-mem', action='store_true', default=False, help="Profile memory allocations")
-    parser.add_argument('--strip', action='store_true', default=False,
-                        help="Strips debug information from the resulting exe")
-
-    return parser.parse_args()
-
-
-if __name__ == "__main__":
+def main(options):
     start = timer()
     init()
     ParserState.init()
-    options = parse_arguments()
 
     if options.profile_mem:
         tracemalloc.start()
@@ -192,7 +29,7 @@ if __name__ == "__main__":
 
     set_profiling(options.profile)
 
-    self_dir = "/".join(f"{__file__}".split('/')[0:-1])
+    self_dir = __file__.replace("main.py", "")
     project_path = str(os.path.abspath(options.workdir))
     project_name = project_path.split('/')[-1]
 
@@ -214,12 +51,10 @@ if __name__ == "__main__":
         log_fail("Source path does not exist!")
         sys.exit(1)
 
-    config = Configuration(project_name, source_path, cache_path, bin_path, Path(__file__.replace("main.py", "")),
-                           options)
+    config = Configuration(project_name, source_path, cache_path, bin_path, Path(self_dir), options)
     CompilationManager.init(config)
-    codegen = CodeGen(options.opt_level)
 
-    main(options)
+    compiler()
 
     end = timer()
 
@@ -235,3 +70,78 @@ if __name__ == "__main__":
     if options.profile_mem:
         end_snapshot = tracemalloc.take_snapshot()
         display_top(end_snapshot)
+
+
+def parse_prelim_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-w', '--workdir', help="Overwrite working directory", type=str, default="")
+    parser.add_argument('--print-tokens', help="Prints the list of tokens to stdout", action="store_true", default=None)
+    parser.add_argument('--print-ir', help="Prints the LLVM IR", action="store_true", default=None)
+    parser.add_argument('--print-asm', help="Prints the native assembly", action="store_true", default=None)
+    parser.add_argument('--print-lbc', help="Prints the LLVM bitcode", action="store_true", default=None)
+    parser.add_argument('--opt-level', type=str, help="Optimization level to use",
+                        choices=("0", "1", "2", "3", "s", "z"), default=None)
+    parser.add_argument('--print-link-command', action='store_true',
+                        help="Prints the command used for linking the object files", default=None)
+    parser.add_argument('--release', action='store_true', help="Release mode", default=None)
+
+    return parser.parse_known_args()
+
+
+def parse_config_file_arguments(workdir: str):
+    workdir = Path(workdir)
+    return anyconfig.load([
+        str(workdir.joinpath("rial.json")),
+        str(workdir.joinpath("rial.yml")),
+        str(workdir.joinpath("rial.toml")),
+        str(workdir.joinpath("rial.ini")),
+        str(workdir.joinpath("rial.xml")),
+        str(workdir.joinpath("rial.properties")),
+    ], ac_ignore_missing=True)
+
+
+if __name__ == "__main__":
+    opts = {
+        'config': {
+            'print_tokens': False,
+            'print_ir': False,
+            'print_asm': False,
+            'print_lbc': False,
+            'opt_level': '0',
+            'print_link_command': False,
+            'release': False,
+            'profile': False,
+            'profile_mem': False,
+            'strip': False,
+        },
+        'release': {
+            'opt_level': '3',
+            'release': True,
+            'strip': True
+        }
+    }
+
+    # Remove default (None) values
+    ops = {k: v for k, v in vars(parse_prelim_arguments()[0]).items() if v is not None}
+
+    # Check if workdir is set, otherwise assume cwd
+    if ops['workdir'] == "":
+        ops['workdir'] = os.getcwd()
+    else:
+        ops['workdir'] = os.path.abspath(ops['workdir'])
+
+    # Merge arg config and file config (giving priority to arg config)
+    anyconfig.merge(opts, parse_config_file_arguments(ops['workdir']), ac_merge=anyconfig.MS_DICTS_AND_LISTS)
+
+    # Merge CLI args
+    anyconfig.merge(opts, {'config': ops}, ac_merge=anyconfig.MS_DICTS_AND_LISTS)
+
+    # Merge release into config to overwrite for release mode
+    if opts['config']['release']:
+        anyconfig.merge(opts['config'], opts['release'], ac_merge=anyconfig.MS_DICTS)
+
+    opts = opts['config']
+
+    opts = munchify(opts)
+
+    main(opts)
