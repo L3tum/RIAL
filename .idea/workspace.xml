@@ -19,17 +19,12 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Added byte and char support&#10;Fixed bug that caused the constructor to not be registered as a function&#10;Theoretically added support for Half&#10;Closes #29">
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Removed SingleParserState.py&#10;Added necessary additions as threadlocal storage to ParserState.py&#10;Moved necessary methods to ParserState.py&#10;(Part of an ongoing refactoring process)">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/ASTVisitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ASTVisitor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/LLVMGen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMGen.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/ParserState.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ParserState.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/SingleParserState.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/concept/references.md" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/references.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -164,7 +159,7 @@
       <workItem from="1587121436416" duration="8349000" />
       <workItem from="1587133543828" duration="5069000" />
       <workItem from="1587199045602" duration="21944000" />
-      <workItem from="1587287963739" duration="4444000" />
+      <workItem from="1587287963739" duration="9440000" />
     </task>
     <task id="LOCAL-00001" summary="Update">
       <created>1585486198876</created>
@@ -299,7 +294,14 @@
       <option name="project" value="LOCAL" />
       <updated>1587292361296</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL-00020" summary="Removed SingleParserState.py&#10;Added necessary additions as threadlocal storage to ParserState.py&#10;Moved necessary methods to ParserState.py&#10;(Part of an ongoing refactoring process)">
+      <created>1587294913014</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1587294913014</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -336,7 +338,8 @@
     <MESSAGE value="Update&#10;Fix passing variables as arguments (require a load)&#10;Refactor mod/path transition&#10;Add attributed functions as a possibility with an example being NoMangle&#10;Added inheritance and inherited constructor calls in constructor&#10;Refactored main.py to give control back a bit faster&#10;Refactored builtin and std resolution" />
     <MESSAGE value="Added equality operator&#10;Closes #26" />
     <MESSAGE value="Added byte and char support&#10;Fixed bug that caused the constructor to not be registered as a function&#10;Theoretically added support for Half&#10;Closes #29" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added byte and char support&#10;Fixed bug that caused the constructor to not be registered as a function&#10;Theoretically added support for Half&#10;Closes #29" />
+    <MESSAGE value="Removed SingleParserState.py&#10;Added necessary additions as threadlocal storage to ParserState.py&#10;Moved necessary methods to ParserState.py&#10;(Part of an ongoing refactoring process)" />
+    <option name="LAST_COMMIT_MESSAGE" value="Removed SingleParserState.py&#10;Added necessary additions as threadlocal storage to ParserState.py&#10;Moved necessary methods to ParserState.py&#10;(Part of an ongoing refactoring process)" />
   </component>
   <component name="WindowStateProjectService">
     <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1587209813482">
@@ -372,11 +375,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586869276582" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1587292362357">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1587294914028">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587292362357" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587294914028" />
     <state x="92" y="92" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1585249165802">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

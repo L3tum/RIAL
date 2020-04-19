@@ -2,12 +2,16 @@ from typing import Optional, Union, Tuple, List, Literal, Dict
 
 from llvmlite import ir
 from llvmlite.ir import IRBuilder, Function, AllocaInstr, Branch, FunctionType, Type, VoidType, PointerType, \
-    Block, Instruction, Ret, LoadInstr, StoreInstr, IdentifiedStructType, Argument
+    Argument, CallInstr, Block
 
 from rial.LLVMBlock import LLVMBlock, create_llvm_block
+from rial.LLVMFunction import LLVMFunction
 from rial.LLVMStruct import LLVMStruct
 from rial.LLVMUIntType import LLVMUIntType
 from rial.ParserState import ParserState
+from rial.builtin_type_to_llvm_mapper import map_llvm_to_type
+from rial.compilation_manager import CompilationManager
+from rial.log import log_fail
 from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 from rial.rial_types.RIALVariable import RIALVariable
 
@@ -158,6 +162,50 @@ class LLVMGen:
 
         return mathed
 
+    def gen_function_call(self, function_name: str, full_function_name: str, mangled_function_name: str,
+                          llvm_args: List) -> Optional[CallInstr]:
+        # Try to find by mangled function name
+        func = ParserState.find_function(mangled_function_name)
+
+        # Try to find by full function name
+        if func is None:
+            func = ParserState.find_function(full_function_name)
+
+        # Try to find by function name
+        if func is None:
+            func = ParserState.find_function(function_name)
+
+        if func is None:
+            return None
+
+        llvm_func = ParserState.functions[func.name]
+        args = list()
+
+        # Gen a load if it doesn't expect a pointer
+        for i, arg in enumerate(llvm_args):
+            if len(func.args) > i and not isinstance(func.args[i].type, PointerType):
+                args.append(self.gen_load_if_necessary(arg))
+            else:
+                args.append(arg)
+
+        # Check type matching
+        for i, arg in enumerate(args):
+            if len(func.args) > i and arg.type != func.args[i].type:
+                # TODO: SLOC information
+                log_fail(
+                    f"Function {function_name} expects a {map_llvm_to_type(func.args[i].type)} but got a {map_llvm_to_type(arg.type)}")
+
+        # Gen call
+        return self.builder.call(func, args)
+
+    def gen_no_op(self):
+        if not "nop" in ParserState.functions:
+            func_type = self.create_function_type(ir.VoidType(), [], False)
+            llvm_func = LLVMFunction("nop", func_type, RIALAccessModifier.PUBLIC, ParserState.module().name, "void", [])
+            ParserState.functions["nop"] = llvm_func
+
+        self.gen_function_call("nop", "nop", "nop", [])
+
     def declare_variable(self, identifier: str, variable_type, value, rial_type: str) -> Optional[AllocaInstr]:
         variable = self.current_block.get_named_value(identifier)
 
@@ -277,13 +325,8 @@ class LLVMGen:
         # Call derived constructors
         for deriv in derived:
             if deriv.constructor is not None:
-                func = next((func for func in ParserState.module().functions if func.name == deriv.constructor.name),
-                            None)
-
-                if func is None:
-                    func = ir.Function(ParserState.module(), deriv.constructor.function_type, deriv.constructor.name)
-                bitcasted = self.builder.bitcast(self_value, ir.PointerType(deriv.struct))
-                self.builder.call(func, [bitcasted], cconv="fastcc")
+                self.gen_function_call(deriv.constructor.name, deriv.constructor.name, deriv.constructor.name,
+                                       [self.builder.bitcast(self_value, ir.PointerType(deriv.struct)), ])
 
         # Set initial values
         for i, bod in enumerate(body):
@@ -311,6 +354,19 @@ class LLVMGen:
                                   generate_body: bool,
                                   rial_access_modifier: RIALAccessModifier,
                                   rial_return_type: str):
+        """
+        Creates an IR Function with the specified arguments. NOTHING MORE.
+        :param name:
+        :param ty:
+        :param linkage:
+        :param calling_convention:
+        :param arg_names:
+        :param rial_args:
+        :param generate_body:
+        :param rial_access_modifier:
+        :param rial_return_type:
+        :return:
+        """
 
         # Create function with specified linkage (internal -> module only)
         func = ir.Function(ParserState.module(), ty, name=name)
@@ -357,60 +413,36 @@ class LLVMGen:
         if self.current_block.block.terminator is None:
             self.builder.position_at_end(self.current_block.block)
             self.builder.ret_void()
+        self.current_block = None
 
     def finish_current_func(self):
-        potential_memory: List[Instruction] = list()
-        loaded_memory: List[Instruction] = list()
+        # If we're in release mode
+        # Reorder all possible allocas to the start of the function
+        if CompilationManager.config.raw_opts.release:
+            entry: Block = self.current_func.entry_basic_block
+            pos = entry.instructions.index(
+                next((instr for instr in reversed(entry.instructions) if isinstance(instr, AllocaInstr)),
+                     entry.terminator))
+            allocas: List[Tuple[AllocaInstr, Block]] = list()
 
-        for block in self.current_func.blocks:
-            block: Block
-            for instr in block.instructions:
-                instr: Instruction
-
-                # If instruction is returned remove it from the potential memory allocations
-                if isinstance(instr, Ret):
-                    for op in instr.operands:
-                        try:
-                            potential_memory.remove(op)
-                        except ValueError:
-                            pass
-                    self.builder.position_before(instr)
-                    for mem in potential_memory:
-                        if isinstance(mem, AllocaInstr):
-                            pointee = mem.type.pointee
-
-                            if isinstance(pointee, IdentifiedStructType):
-                                llvm_struct = ParserState.search_structs(pointee.name)
-                                if llvm_struct.destructor is not None:
-                                    self.builder.call(llvm_struct.destructor, (mem,))
-                # If instruction is alloc it may need to be deconstructed
-                elif isinstance(instr, AllocaInstr):
-                    potential_memory.append(instr)
-                # If instruction is load we need to keep track of where the object goes
-                # So that we can avoid calling a deconstructor twice
-                elif isinstance(instr, LoadInstr):
-                    loaded_memory.append(instr)
-                # If instruction is store we can remove the target from the list of deconstructor calls
-                # since it has a reference to the same object
-                elif isinstance(instr, StoreInstr):
-                    stored = instr.operands[0]
-                    if stored in loaded_memory:
-                        target = instr.operands[1]
-                        # Same object
-                        if stored.operands[0] in potential_memory:
-                            if target in potential_memory:
-                                potential_memory.remove(target)
-                        # New untracked object?
-                        else:
-                            if not target in potential_memory:
-                                potential_memory.append(target)
-
-        # for instr in potential_memory:
-        #     if isinstance(instr, AllocaInstr):
-        #         pointee = instr.type.pointee
-        #
-        #         if isinstance(pointee, IdentifiedStructType):
-        #             print(ParserState.search_structs(pointee.name))
+            for block in self.current_func.blocks:
+                block: Block
+                # Skip first block
+                if block == entry:
+                    continue
+                for instr in block.instructions:
+                    if isinstance(instr, AllocaInstr):
+                        allocas.append((instr, block))
+            for instr_block in allocas:
+                if instr_block is not None:
+                    instr_block[1].instructions.remove(instr_block[0])
+                    entry.instructions.insert(pos, instr_block[0])
+                    pos += 1
+                    # Insert nop if block is empty
+                    if len(instr_block[1].instructions) == 0:
+                        self.builder.position_at_end(instr_block[1])
+                        self.gen_no_op()
+        self.current_func = None
 
     def create_return_statement(self, statement):
         if isinstance(statement, VoidType):

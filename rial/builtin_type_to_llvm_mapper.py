@@ -95,3 +95,20 @@ def map_type_to_llvm(rial_type: str) -> Optional[Type]:
         return ir.IntType(int(count))
 
     return None
+
+
+def map_llvm_to_type(llvm_type: Type):
+    if isinstance(llvm_type, LLVMUIntType):
+        return f"UInt{llvm_type.width}"
+
+    if isinstance(llvm_type, ir.IntType):
+        return f"Int{llvm_type.width}"
+
+    if isinstance(llvm_type, ir.FloatType):
+        return "Float32"
+
+    if isinstance(llvm_type, ir.DoubleType):
+        return "Double64"
+
+    if isinstance(llvm_type, ir.VoidType):
+        return "void"

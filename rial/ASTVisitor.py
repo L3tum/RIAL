@@ -396,12 +396,13 @@ class ASTVisitor(Interpreter):
     def function_call(self, tree: Tree):
         nodes = tree.children
         full_function_name: str
+        function_name: str
         start = 1
         implicit_parameter = None
         instantiation = False
 
         if len(nodes) > 1 and not isinstance(nodes[1], Tree) and nodes[1].type == "IDENTIFIER":
-            full_function_name = nodes[1].value
+            full_function_name = function_name = nodes[1].value
 
             # Get initial value
             implicit_parameter = self.get_var(nodes[0].value)
@@ -423,7 +424,7 @@ class ASTVisitor(Interpreter):
                     break
 
         else:
-            full_function_name: str = nodes[0].value
+            full_function_name = function_name = nodes[0].value
 
         i = start
         arguments: list = list()
@@ -439,68 +440,15 @@ class ASTVisitor(Interpreter):
 
         mangled_name = mangle_function_name(full_function_name, [arg.type for arg in arguments])
 
-        if implicit_parameter is not None:
-            # Try get type from parameter
-            ty = implicit_parameter.type.pointee
-            llvm_struct = ParserState.search_structs(ty.name)
+        # Check if it's an instantiation
+        llvm_struct = ParserState.find_struct(full_function_name)
 
-            if llvm_struct is not None:
-                # Try find function by struct module name
-                full_name = f"{llvm_struct.module_name}:{mangled_name}"
-
-                func = next((func for func in llvm_struct.functions if func.name == full_name), None)
-
-                # If we found a function we know what module it's in and can speed up the find_function call
-                if func is not None:
-                    mangled_name = full_name
-
-        # We still go the normal route here as it handles the difference between calling a module-local function
-        # vs calling a function in another module (which requires copying the definition into the current module)
-        func = ParserState.find_function(mangled_name)
-
-        # Check if it's an external (aka not mangled call)
-        if func is None:
-            func = ParserState.find_function(full_function_name)
-            # TODO: Should we get the LLVMFunction definition and actually check if it's external?
-
-        # Check if it's actually an instantiation
-        if func is None:
-            llvm_struct = ParserState.find_struct(full_function_name)
-
-            if llvm_struct is not None:
-                func = llvm_struct.constructor
-                arguments.append(self.llvmgen.builder.alloca(llvm_struct.struct))
-                instantiation = True
-            else:
-                print(ParserState.module().name)
-                print(nodes[0].line)
-                print(nodes[0].column)
-                print(arguments)
-                print(mangled_name)
-                print(full_function_name)
-                log_fail(f"Undeclared function or constructor {full_function_name} called!")
-                return None
-
-        args = list()
-
-        llvm_func = ParserState.search_function(func.name)
-
-        if llvm_func is None:
-            log_fail(f"Undeclared function {func.name} called!")
-            return None
-
-        for i, arg in enumerate(arguments):
-            # Don't gen a load when it's a CString parameter (pointer)
-            if llvm_func.rial_args[i][0] == "CString":
-                args.append(arg)
-            # Gen a load when the parameter is not supposed to be a pointer
-            elif not isinstance(func.args[i].type, PointerType):
-                args.append(self.llvmgen.gen_load_if_necessary(arg))
-            else:
-                args.append(arg)
+        if llvm_struct is not None:
+            arguments.append(self.llvmgen.builder.alloca(llvm_struct.struct))
+            instantiation = True
 
         try:
-            call_instr = self.llvmgen.builder.call(func, args)
+            call_instr = self.llvmgen.gen_function_call(function_name, full_function_name, mangled_name, arguments)
 
             if instantiation:
                 return arguments[0]
