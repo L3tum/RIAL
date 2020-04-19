@@ -2,8 +2,8 @@ from typing import List
 
 from rial.FunctionDeclarationTransformer import FunctionDeclarationTransformer
 from rial.LLVMFunction import LLVMFunction
+from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
-from rial.SingleParserState import SingleParserState
 from rial.concept.metadata_token import MetadataToken
 from rial.concept.parser import Transformer_InPlaceRecursive, Tree, Token, Discard
 from rial.log import log_fail
@@ -13,11 +13,13 @@ from rial.rial_types.RIALVariable import RIALVariable
 
 class StructDeclarationTransformer(Transformer_InPlaceRecursive):
     fdt: FunctionDeclarationTransformer
-    sps: SingleParserState
+    llvmgen: LLVMGen
 
-    def init(self, sps: SingleParserState, fdt: FunctionDeclarationTransformer):
-        self.sps = sps
-        self.fdt = fdt
+    def __init__(self):
+        super().__init__()
+        self.llvmgen = LLVMGen()
+        self.fdt = FunctionDeclarationTransformer()
+        self.fdt.llvmgen = self.llvmgen
 
     def struct_decl(self, nodes: List):
         if nodes[0].type == "ACCESS_MODIFIER":
@@ -29,7 +31,7 @@ class StructDeclarationTransformer(Transformer_InPlaceRecursive):
             name = nodes[0].value
             start = 1
 
-        full_name = f"{self.sps.llvmgen.module.name}:{name}"
+        full_name = f"{ParserState.module().name}:{name}"
 
         if ParserState.search_structs(full_name) is not None:
             log_fail(f"Struct {full_name} has been previously declared!")
@@ -48,7 +50,7 @@ class StructDeclarationTransformer(Transformer_InPlaceRecursive):
                 variable = node.children
                 rial_type = variable[0].value
                 variable_name = variable[1].value
-                llvm_type = self.sps.map_type_to_llvm(rial_type)
+                llvm_type = ParserState.map_type_to_llvm(rial_type)
                 variable_value = None
 
                 if len(variable) > 2:
@@ -64,14 +66,15 @@ class StructDeclarationTransformer(Transformer_InPlaceRecursive):
         base_llvm_structs = list()
 
         for base in bases:
-            llvm_struct = self.sps.find_struct(base)
+            llvm_struct = ParserState.find_struct(base)
             base_llvm_structs.append(llvm_struct)
 
-        llvm_struct = self.sps.llvmgen.create_identified_struct(full_name, self.sps.llvmgen.module.name,
-                                                                access_modifier.get_linkage(),
-                                                                access_modifier,
-                                                                base_llvm_structs,
-                                                                body)
+        llvm_struct = self.llvmgen.create_identified_struct(full_name,
+                                                            ParserState.module().name,
+                                                            access_modifier.get_linkage(),
+                                                            access_modifier,
+                                                            base_llvm_structs,
+                                                            body)
         ParserState.structs[full_name] = llvm_struct
 
         # Add constructor to function list
@@ -88,7 +91,7 @@ class StructDeclarationTransformer(Transformer_InPlaceRecursive):
             nodes.remove(function_decl)
             declared_functions.append(metadata_node)
 
-        self.sps.llvmgen.finish_struct()
+        self.llvmgen.finish_struct()
 
         node: Token = nodes[0]
         md_node = MetadataToken(node.type, node.value)

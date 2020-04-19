@@ -17,10 +17,8 @@ from rial.ASTVisitor import ASTVisitor
 from rial.FunctionDeclarationTransformer import FunctionDeclarationTransformer
 from rial.ParserState import ParserState
 from rial.PrimitiveASTTransformer import PrimitiveASTTransformer
-from rial.SingleParserState import SingleParserState
 from rial.StructDeclarationTransformer import StructDeclarationTransformer
 from rial.codegen import CodeGen
-from rial.combined_transformer import CombinedTransformer
 from rial.compilation_manager import CompilationManager
 from rial.concept.Postlexer import Postlexer
 from rial.concept.parser import Lark_StandAlone
@@ -102,10 +100,6 @@ def main(opts):
 
 def compile_file(opts):
     try:
-        primitive_transformer = PrimitiveASTTransformer()
-        function_declaration_transformer = FunctionDeclarationTransformer()
-        struct_declaration_transformer = StructDeclarationTransformer()
-
         while True:
             path = CompilationManager.files_to_compile.get()
 
@@ -124,11 +118,14 @@ def compile_file(opts):
             else:
                 module_name = project_name + ":" + module_name
             module = codegen.get_module(module_name, file.split('/')[-1], str(source_path))
-            sps = SingleParserState(module)
-            transformer = ASTVisitor(sps)
-            primitive_transformer.init(sps)
-            function_declaration_transformer.init(sps)
-            struct_declaration_transformer.init(sps, function_declaration_transformer)
+            ParserState.reset_usings()
+            ParserState.set_module(module)
+
+            primitive_transformer = PrimitiveASTTransformer()
+            function_declaration_transformer = FunctionDeclarationTransformer()
+            struct_declaration_transformer = StructDeclarationTransformer()
+            transformer = ASTVisitor()
+
             parser = Lark_StandAlone(transformer=primitive_transformer, postlex=Postlexer())
 
             with run_with_profiling(file, ExecutionStep.READ_FILE):

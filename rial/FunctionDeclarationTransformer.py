@@ -4,8 +4,8 @@ from llvmlite import ir
 from llvmlite.ir import IdentifiedStructType
 
 from rial.LLVMFunction import LLVMFunction
+from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
-from rial.SingleParserState import SingleParserState
 from rial.concept.TransformerInterpreter import TransformerInterpreter
 from rial.concept.metadata_token import MetadataToken
 from rial.concept.name_mangler import mangle_function_name
@@ -15,11 +15,12 @@ from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 
 
 class FunctionDeclarationTransformer(TransformerInterpreter):
-    sps: SingleParserState
     mangling: bool
+    llvmgen: LLVMGen
 
-    def init(self, sps: SingleParserState):
-        self.sps = sps  #
+    def __init__(self):
+        super().__init__()
+        self.llvmgen = LLVMGen()
         self.mangling = True
 
     def attributed_func_decl(self, tree: Tree):
@@ -78,7 +79,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
             name = nodes[1].value
             start_args = 2
 
-        full_function_name = f"{self.sps.llvmgen.module.name}:{name}"
+        full_function_name = f"{ParserState.module().name}:{name}"
         args: List[Tuple[str, str]] = list()
 
         i = start_args
@@ -117,7 +118,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
             raise Discard()
 
         # Map RIAL args to llvm arg types
-        llvm_args = [self.sps.map_type_to_llvm(arg[0]) for arg in args if not arg[1].endswith("...")]
+        llvm_args = [ParserState.map_type_to_llvm(arg[0]) for arg in args if not arg[1].endswith("...")]
 
         # Convert struct arguments into reference arguments
         for llvm_arg in llvm_args:
@@ -127,9 +128,9 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
                 llvm_args.insert(index, ir.PointerType(llvm_arg))
 
         # Add class as implicit self parameter
-        if self.sps.llvmgen.current_struct is not None:
-            llvm_args.insert(0, ir.PointerType(self.sps.llvmgen.current_struct.struct))
-            args.insert(0, (self.sps.llvmgen.current_struct.name, "this"))
+        if self.llvmgen.current_struct is not None:
+            llvm_args.insert(0, ir.PointerType(self.llvmgen.current_struct.struct))
+            args.insert(0, (self.llvmgen.current_struct.name, "this"))
 
         # Check if main method
         if full_function_name.endswith("main:main") and full_function_name.count(':') == 2:
@@ -159,33 +160,34 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
             if has_body == False or full_function_name in ParserState.implemented_functions and (
                     llvm_func.access_modifier == "public" or (
                     llvm_func.access_modifier == "internal" and llvm_func.module.split(':')[0] ==
-                    self.sps.llvmgen.module.name.split(':')[0])):
+                    ParserState.module().name.split(':')[0])):
                 log_fail(f"Function {full_function_name} already declared elsewhere")
                 raise Discard()
         else:
             # Hasn't been declared previously, redeclare the function type here
-            llvm_return_type = self.sps.map_type_to_llvm(return_type)
-            func_type = self.sps.llvmgen.create_function_type(llvm_return_type, llvm_args, var_args)
-            llvm_func = LLVMFunction(full_function_name, func_type, access_modifier, self.sps.llvmgen.module.name,
+            llvm_return_type = ParserState.map_type_to_llvm(return_type)
+            func_type = self.llvmgen.create_function_type(llvm_return_type, llvm_args, var_args)
+            llvm_func = LLVMFunction(full_function_name, func_type, access_modifier,
+                                     ParserState.module().name,
                                      return_type, args)
             ParserState.functions[full_function_name] = llvm_func
             ParserState.main_function = llvm_func
 
         # Create the actual function in IR
-        func = self.sps.llvmgen.create_function_with_type(full_function_name, llvm_func.function_type, linkage,
-                                                          calling_convention,
-                                                          list(map(lambda arg: arg[1], args)),
-                                                          args,
-                                                          has_body, access_modifier,
-                                                          llvm_func.rial_return_type)
+        func = self.llvmgen.create_function_with_type(full_function_name, llvm_func.function_type, linkage,
+                                                      calling_convention,
+                                                      list(map(lambda arg: arg[1], args)),
+                                                      args,
+                                                      has_body, access_modifier,
+                                                      llvm_func.rial_return_type)
 
         # Always inline the main function into the compiler supplied one
         if main_function:
             func.attributes.add('alwaysinline')
 
         # If it's in a struct or class we add it to that struct archives
-        if self.sps.llvmgen.current_struct is not None:
-            self.sps.llvmgen.current_struct.functions.append(func)
+        if self.llvmgen.current_struct is not None:
+            self.llvmgen.current_struct.functions.append(func)
 
         # If it has no body we do not need to go through it later as it's already declared with this method.
         if not has_body:

@@ -19,17 +19,17 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Added equality operator&#10;Closes #26">
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Added byte and char support&#10;Fixed bug that caused the constructor to not be registered as a function&#10;Theoretically added support for Half&#10;Closes #29">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/ASTVisitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ASTVisitor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/LLVMGen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMGen.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/ParserState.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ParserState.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/SingleParserState.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/src/main.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/main.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/src/print.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/print.rial" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -164,7 +164,7 @@
       <workItem from="1587121436416" duration="8349000" />
       <workItem from="1587133543828" duration="5069000" />
       <workItem from="1587199045602" duration="21944000" />
-      <workItem from="1587287963739" duration="1775000" />
+      <workItem from="1587287963739" duration="4444000" />
     </task>
     <task id="LOCAL-00001" summary="Update">
       <created>1585486198876</created>
@@ -292,7 +292,14 @@
       <option name="project" value="LOCAL" />
       <updated>1587247409585</updated>
     </task>
-    <option name="localTasksCounter" value="19" />
+    <task id="LOCAL-00019" summary="Added byte and char support&#10;Fixed bug that caused the constructor to not be registered as a function&#10;Theoretically added support for Half&#10;Closes #29">
+      <created>1587292361296</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1587292361296</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -328,7 +335,8 @@
     <MESSAGE value="Adds support for unsigned integers in math operations&#10;Closes #18&#10;&#10;Improves name mangling and error messages" />
     <MESSAGE value="Update&#10;Fix passing variables as arguments (require a load)&#10;Refactor mod/path transition&#10;Add attributed functions as a possibility with an example being NoMangle&#10;Added inheritance and inherited constructor calls in constructor&#10;Refactored main.py to give control back a bit faster&#10;Refactored builtin and std resolution" />
     <MESSAGE value="Added equality operator&#10;Closes #26" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added equality operator&#10;Closes #26" />
+    <MESSAGE value="Added byte and char support&#10;Fixed bug that caused the constructor to not be registered as a function&#10;Theoretically added support for Half&#10;Closes #29" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added byte and char support&#10;Fixed bug that caused the constructor to not be registered as a function&#10;Theoretically added support for Half&#10;Closes #29" />
   </component>
   <component name="WindowStateProjectService">
     <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1587209813482">
@@ -364,11 +372,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586869276582" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1587247411130">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1587292362357">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587247411130" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587292362357" />
     <state x="92" y="92" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1585249165802">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -397,10 +405,10 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="374" y="358" width="565" height="560" key="dock-window-3/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584965812228" />
-    <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1587228521758">
+    <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1587294082365">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587228521758" />
+    <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587294082365" />
     <state x="1123" y="472" key="refactoring.ChangeSignatureDialog" timestamp="1586600798541">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

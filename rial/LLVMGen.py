@@ -1,7 +1,7 @@
 from typing import Optional, Union, Tuple, List, Literal, Dict
 
 from llvmlite import ir
-from llvmlite.ir import Module, IRBuilder, Function, AllocaInstr, Branch, FunctionType, Type, VoidType, PointerType, \
+from llvmlite.ir import IRBuilder, Function, AllocaInstr, Branch, FunctionType, Type, VoidType, PointerType, \
     Block, Instruction, Ret, LoadInstr, StoreInstr, IdentifiedStructType, Argument
 
 from rial.LLVMBlock import LLVMBlock, create_llvm_block
@@ -18,12 +18,10 @@ class LLVMGen:
     conditional_block: Optional[LLVMBlock]
     end_block: Optional[LLVMBlock]
     current_block: Optional[LLVMBlock]
-    module: Module
     current_struct: Optional[LLVMStruct]
     global_variables: Dict
 
-    def __init__(self, module: Module):
-        self.module = module
+    def __init__(self):
         self.current_block = None
         self.conditional_block = None
         self.end_block = None
@@ -50,7 +48,7 @@ class LLVMGen:
         # TODO: Remove the always-added \0 once we don't need that anymore
         arr = bytearray(value.encode("utf-8") + b"\x00")
         const_char_arr = ir.Constant(ir.ArrayType(ir.IntType(8), len(arr)), arr)
-        glob = ir.GlobalVariable(self.module, const_char_arr.type, name=name)
+        glob = ir.GlobalVariable(ParserState.module(), const_char_arr.type, name=name)
         glob.linkage = 'private'
         glob.global_constant = True
         glob.initializer = const_char_arr
@@ -173,7 +171,7 @@ class LLVMGen:
             variable = self.builder.alloca(variable_type)
             variable.name = identifier
             variable.set_metadata('type',
-                                  self.module.add_metadata((rial_type,)))
+                                  ParserState.module().add_metadata((rial_type,)))
             if value is not None:
                 self.builder.store(value, variable)
 
@@ -256,7 +254,7 @@ class LLVMGen:
                                  rial_access_modifier: RIALAccessModifier,
                                  derived: List[LLVMStruct],
                                  body: List[RIALVariable]):
-        struct = self.module.context.get_identified_type(name)
+        struct = ParserState.module().context.get_identified_type(name)
         props = list()
         for deriv in derived:
             props.extend([bod[1].llvm_type for bod in deriv.properties.values()])
@@ -279,10 +277,11 @@ class LLVMGen:
         # Call derived constructors
         for deriv in derived:
             if deriv.constructor is not None:
-                func = next((func for func in self.module.functions if func.name == deriv.constructor.name), None)
+                func = next((func for func in ParserState.module().functions if func.name == deriv.constructor.name),
+                            None)
 
                 if func is None:
-                    func = ir.Function(self.module, deriv.constructor.function_type, deriv.constructor.name)
+                    func = ir.Function(ParserState.module(), deriv.constructor.function_type, deriv.constructor.name)
                 bitcasted = self.builder.bitcast(self_value, ir.PointerType(deriv.struct))
                 self.builder.call(func, [bitcasted], cconv="fastcc")
 
@@ -314,13 +313,14 @@ class LLVMGen:
                                   rial_return_type: str):
 
         # Create function with specified linkage (internal -> module only)
-        func = ir.Function(self.module, ty, name=name)
+        func = ir.Function(ParserState.module(), ty, name=name)
         func.linkage = linkage
         func.calling_convention = calling_convention
 
         if generate_body:
             func.set_metadata('function_definition',
-                              self.module.add_metadata((rial_return_type, str(rial_access_modifier), rial_args)))
+                              ParserState.module().add_metadata(
+                                  (rial_return_type, str(rial_access_modifier), rial_args)))
 
         # Set argument names
         for i, arg in enumerate(func.args):
@@ -351,7 +351,7 @@ class LLVMGen:
             self.builder.store(arg, allocated_arg)
             self.current_block.named_values[arg.name] = allocated_arg
             allocated_arg.set_metadata('type',
-                                       self.module.add_metadata((rial_arg_types[i],)))
+                                       ParserState.module().add_metadata((rial_arg_types[i],)))
 
     def finish_current_block(self):
         if self.current_block.block.terminator is None:
