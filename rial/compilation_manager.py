@@ -1,9 +1,9 @@
 from pathlib import Path
 from queue import Queue
 from threading import Lock, Event
-from typing import Dict
+from typing import Dict, List
 
-from llvmlite.binding import ModuleRef
+from llvmlite.ir import Module
 
 from rial.codegen import CodeGen
 from rial.configuration import Configuration
@@ -12,7 +12,8 @@ from rial.configuration import Configuration
 class CompilationManager:
     files_to_compile: Queue
     files_compiled: Dict[str, Event]
-    modules: Dict[str, ModuleRef]
+    modules: Dict[str, Module]
+    cached_files: List[str]
     lock: Lock
     config: Configuration
     codegen: CodeGen
@@ -24,7 +25,7 @@ class CompilationManager:
     def init(config: Configuration):
         CompilationManager.files_to_compile = Queue()
         CompilationManager.files_compiled = dict()
-        CompilationManager.object_files = list()
+        CompilationManager.cached_files = list()
         CompilationManager.lock = Lock()
         CompilationManager.config = config
         CompilationManager.modules = dict()

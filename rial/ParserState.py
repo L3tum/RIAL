@@ -4,7 +4,6 @@ from typing import Dict, Optional, List, Tuple
 from llvmlite import ir
 from llvmlite.ir import Module, Function
 
-from rial.LLVMFunction import LLVMFunction
 from rial.LLVMStruct import LLVMStruct
 from rial.builtin_type_to_llvm_mapper import map_type_to_llvm
 from rial.compilation_manager import CompilationManager
@@ -13,10 +12,8 @@ from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 
 
 class ParserState:
-    functions: Dict[str, LLVMFunction]
     implemented_functions: List[str]
     structs: Dict[str, LLVMStruct]
-    main_function: LLVMFunction
     threadLocalUsings: threading.local
     threadLocalModule: threading.local
 
@@ -25,7 +22,6 @@ class ParserState:
 
     @staticmethod
     def init():
-        ParserState.functions = dict()
         ParserState.implemented_functions = list()
         ParserState.structs = dict()
         ParserState.threadLocalUsings = threading.local()
@@ -48,15 +44,14 @@ class ParserState:
         return cls.threadLocalModule.module
 
     @staticmethod
-    def search_function(name: str) -> Optional[LLVMFunction]:
-        if name in ParserState.functions:
-            return ParserState.functions[name]
+    def search_function(name: str) -> Optional[Function]:
+        for key, mod in CompilationManager.modules.items():
+            try:
+                return mod.get_global(name)
+            except KeyError:
+                pass
 
         return None
-
-    @staticmethod
-    def search_implemented_functions(name: str) -> bool:
-        return name in ParserState.implemented_functions
 
     @staticmethod
     def search_structs(name: str) -> Optional[LLVMStruct]:
@@ -78,17 +73,17 @@ class ParserState:
         # If func isn't in current module
         if func is None:
             # Try to find function by full name
-            llvm_function = ParserState.search_function(full_function_name)
+            function = ParserState.search_function(full_function_name)
 
             # If couldn't find it, iterate through usings and try to find function
-            if llvm_function is None:
-                functions_found: List[Tuple[str, LLVMFunction]] = list()
+            if function is None:
+                functions_found: List[Tuple[str, Function]] = list()
 
                 for use in ParserState.usings():
-                    llvm_function = ParserState.search_function(f"{use}:{full_function_name}")
-                    if llvm_function is None:
+                    function = ParserState.search_function(f"{use}:{full_function_name}")
+                    if function is None:
                         continue
-                    functions_found.append((use, llvm_function,))
+                    functions_found.append((use, function,))
 
                 if len(functions_found) > 1:
                     log_fail(f"Function {full_function_name} has been declared multiple times!")
@@ -98,29 +93,28 @@ class ParserState:
 
                 # Check for number of functions found
                 if len(functions_found) == 1:
-                    llvm_function = functions_found[0][1]
+                    function = functions_found[0][1]
 
-            if llvm_function is not None:
+            if function is not None:
                 # Function cannot be accessed if:
                 #   - Function is not public and
                 #   - Function is internal but not in same TLM (top level module) or
                 #   - Function is private but not in same module
-                if llvm_function.access_modifier != RIALAccessModifier.PUBLIC and \
-                        ((llvm_function.access_modifier == RIALAccessModifier.INTERNAL and
-                          llvm_function.module.split(':')[0] != ParserState.module().name.split(':')[0]) or
-                         (llvm_function.access_modifier == RIALAccessModifier.PRIVATE and
-                          llvm_function.module != ParserState.module().name)):
+                if function.get_access_modifier() != RIALAccessModifier.PUBLIC and \
+                        ((function.get_access_modifier() == RIALAccessModifier.INTERNAL and
+                          function.module.name.split(':')[0] != ParserState.module().name.split(':')[0]) or
+                         (function.get_access_modifier() == RIALAccessModifier.PRIVATE and
+                          function.module.name != ParserState.module().name)):
                     log_fail(
-                        f"Cannot access method {full_function_name} in module {llvm_function.module}!")
+                        f"Cannot access method {full_function_name} in module {function.module.name}!")
                     return None
 
                 # Check if it has been declared previously (by another function call for example)
-                func = next((func for func in ParserState.module().functions if
-                             func.name == llvm_function.name), None)
+                func = ParserState.module().get_global_safe(function.name)
 
                 # Declare function if not declared in current module
                 if func is None:
-                    func = ir.Function(ParserState.module(), llvm_function.function_type, name=llvm_function.name)
+                    func = ir.Function(ParserState.module(), function.function_type, name=function.name)
 
         # Try request the module that the function might(!) be in
         if func is None:

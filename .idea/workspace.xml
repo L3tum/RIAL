@@ -19,16 +19,17 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Fixed access control for functions">
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Added option to use LLVM bitcode files instead of object files&#10;Switched to prefer Clang but with GCC fallback&#10;Added config validation&#10;Added struct access control&#10;Fixed config merging use a wrong order&#10;&#10;Overall Clang nets around 0.1 seconds in the testing/ test&#10;However, LLLVM bitcode produces larger binaries than using object files. Not sure why.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/LLVMFunction.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/LLVMGen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMGen.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/ParserState.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ParserState.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/compilation_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compilation_manager.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/compiler.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compiler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/linking/linker.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/linking/linker.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/linking/linking_options.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/linking/linking_options.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/platform/LinuxPlatform.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/platform/LinuxPlatform.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/util.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/rial.ini" beforeDir="false" afterPath="$PROJECT_DIR$/testing/rial.ini" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -164,7 +165,7 @@
       <workItem from="1587133543828" duration="5069000" />
       <workItem from="1587199045602" duration="21944000" />
       <workItem from="1587287963739" duration="18809000" />
-      <workItem from="1587369605136" duration="8225000" />
+      <workItem from="1587369605136" duration="11835000" />
     </task>
     <task id="LOCAL-00001" summary="Update">
       <created>1585486198876</created>
@@ -341,7 +342,14 @@
       <option name="project" value="LOCAL" />
       <updated>1587374679791</updated>
     </task>
-    <option name="localTasksCounter" value="26" />
+    <task id="LOCAL-00026" summary="Added option to use LLVM bitcode files instead of object files&#10;Switched to prefer Clang but with GCC fallback&#10;Added config validation&#10;Added struct access control&#10;Fixed config merging use a wrong order&#10;&#10;Overall Clang nets around 0.1 seconds in the testing/ test&#10;However, LLLVM bitcode produces larger binaries than using object files. Not sure why.">
+      <created>1587382210690</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1587382210690</updated>
+    </task>
+    <option name="localTasksCounter" value="27" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -384,7 +392,8 @@
     <MESSAGE value="Fixed a race condition that would confuse LLVM" />
     <MESSAGE value="Fixed passing variables to functions" />
     <MESSAGE value="Fixed access control for functions" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed access control for functions" />
+    <MESSAGE value="Added option to use LLVM bitcode files instead of object files&#10;Switched to prefer Clang but with GCC fallback&#10;Added config validation&#10;Added struct access control&#10;Fixed config merging use a wrong order&#10;&#10;Overall Clang nets around 0.1 seconds in the testing/ test&#10;However, LLLVM bitcode produces larger binaries than using object files. Not sure why." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added option to use LLVM bitcode files instead of object files&#10;Switched to prefer Clang but with GCC fallback&#10;Added config validation&#10;Added struct access control&#10;Fixed config merging use a wrong order&#10;&#10;Overall Clang nets around 0.1 seconds in the testing/ test&#10;However, LLLVM bitcode produces larger binaries than using object files. Not sure why." />
   </component>
   <component name="WindowStateProjectService">
     <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1587209813482">
@@ -420,11 +429,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586869276582" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1587374680662">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1587382211789">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587374680662" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587382211789" />
     <state x="92" y="92" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1585249165802">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -453,10 +462,10 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="374" y="358" width="565" height="560" key="dock-window-3/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584965812228" />
-    <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1587294082365">
+    <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1587385202750">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587294082365" />
+    <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587385202750" />
     <state x="1123" y="472" key="refactoring.ChangeSignatureDialog" timestamp="1586600798541">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

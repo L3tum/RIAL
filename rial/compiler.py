@@ -44,25 +44,8 @@ def compiler():
 
     modules: Dict[str, ModuleRef] = dict()
 
-    if CompilationManager.config.raw_opts.release:
-        with run_with_profiling("main", ExecutionStep.COMPILE_MOD):
-            # Since the main module is dependent on all other modules, it will be the last to add
-            # If it's not the actual main module then that's no big deal either
-            main_module = CompilationManager.modules[list(CompilationManager.modules.keys())[-1]]
-
-            for key in list(CompilationManager.modules.keys()):
-                mod = CompilationManager.modules[key]
-
-                # Skip last
-                if main_module == mod:
-                    continue
-
-                main_module.link_in(mod, False)
-
-            # "Virtual" main
-            modules[str(CompilationManager.config.source_path) + "/main.rial"] = main_module
-    else:
-        modules = CompilationManager.modules
+    for key, mod in CompilationManager.modules.items():
+        modules[key] = CompilationManager.codegen.compile_ir(mod)
 
     object_files: List[str] = list()
     llvm_bitcode_files: List[str] = list()
@@ -143,6 +126,7 @@ def compile_file():
                 ast = function_declaration_transformer.visit(ast)
 
                 # Declarations are all already collected so we can move on.
+                CompilationManager.modules[str(path)] = module
                 CompilationManager.finish_file(path)
 
                 transformer.visit(ast)
@@ -150,8 +134,6 @@ def compile_file():
             if CompilationManager.config.raw_opts.print_tokens:
                 print(ast.pretty())
 
-            mod = CompilationManager.codegen.compile_ir(module)
-            CompilationManager.modules[str(path)] = mod
             CompilationManager.files_to_compile.task_done()
     except Exception as e:
         log_fail("Internal Compiler Error: ")

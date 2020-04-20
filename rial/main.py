@@ -16,7 +16,7 @@ from rial.compiler import compiler
 from rial.configuration import Configuration
 from rial.log import log_fail
 from rial.profiling import set_profiling, execution_events, display_top
-from rial.util import pythonify
+from rial.util import pythonify, monkey_patch
 
 
 def main(options):
@@ -137,7 +137,8 @@ if __name__ == "__main__":
                     ac_parse_value=True)
 
     # Merge release into config to overwrite for release mode
-    if opts['config']['release'] or ops['release']:
+    if ('release' in ops and ops['release']) or (
+            'config' in opts and 'release' in opts['config'] and opts['config']['release']):
         anyconfig.merge(opts['config'], opts['release'], ac_merge=anyconfig.MS_DICTS_AND_LISTS)
 
     # Merge CLI args
@@ -158,5 +159,8 @@ if __name__ == "__main__":
     #     file.write(schema_s)
 
     opts = munchify(opts)
+
+    # Monkey patch functions in
+    monkey_patch()
 
     main(opts)

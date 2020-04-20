@@ -1,7 +1,6 @@
 from typing import List
 
 from rial.FunctionDeclarationTransformer import FunctionDeclarationTransformer
-from rial.LLVMFunction import LLVMFunction
 from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
 from rial.concept.metadata_token import MetadataToken
@@ -76,12 +75,6 @@ class StructDeclarationTransformer(Transformer_InPlaceRecursive):
                                                             base_llvm_structs,
                                                             body)
         ParserState.structs[full_name] = llvm_struct
-
-        # Add constructor to function list
-        llvm_func = LLVMFunction(llvm_struct.constructor.name, llvm_struct.constructor.function_type,
-                                 llvm_struct.access_modifier,
-                                 llvm_struct.module_name, "Void", [llvm_struct.name, "this"])
-        ParserState.functions[llvm_func.name] = llvm_func
 
         declared_functions = list()
 

@@ -3,7 +3,6 @@ from typing import List, Tuple
 from llvmlite import ir
 from llvmlite.ir import IdentifiedStructType
 
-from rial.LLVMFunction import LLVMFunction
 from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
 from rial.concept.TransformerInterpreter import TransformerInterpreter
@@ -147,45 +146,36 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
             full_function_name = mangle_function_name(full_function_name, llvm_args)
 
         # Search for function in the archives
-        llvm_func = ParserState.search_function(full_function_name)
+        func = ParserState.search_function(full_function_name)
 
         # Function has been previously declared
-        if llvm_func is not None:
+        if func is not None:
             # Check if either:
             # - has no body (cannot redeclare functions) or
             # - is already implemented and
             #   - is either public or
             #     - internal and
             #     - is in same package (cannot reimplement functions)
-            if has_body == False or full_function_name in ParserState.implemented_functions and (
-                    llvm_func.access_modifier == "public" or (
-                    llvm_func.access_modifier == "internal" and llvm_func.module.split(':')[0] ==
-                    ParserState.module().name.split(':')[0])):
-                log_fail(f"Function {full_function_name} already declared elsewhere")
-                raise Discard()
-        else:
-            # Hasn't been declared previously, redeclare the function type here
-            llvm_return_type = ParserState.map_type_to_llvm(return_type)
-            func_type = self.llvmgen.create_function_type(llvm_return_type, llvm_args, var_args)
-            llvm_func = LLVMFunction(full_function_name, func_type, access_modifier,
-                                     ParserState.module().name,
-                                     return_type, args)
-            ParserState.functions[full_function_name] = llvm_func
-            ParserState.main_function = llvm_func
+            # TODO: LLVM checks this anyways but maybe we wanna do it, too?
+            log_fail(f"Function {full_function_name} already declared elsewhere")
+            raise Discard()
+        # Hasn't been declared previously, redeclare the function type here
+        llvm_return_type = ParserState.map_type_to_llvm(return_type)
+        func_type = self.llvmgen.create_function_type(llvm_return_type, llvm_args, var_args)
 
         # Create the actual function in IR
-        func = self.llvmgen.create_function_with_type(full_function_name, llvm_func.function_type, linkage,
+        func = self.llvmgen.create_function_with_type(full_function_name, func_type, linkage,
                                                       calling_convention,
                                                       list(map(lambda arg: arg[1], args)),
                                                       args,
                                                       has_body, access_modifier,
-                                                      llvm_func.rial_return_type)
+                                                      return_type)
 
         # Always inline the main function into the compiler supplied one
         if main_function:
             func.attributes.add('alwaysinline')
 
-        # If it's in a struct or class we add it to that struct archives
+        # If it's in a struct or class we add it to that struct's archives
         if self.llvmgen.current_struct is not None:
             self.llvmgen.current_struct.functions.append(func)
 

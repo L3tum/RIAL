@@ -5,7 +5,6 @@ from llvmlite.ir import IRBuilder, Function, AllocaInstr, Branch, FunctionType, 
     Argument, CallInstr, Block
 
 from rial.LLVMBlock import LLVMBlock, create_llvm_block
-from rial.LLVMFunction import LLVMFunction
 from rial.LLVMStruct import LLVMStruct
 from rial.LLVMUIntType import LLVMUIntType
 from rial.ParserState import ParserState
@@ -178,7 +177,6 @@ class LLVMGen:
         if func is None:
             return None
 
-        llvm_func = ParserState.functions[func.name]
         args = list()
 
         # Gen a load if it doesn't expect a pointer
@@ -202,12 +200,15 @@ class LLVMGen:
         return self.builder.call(func, args)
 
     def gen_no_op(self):
-        if not "nop" in ParserState.functions:
+        # Redeclare llvm.donothing if it isn't declared in current module
+        try:
+            ParserState.module().get_global('llvm.donothing')
+        except KeyError:
             func_type = self.create_function_type(ir.VoidType(), [], False)
-            llvm_func = LLVMFunction("nop", func_type, RIALAccessModifier.PUBLIC, ParserState.module().name, "void", [])
-            ParserState.functions["nop"] = llvm_func
+            self.create_function_with_type('llvm.donothing', func_type, "external", "", [], [], False,
+                                           RIALAccessModifier.PUBLIC, "void")
 
-        self.gen_function_call("nop", "nop", "nop", [])
+        self.gen_function_call("llvm.donothing", "llvm.donothing", "llvm.donothing", [])
 
     def declare_variable(self, identifier: str, variable_type, value, rial_type: str) -> Optional[AllocaInstr]:
         variable = self.current_block.get_named_value(identifier)
