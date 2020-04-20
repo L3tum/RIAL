@@ -101,14 +101,15 @@ class ParserState:
                     llvm_function = functions_found[0][1]
 
             if llvm_function is not None:
-                # Function is either:
-                # - public or
-                # - internal and
-                #   - in same TLM
+                # Function cannot be accessed if:
+                #   - Function is not public and
+                #   - Function is internal but not in same TLM (top level module) or
+                #   - Function is private but not in same module
                 if llvm_function.access_modifier != RIALAccessModifier.PUBLIC and \
-                        (llvm_function.access_modifier != RIALAccessModifier.INTERNAL and
-                         llvm_function.module.split(':')[0]
-                         == ParserState.module().name.split(':')[0]):
+                        ((llvm_function.access_modifier == RIALAccessModifier.INTERNAL and
+                          llvm_function.module.split(':')[0] != ParserState.module().name.split(':')[0]) or
+                         (llvm_function.access_modifier == RIALAccessModifier.PRIVATE and
+                          llvm_function.module != ParserState.module().name)):
                     log_fail(
                         f"Cannot access method {full_function_name} in module {llvm_function.module}!")
                     return None
