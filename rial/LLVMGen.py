@@ -183,7 +183,10 @@ class LLVMGen:
 
         # Gen a load if it doesn't expect a pointer
         for i, arg in enumerate(llvm_args):
-            if len(func.args) > i and not isinstance(func.args[i].type, PointerType):
+            # If it's a variable and the function doesn't expect a pointer we _need_ to load it
+            if isinstance(arg, AllocaInstr) and (len(func.args) <= i or not isinstance(func.args[i].type, PointerType)):
+                args.append(self.gen_load_if_necessary(arg))
+            elif len(func.args) > i and not isinstance(func.args[i].type, PointerType):
                 args.append(self.gen_load_if_necessary(arg))
             else:
                 args.append(arg)
