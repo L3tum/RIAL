@@ -65,6 +65,7 @@ def compiler():
         modules = CompilationManager.modules
 
     object_files: List[str] = list()
+    llvm_bitcode_files: List[str] = list()
     CompilationManager.codegen.generate_final_modules(list(modules.values()))
 
     for path in list(modules.keys()):
@@ -78,9 +79,10 @@ def compiler():
             asm_file = str(CompilationManager.get_cache_path_str(path)).replace(".rial", ".asm")
             CompilationManager.codegen.save_assembly(asm_file, mod)
 
-        if CompilationManager.config.raw_opts.print_lbc:
+        if not CompilationManager.config.raw_opts.use_object_files:
             llvm_bitcode_file = str(CompilationManager.get_cache_path_str(path)).replace(".rial", ".lbc")
             CompilationManager.codegen.save_llvm_bitcode(llvm_bitcode_file, mod)
+            llvm_bitcode_files.append(llvm_bitcode_file)
 
         object_file = str(CompilationManager.get_cache_path_str(path)).replace(".rial", ".o")
         CompilationManager.codegen.save_object(object_file, mod)
@@ -89,8 +91,15 @@ def compiler():
     with run_with_profiling(CompilationManager.config.project_name, ExecutionStep.LINK_EXE):
         exe_path = str(CompilationManager.config.bin_path.joinpath(
             f"{CompilationManager.config.project_name}{Platform.get_exe_file_extension()}"))
-        Linker.link_files(object_files, exe_path, CompilationManager.config.raw_opts.print_link_command,
-                          CompilationManager.config.raw_opts.strip)
+
+        if CompilationManager.config.raw_opts.use_object_files:
+            Linker.link_files(object_files, exe_path, CompilationManager.config.raw_opts.print_link_command,
+                              CompilationManager.config.raw_opts.strip)
+        else:
+            output_path = str(CompilationManager.config.cache_path.joinpath("temp_total.ll"))
+            Linker.link_lbc_files(llvm_bitcode_files, output_path)
+            Linker.link_files([output_path], exe_path, CompilationManager.config.raw_opts.print_link_command,
+                              CompilationManager.config.raw_opts.strip)
 
 
 def compile_file():

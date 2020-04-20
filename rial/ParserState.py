@@ -137,11 +137,14 @@ class ParserState:
 
     @staticmethod
     def find_struct(struct_name: str):
+        # Search with name
         struct = ParserState.search_structs(struct_name)
 
+        # Search with current module specifier
         if struct is None:
             struct = ParserState.search_structs(f"{ParserState.module().name}:{struct_name}")
 
+        # Iterate through usings
         if struct is None:
             structs_found: List[Tuple] = list()
             for using in ParserState.usings():
@@ -157,6 +160,19 @@ class ParserState:
                 log_fail(f"Specify one of them by using {structs_found[0][0]}:{struct_name} for example")
                 return None
             struct = structs_found[0][1]
+
+        # Struct cannot be accessed if:
+        #   - Struct is not public and
+        #   - Struct is internal but not in same TLM (top level module) or
+        #   - Struct is private but not in same module
+        if struct.access_modifier != RIALAccessModifier.PUBLIC and \
+                ((struct.access_modifier == RIALAccessModifier.INTERNAL and
+                  struct.module_name.split(':')[0] != ParserState.module().name.split(':')[0]) or
+                 (struct.access_modifier == RIALAccessModifier.PRIVATE and
+                  struct.module_name != ParserState.module().name)):
+            log_fail(
+                f"Cannot access struct {struct_name} in module {struct.module_name}!")
+            return None
 
         return struct
 

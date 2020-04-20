@@ -16,6 +16,7 @@ from rial.compiler import compiler
 from rial.configuration import Configuration
 from rial.log import log_fail
 from rial.profiling import set_profiling, execution_events, display_top
+from rial.util import pythonify
 
 
 def main(options):
@@ -78,12 +79,13 @@ def parse_prelim_arguments():
     parser.add_argument('--print-tokens', help="Prints the list of tokens to stdout", action="store_true", default=None)
     parser.add_argument('--print-ir', help="Prints the LLVM IR", action="store_true", default=None)
     parser.add_argument('--print-asm', help="Prints the native assembly", action="store_true", default=None)
-    parser.add_argument('--print-lbc', help="Prints the LLVM bitcode", action="store_true", default=None)
     parser.add_argument('--opt-level', type=str, help="Optimization level to use",
                         choices=("0", "1", "2", "3", "s", "z"), default=None)
     parser.add_argument('--print-link-command', action='store_true',
                         help="Prints the command used for linking the object files", default=None)
     parser.add_argument('--release', action='store_true', help="Release mode", default=None)
+    parser.add_argument('--use-object-files', action='store_true',
+                        help="Use object files rather than LLVM bitcode files for linking", default=None)
 
     return parser.parse_known_args()
 
@@ -92,7 +94,7 @@ def parse_config_file_arguments(workdir: str):
     workdir = Path(workdir)
     return anyconfig.load([
         str(workdir.joinpath("rial.json")),
-        str(workdir.joinpath("rial.yml")),
+        str(workdir.joinpath("rial.yaml")),
         str(workdir.joinpath("rial.toml")),
         str(workdir.joinpath("rial.ini")),
         str(workdir.joinpath("rial.xml")),
@@ -106,7 +108,7 @@ if __name__ == "__main__":
             'print_tokens': False,
             'print_ir': False,
             'print_asm': False,
-            'print_lbc': False,
+            'use_object_files': True,
             'opt_level': '0',
             'print_link_command': False,
             'release': False,
@@ -117,7 +119,7 @@ if __name__ == "__main__":
         'release': {
             'opt_level': '3',
             'release': True,
-            'strip': True
+            'strip': True,
         }
     }
 
@@ -131,16 +133,29 @@ if __name__ == "__main__":
         ops['workdir'] = os.path.abspath(ops['workdir'])
 
     # Merge base config and file config (giving priority to file config)
-    anyconfig.merge(opts, parse_config_file_arguments(ops['workdir']), ac_merge=anyconfig.MS_DICTS_AND_LISTS)
+    anyconfig.merge(opts, parse_config_file_arguments(ops['workdir']), ac_merge=anyconfig.MS_DICTS_AND_LISTS,
+                    ac_parse_value=True)
+
+    # Merge release into config to overwrite for release mode
+    if opts['config']['release'] or ops['release']:
+        anyconfig.merge(opts['config'], opts['release'], ac_merge=anyconfig.MS_DICTS_AND_LISTS)
 
     # Merge CLI args
     anyconfig.merge(opts, {'config': ops}, ac_merge=anyconfig.MS_DICTS_AND_LISTS)
 
-    # Merge release into config to overwrite for release mode
-    if opts['config']['release']:
-        anyconfig.merge(opts['config'], opts['release'], ac_merge=anyconfig.MS_DICTS)
-
     opts = opts['config']
+
+    opts = pythonify(opts)
+
+    # Validate the config
+    schema = anyconfig.load(__file__.replace("main.py", "") + "/concept/config_schema.json")
+    anyconfig.validate(opts, schema, ac_schema_safe=False)
+
+    # schema = anyconfig.gen_schema(opts, ac_schema_type="strict")
+    # schema_s = anyconfig.dumps(schema, "json")
+    #
+    # with open(__file__.replace("main.py", "") + "/concept/config_schema.json", "w") as file:
+    #     file.write(schema_s)
 
     opts = munchify(opts)
 

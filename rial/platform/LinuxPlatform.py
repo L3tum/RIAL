@@ -25,14 +25,25 @@ class LinuxPlatform(IPlatform):
 
     def get_link_options(self) -> LinkingOptions:
         opts = LinkingOptions()
-        opts.linker_executable = which("cc")
+        opts.linker_executable = which("clang-8")
+
+        if opts.linker_executable is None:
+            opts.linker_executable = which("clang")
+
+        if opts.linker_executable is None:
+            opts.linker_executable = which("cc")
+
+        opts.llvm_linker_executable = which("llvm-link-8")
+
+        if opts.llvm_linker_executable is None:
+            opts.llvm_linker_executable = which("llvm-link")
 
         # Detect underlinking (missing shared libraries)
         opts.linker_pre_args.append("-Wl,-z,defs")
 
         # Enable Adress space layout randomization via position-independent-executables
         # TODO: Disable when building a shared library
-        opts.linker_pre_args.append("-fPIE -Wl,-pie")
+        # opts.linker_pre_args.append("-fPIE -Wl,-pie")
 
         # Use the "new" stack protector
         opts.linker_pre_args.append("-fstack-protector-strong")

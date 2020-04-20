@@ -19,9 +19,16 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Fixed passing variables to functions">
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Fixed access control for functions">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/ParserState.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ParserState.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/compiler.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compiler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/linking/linker.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/linking/linker.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/linking/linking_options.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/linking/linking_options.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/platform/LinuxPlatform.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/platform/LinuxPlatform.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/util.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing/rial.ini" beforeDir="false" afterPath="$PROJECT_DIR$/testing/rial.ini" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -157,7 +164,7 @@
       <workItem from="1587133543828" duration="5069000" />
       <workItem from="1587199045602" duration="21944000" />
       <workItem from="1587287963739" duration="18809000" />
-      <workItem from="1587369605136" duration="2689000" />
+      <workItem from="1587369605136" duration="8225000" />
     </task>
     <task id="LOCAL-00001" summary="Update">
       <created>1585486198876</created>
@@ -327,7 +334,14 @@
       <option name="project" value="LOCAL" />
       <updated>1587373855803</updated>
     </task>
-    <option name="localTasksCounter" value="25" />
+    <task id="LOCAL-00025" summary="Fixed access control for functions">
+      <created>1587374679791</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1587374679791</updated>
+    </task>
+    <option name="localTasksCounter" value="26" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -369,7 +383,8 @@
     <MESSAGE value="Added config file support&#10;Refactored config layout&#10;Refactored main.py to be all about arguments&#10;Closes #10" />
     <MESSAGE value="Fixed a race condition that would confuse LLVM" />
     <MESSAGE value="Fixed passing variables to functions" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed passing variables to functions" />
+    <MESSAGE value="Fixed access control for functions" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed access control for functions" />
   </component>
   <component name="WindowStateProjectService">
     <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1587209813482">
@@ -405,11 +420,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586869276582" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1587373856701">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1587374680662">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587373856701" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587374680662" />
     <state x="92" y="92" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1585249165802">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
