@@ -65,10 +65,10 @@ def compiler():
         modules = CompilationManager.modules
 
     object_files: List[str] = list()
+    CompilationManager.codegen.generate_final_modules(list(modules.values()))
 
     for path in list(modules.keys()):
         mod = modules[path]
-        CompilationManager.codegen.generate_final_module(mod)
 
         if CompilationManager.config.raw_opts.print_ir:
             ir_file = str(CompilationManager.get_cache_path_str(path)).replace(".rial", ".ll")

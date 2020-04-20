@@ -130,7 +130,7 @@ if __name__ == "__main__":
     else:
         ops['workdir'] = os.path.abspath(ops['workdir'])
 
-    # Merge arg config and file config (giving priority to arg config)
+    # Merge base config and file config (giving priority to file config)
     anyconfig.merge(opts, parse_config_file_arguments(ops['workdir']), ac_merge=anyconfig.MS_DICTS_AND_LISTS)
 
     # Merge CLI args

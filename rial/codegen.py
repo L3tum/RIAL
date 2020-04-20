@@ -1,5 +1,6 @@
 from pathlib import Path
 from threading import Lock
+from typing import List
 
 from llvmlite import ir, binding
 from llvmlite.binding import ExecutionEngine, ModuleRef, TargetMachine, PassManagerBuilder, ModulePassManager
@@ -102,11 +103,11 @@ class CodeGen:
 
         return mod
 
-    def generate_final_module(self, mod: ModuleRef):
-        self.engine.add_module(mod)
+    def generate_final_modules(self, modules: List[ModuleRef]):
+        for mod in modules:
+            self.engine.add_module(mod)
         self.engine.finalize_object()
         self.engine.run_static_constructors()
-        self.engine.remove_module(mod)
 
     def _check_dirs_exist(self, dest: str):
         directory = '/'.join(dest.split("/")[0:-1])
