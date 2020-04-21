@@ -19,20 +19,19 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Updates for caching system&#10;&#10;Fixed bug in main.py that expected release to always be set&#10;Completely removed LLVMFunction.py and instead rely on LLVM's Function and Metadata&#10;Added monkey patches to ease the above mentioned change&#10;Reworked module compilation system to better support this&#10;Removed linking in of modules. Doesn't net any benefit as far as my tests have shown so instead of reworking it the removal was easier">
-      <change afterPath="$PROJECT_DIR$/rial/metadata/FunctionDefinition.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/metadata/StructDefinition.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/metadata/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Completely removed any state for functions and structs (LLVMFunction.py and LLVMStruct.py)&#10;Moved necessary metadata into LLVM metadata&#10;Improved certain operations&#10;Fixed bug in ParserState.py causing the function to not be returned&#10;&#10;Removed inheritance for now">
+      <change afterPath="$PROJECT_DIR$/rial/concept/config_schema.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/ASTVisitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ASTVisitor.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/LLVMGen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMGen.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/ParserState.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ParserState.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/rial_types/RIALVariable.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/rial_types/RIALVariable.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/codegen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/codegen.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/compilation_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compilation_manager.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/compiler.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compiler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/configuration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/profiling.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/profiling.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/util.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/src/main.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/main.rial" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -170,7 +169,7 @@
       <workItem from="1587199045602" duration="21944000" />
       <workItem from="1587287963739" duration="18809000" />
       <workItem from="1587369605136" duration="18078000" />
-      <workItem from="1587455850878" duration="6344000" />
+      <workItem from="1587455850878" duration="15462000" />
     </task>
     <task id="LOCAL-00001" summary="Update">
       <created>1585486198876</created>
@@ -361,7 +360,14 @@
       <option name="project" value="LOCAL" />
       <updated>1587387501961</updated>
     </task>
-    <option name="localTasksCounter" value="28" />
+    <task id="LOCAL-00028" summary="Completely removed any state for functions and structs (LLVMFunction.py and LLVMStruct.py)&#10;Moved necessary metadata into LLVM metadata&#10;Improved certain operations&#10;Fixed bug in ParserState.py causing the function to not be returned&#10;&#10;Removed inheritance for now">
+      <created>1587469312524</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1587469312524</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -380,7 +386,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Implements #1" />
     <MESSAGE value="Improved profiling and name mangling" />
     <MESSAGE value="Improved name mangling&#10;Improved file and module handling&#10;Added ability to specify modules in function names and resolve them via that method&#10;Moved postlex stuff into a separate Postlexer.py&#10;Added outer main method supplied by RIAL&#10;Added support for nested directories&#10;Improved global Compilation Manager&#10;Added functions list to structs to collect and keep track of their functions" />
     <MESSAGE value="Added bool -&gt; Boolean to shortcut mapper" />
@@ -405,7 +410,8 @@
     <MESSAGE value="Fixed access control for functions" />
     <MESSAGE value="Added option to use LLVM bitcode files instead of object files&#10;Switched to prefer Clang but with GCC fallback&#10;Added config validation&#10;Added struct access control&#10;Fixed config merging use a wrong order&#10;&#10;Overall Clang nets around 0.1 seconds in the testing/ test&#10;However, LLLVM bitcode produces larger binaries than using object files. Not sure why." />
     <MESSAGE value="Updates for caching system&#10;&#10;Fixed bug in main.py that expected release to always be set&#10;Completely removed LLVMFunction.py and instead rely on LLVM's Function and Metadata&#10;Added monkey patches to ease the above mentioned change&#10;Reworked module compilation system to better support this&#10;Removed linking in of modules. Doesn't net any benefit as far as my tests have shown so instead of reworking it the removal was easier" />
-    <option name="LAST_COMMIT_MESSAGE" value="Updates for caching system&#10;&#10;Fixed bug in main.py that expected release to always be set&#10;Completely removed LLVMFunction.py and instead rely on LLVM's Function and Metadata&#10;Added monkey patches to ease the above mentioned change&#10;Reworked module compilation system to better support this&#10;Removed linking in of modules. Doesn't net any benefit as far as my tests have shown so instead of reworking it the removal was easier" />
+    <MESSAGE value="Completely removed any state for functions and structs (LLVMFunction.py and LLVMStruct.py)&#10;Moved necessary metadata into LLVM metadata&#10;Improved certain operations&#10;Fixed bug in ParserState.py causing the function to not be returned&#10;&#10;Removed inheritance for now" />
+    <option name="LAST_COMMIT_MESSAGE" value="Completely removed any state for functions and structs (LLVMFunction.py and LLVMStruct.py)&#10;Moved necessary metadata into LLVM metadata&#10;Improved certain operations&#10;Fixed bug in ParserState.py causing the function to not be returned&#10;&#10;Removed inheritance for now" />
   </component>
   <component name="WindowStateProjectService">
     <state x="906" y="378" key="#Inspections" timestamp="1587407424129">
@@ -449,11 +455,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586869276582" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1587387503985">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1587469314390">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587387503985" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587469314390" />
     <state x="92" y="92" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1585249165802">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -482,10 +488,10 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="374" y="358" width="565" height="560" key="dock-window-3/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584965812228" />
-    <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1587467680391">
+    <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1587478151851">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587467680391" />
+    <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587478151851" />
     <state x="1123" y="472" key="refactoring.ChangeSignatureDialog" timestamp="1586600798541">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

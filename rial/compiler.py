@@ -20,6 +20,7 @@ from rial.linking.linker import Linker
 from rial.log import log_fail
 from rial.platform.Platform import Platform
 from rial.profiling import run_with_profiling, ExecutionStep
+from rial.util import good_hash
 
 
 def compiler():
@@ -45,6 +46,11 @@ def compiler():
     modules: Dict[str, ModuleRef] = dict()
 
     for key, mod in CompilationManager.modules.items():
+        cache_path = str(CompilationManager.get_cache_path_str(key)).replace(".rial", ".cache")
+
+        if not Path(cache_path).exists():
+            CompilationManager.codegen.save_module(mod, cache_path)
+
         modules[key] = CompilationManager.codegen.compile_ir(mod)
 
     object_files: List[str] = list()
@@ -55,7 +61,7 @@ def compiler():
         mod = modules[path]
 
         if CompilationManager.config.raw_opts.print_ir:
-            ir_file = str(CompilationManager.get_cache_path_str(path)).replace(".rial", ".ll")
+            ir_file = str(CompilationManager.get_output_path_str(path)).replace(".rial", ".ll")
             CompilationManager.codegen.save_ir(ir_file, mod)
 
         if CompilationManager.config.raw_opts.print_asm:
@@ -63,11 +69,11 @@ def compiler():
             CompilationManager.codegen.save_assembly(asm_file, mod)
 
         if not CompilationManager.config.raw_opts.use_object_files:
-            llvm_bitcode_file = str(CompilationManager.get_cache_path_str(path)).replace(".rial", ".lbc")
+            llvm_bitcode_file = str(CompilationManager.get_output_path_str(path)).replace(".rial", ".lbc")
             CompilationManager.codegen.save_llvm_bitcode(llvm_bitcode_file, mod)
             llvm_bitcode_files.append(llvm_bitcode_file)
 
-        object_file = str(CompilationManager.get_cache_path_str(path)).replace(".rial", ".o")
+        object_file = str(CompilationManager.get_output_path_str(path)).replace(".rial", ".o")
         CompilationManager.codegen.save_object(object_file, mod)
         object_files.append(object_file)
 
@@ -88,7 +94,7 @@ def compiler():
 def compile_file():
     try:
         while True:
-            path = CompilationManager.files_to_compile.get()
+            path = str(CompilationManager.files_to_compile.get())
 
             if not Path(path).exists():
                 log_fail(f"Could not find {path}")
@@ -98,6 +104,49 @@ def compile_file():
 
             file = str(path).replace(str(CompilationManager.config.source_path), "")
             file = file.replace(str(CompilationManager.config.rial_path), "")
+
+            # TODO: Check for easier things (like last modified etc.)
+            with run_with_profiling(file, ExecutionStep.READ_FILE):
+                with open(path, "r") as src:
+                    contents = src.read()
+
+            with run_with_profiling(file, ExecutionStep.HASH_FILE):
+                hashed_contents = good_hash(contents)
+
+            # Try to load cached
+            cache_path = str(CompilationManager.get_cache_path_str(path)).replace(".rial", ".cache")
+            if Path(cache_path).exists():
+                with run_with_profiling(cache_path.replace(str(CompilationManager.config.cache_path), ""),
+                                        ExecutionStep.READ_CACHE):
+                    module = CompilationManager.codegen.load_module(cache_path)
+                    CompilationManager.modules[str(path)] = module
+
+                # Skip this module if cache was successful
+                if module is not None:
+                    # Check if hash matches
+                    if 'hash' in module.namedmetadata and \
+                            module.get_named_metadata('hash').operands[0].operands[0].string == hashed_contents:
+                        dependency_invalidated = False
+
+                        # Check for dependencies
+                        for mod in module.get_dependencies():
+                            if CompilationManager.check_module_already_compiled(mod):
+                                if not mod in CompilationManager.cached_modules:
+                                    dependency_invalidated = True
+                            CompilationManager.request_module(mod)
+
+                        # If a dependency got invalidated
+                        # we need to compile this module again as well
+                        if not dependency_invalidated:
+                            CompilationManager.cached_modules.append(module.name)
+                            CompilationManager.finish_file(path)
+                            CompilationManager.files_to_compile.task_done()
+                            continue
+
+            # Cache is invalid (or doesn't exist). Delete the file
+            if Path(cache_path).exists():
+                os.remove(cache_path)
+
             module_name = CompilationManager.mod_name_from_path(file)
 
             if module_name.startswith("builtin") or module_name.startswith("std"):
@@ -106,6 +155,7 @@ def compile_file():
                 module_name = CompilationManager.config.project_name + ":" + module_name
             module = CompilationManager.codegen.get_module(module_name, file.split('/')[-1],
                                                            str(CompilationManager.config.source_path))
+            module.add_named_metadata('hash', (str(hashed_contents),))
             ParserState.reset_usings()
             ParserState.set_module(module)
 
@@ -115,10 +165,6 @@ def compile_file():
             transformer = ASTVisitor()
 
             parser = Lark_StandAlone(transformer=primitive_transformer, postlex=Postlexer())
-
-            with run_with_profiling(file, ExecutionStep.READ_FILE):
-                with open(path, "r") as src:
-                    contents = src.read()
 
             with run_with_profiling(file, ExecutionStep.PARSE_FILE):
                 ast = parser.parse(contents)

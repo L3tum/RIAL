@@ -36,12 +36,15 @@ def main(options):
 
     source_path = Path(os.path.join(project_path, "src"))
     cache_path = Path(os.path.join(project_path, "cache"))
+    output_path = Path(os.path.join(project_path, "output"))
     bin_path = Path(os.path.join(project_path, "bin"))
 
-    if cache_path.exists():
-        shutil.rmtree(cache_path)
+    cache_path.mkdir(parents=False, exist_ok=True)
 
-    cache_path.mkdir(parents=False, exist_ok=False)
+    if output_path.exists():
+        shutil.rmtree(output_path)
+
+    output_path.mkdir(parents=False, exist_ok=False)
 
     if bin_path.exists():
         shutil.rmtree(bin_path)
@@ -52,7 +55,7 @@ def main(options):
         log_fail("Source path does not exist!")
         sys.exit(1)
 
-    config = Configuration(project_name, source_path, cache_path, bin_path, Path(self_dir), options)
+    config = Configuration(project_name, source_path, cache_path, output_path, bin_path, Path(self_dir), options)
     CompilationManager.init(config)
 
     compiler()
@@ -77,8 +80,8 @@ def parse_prelim_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('-w', '--workdir', help="Overwrite working directory", type=str, default="")
     parser.add_argument('--print-tokens', help="Prints the list of tokens to stdout", action="store_true", default=None)
-    parser.add_argument('--print-ir', help="Prints the LLVM IR", action="store_true", default=None)
     parser.add_argument('--print-asm', help="Prints the native assembly", action="store_true", default=None)
+    parser.add_argument('--print-ir', help="Prints the LLVM IR", action="store_true", default=None)
     parser.add_argument('--opt-level', type=str, help="Optimization level to use",
                         choices=("0", "1", "2", "3", "s", "z"), default=None)
     parser.add_argument('--print-link-command', action='store_true',
@@ -106,8 +109,8 @@ if __name__ == "__main__":
     opts = {
         'config': {
             'print_tokens': False,
-            'print_ir': False,
             'print_asm': False,
+            'print_ir': False,
             'use_object_files': True,
             'opt_level': '0',
             'print_link_command': False,

@@ -10,6 +10,7 @@ from rial.builtin_type_to_llvm_mapper import NULL, TRUE, FALSE
 from rial.compilation_manager import CompilationManager
 from rial.concept.parser import Transformer_InPlaceRecursive, Token
 from rial.log import log_warn, log_warn_short
+from rial.util import good_hash
 
 
 class PrimitiveASTTransformer(Transformer_InPlaceRecursive):
@@ -25,6 +26,7 @@ class PrimitiveASTTransformer(Transformer_InPlaceRecursive):
         if mod_name.startswith("builtin") or mod_name.startswith("std"):
             mod_name = f"rial:{mod_name}"
 
+        ParserState.module().add_named_metadata('dependencies', (mod_name,))
         CompilationManager.request_module(mod_name)
         ParserState.usings().append(mod_name)
 
@@ -78,7 +80,7 @@ class PrimitiveASTTransformer(Transformer_InPlaceRecursive):
 
     def string(self, nodes) -> GlobalVariable:
         value = nodes[0].value.strip("\"")
-        name = ".const.string.%s" % base64.standard_b64encode(value.encode())
+        name = ".const.string.%s" % good_hash(value)
         glob = None
 
         if any(global_variable == name for global_variable in self.llvmgen.global_variables.keys()):

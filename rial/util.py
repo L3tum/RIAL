@@ -1,5 +1,7 @@
+import hashlib
 import random
 import string
+from typing import List
 
 from llvmlite.ir import Function, MDValue, Module, Context
 
@@ -49,7 +51,22 @@ def _get_identified_type_if_exists(self: Context, name: str):
     return None
 
 
+def _get_dependencies(self: Module) -> List[str]:
+    mods = list()
+
+    if 'dependencies' in self.namedmetadata:
+        for op in self.get_named_metadata('dependencies').operands:
+            mods.append(op.operands[0].string)
+
+    return mods
+
+
+def good_hash(w: str):
+    return hashlib.md5(w.encode()).hexdigest()
+
+
 def monkey_patch():
     Function.get_function_definition = _get_function_definition
     Module.get_global_safe = _get_global_safe
+    Module.get_dependencies = _get_dependencies
     Context.get_identified_type_if_exists = _get_identified_type_if_exists

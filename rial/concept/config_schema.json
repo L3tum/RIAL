@@ -1,0 +1,38 @@
+{
+  "type": "object",
+  "properties": {
+    "print_tokens": {
+      "type": "boolean"
+    },
+    "print_ir": {
+      "type": "boolean"
+    },
+    "print_asm": {
+      "type": "boolean"
+    },
+    "use_object_files": {
+      "type": "boolean"
+    },
+    "opt_level": {
+      "type": "string"
+    },
+    "print_link_command": {
+      "type": "boolean"
+    },
+    "release": {
+      "type": "boolean"
+    },
+    "profile": {
+      "type": "boolean"
+    },
+    "profile_mem": {
+      "type": "boolean"
+    },
+    "strip": {
+      "type": "boolean"
+    },
+    "workdir": {
+      "type": "string"
+    }
+  }
+}

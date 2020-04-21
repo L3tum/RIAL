@@ -13,7 +13,7 @@ class CompilationManager:
     files_to_compile: Queue
     files_compiled: Dict[str, Event]
     modules: Dict[str, Module]
-    cached_files: List[str]
+    cached_modules: List[str]
     lock: Lock
     config: Configuration
     codegen: CodeGen
@@ -25,7 +25,7 @@ class CompilationManager:
     def init(config: Configuration):
         CompilationManager.files_to_compile = Queue()
         CompilationManager.files_compiled = dict()
-        CompilationManager.cached_files = list()
+        CompilationManager.cached_modules = list()
         CompilationManager.lock = Lock()
         CompilationManager.config = config
         CompilationManager.modules = dict()
@@ -91,6 +91,22 @@ class CompilationManager:
         if path.startswith(str(CompilationManager.config.rial_path)):
             path = path.split("/rial/")[-1]
             return CompilationManager.config.cache_path.joinpath(path)
+
+        return Path(path)
+
+    @staticmethod
+    def get_output_path(path: Path) -> Path:
+        return CompilationManager.get_output_path_str(str(path))
+
+    @staticmethod
+    def get_output_path_str(path: str) -> Path:
+        if path.startswith(str(CompilationManager.config.source_path)):
+            return Path(
+                path.replace(str(CompilationManager.config.source_path), str(CompilationManager.config.output_path)))
+
+        if path.startswith(str(CompilationManager.config.rial_path)):
+            path = path.split("/rial/")[-1]
+            return CompilationManager.config.output_path.joinpath(path)
 
         return Path(path)
 

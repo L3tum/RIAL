@@ -2,15 +2,17 @@ import linecache
 import tracemalloc
 from contextlib import contextmanager
 from enum import Enum
-from typing import List
 from timeit import default_timer as timer
+from typing import List
 
 
 class ExecutionStep(Enum):
     INIT = "Initializing the compiler and dependencies"
     SCAN_DIR = "Scanning directory for contents"
     READ_FILE = "Reading file into memory for processing"
+    READ_CACHE = "Reading a cache module into memory"
     PARSE_FILE = "Lexing and parsing file into an AST"
+    HASH_FILE = "Hashing the file contents to check against the cached output"
     COMPILE_MOD = "Compile the file into a module"
     COMPILE_OBJ = "Compile module into object file"
     WRITE_OBJ = "Write out the object file"
@@ -55,6 +57,7 @@ def run_with_profiling(file: str, step: ExecutionStep):
     if profiling:
         end = timer()
         execution_events.append(ExecutionEvent(file, (end - start), step))
+
 
 def display_top(snapshot, key_type='lineno', limit=10):
     snapshot = snapshot.filter_traces((

@@ -1,6 +1,7 @@
+import pickle
 from pathlib import Path
 from threading import Lock
-from typing import List
+from typing import List, Optional
 
 from llvmlite import ir, binding
 from llvmlite.binding import ExecutionEngine, ModuleRef, TargetMachine, PassManagerBuilder, ModulePassManager
@@ -72,7 +73,7 @@ class CodeGen:
     def get_module(self, name: str, filename: str, directory: str) -> Module:
         module = ir.Module(name=name)
         module.triple = self.binding.get_default_triple()
-        module.data_layout = self.target_machine.target_data
+        module.data_layout = str(self.target_machine.target_data)
         module.add_named_metadata('compiler', ('RIALC',))
 
         di_file = module.add_debug_info("DIFile", {
@@ -88,6 +89,18 @@ class CodeGen:
         }, is_distinct=True)
 
         return module
+
+    def load_module(self, path: str) -> Optional[Module]:
+        try:
+            with open(path, "rb") as file:
+                return pickle.load(file)
+        except Exception:
+            return None
+
+    def save_module(self, module: Module, path: str):
+        self._check_dirs_exist(path)
+        with open(path, "wb") as file:
+            pickle.dump(module, file)
 
     def compile_ir(self, module: Module) -> ModuleRef:
         with self.lock:

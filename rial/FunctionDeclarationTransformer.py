@@ -3,7 +3,6 @@ from typing import List, Tuple
 from llvmlite import ir
 from llvmlite.ir import IdentifiedStructType
 
-from rial.metadata.FunctionDefinition import FunctionDefinition
 from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
 from rial.concept.TransformerInterpreter import TransformerInterpreter
@@ -11,6 +10,7 @@ from rial.concept.metadata_token import MetadataToken
 from rial.concept.name_mangler import mangle_function_name
 from rial.concept.parser import Token, Discard, Tree
 from rial.log import log_fail
+from rial.metadata.FunctionDefinition import FunctionDefinition
 from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 
 
@@ -147,19 +147,19 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
             full_function_name = mangle_function_name(full_function_name, llvm_args)
 
         # Search for function in the archives
-        func = ParserState.search_function(full_function_name)
+        # func = ParserState.search_function(full_function_name)
 
-        # Function has been previously declared
-        if func is not None:
-            # Check if either:
-            # - has no body (cannot redeclare functions) or
-            # - is already implemented and
-            #   - is either public or
-            #     - internal and
-            #     - is in same package (cannot reimplement functions)
-            # TODO: LLVM checks this anyways but maybe we wanna do it, too?
-            log_fail(f"Function {full_function_name} already declared elsewhere")
-            raise Discard()
+        # Function has been previously declared in other module
+        # if func is not None and (func.module.name != ParserState.module().name or not func.is_declaration):
+        #     # Check if either:
+        #     # - has no body (cannot redeclare functions) or
+        #     # - is already implemented and
+        #     #   - is either public or
+        #     #     - internal and
+        #     #     - is in same package (cannot reimplement functions)
+        #     # TODO: LLVM checks this anyways but maybe we wanna do it, too?
+        #     log_fail(f"Function {full_function_name} already declared elsewhere")
+        #     raise Discard()
         # Hasn't been declared previously, redeclare the function type here
         llvm_return_type = ParserState.map_type_to_llvm(return_type)
         func_type = self.llvmgen.create_function_type(llvm_return_type, llvm_args, var_args)

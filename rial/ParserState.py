@@ -44,18 +44,18 @@ class ParserState:
     @staticmethod
     def search_function(name: str) -> Optional[Function]:
         # Check if in current module
-        try:
-            return ParserState.module().get_global(name)
-        except KeyError:
-            pass
+        func = ParserState.module().get_global_safe(name)
+
+        if func is not None:
+            return func
 
         mods = dict(CompilationManager.modules)
 
         for key, mod in mods.items():
-            try:
-                return mod.get_global(name)
-            except KeyError:
-                pass
+            func = mod.get_global_safe(name)
+
+            if func is not None:
+                return func
 
         return None
 
@@ -155,6 +155,7 @@ class ParserState:
 
                 # Check that the module hasn't been compiled yet
                 if not CompilationManager.check_module_already_compiled(mod_name):
+                    ParserState.module().add_named_metadata('dependencies', (mod_name,))
                     CompilationManager.request_module(mod_name)
                     return ParserState.find_function(full_function_name)
 
