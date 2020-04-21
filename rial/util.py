@@ -1,9 +1,9 @@
 import random
 import string
 
-from llvmlite.ir import Function, MDValue, Module
+from llvmlite.ir import Function, MDValue, Module, Context
 
-from rial.rial_types.RIALAccessModifier import RIALAccessModifier
+from rial.metadata.FunctionDefinition import FunctionDefinition
 
 
 def generate_random_name(count: int):
@@ -31,9 +31,9 @@ def pythonify(data: dict):
     return data
 
 
-def _get_access_modifier(self: Function):
+def _get_function_definition(self: Function) -> FunctionDefinition:
     md_value: MDValue = self.metadata['function_definition']
-    return RIALAccessModifier(md_value.operands[1].string)
+    return FunctionDefinition.from_mdvalue(md_value)
 
 
 def _get_global_safe(self: Module, name: str):
@@ -43,6 +43,13 @@ def _get_global_safe(self: Module, name: str):
         return None
 
 
+def _get_identified_type_if_exists(self: Context, name: str):
+    if name in self.identified_types:
+        return self.identified_types[name]
+    return None
+
+
 def monkey_patch():
-    Function.get_access_modifier = _get_access_modifier
+    Function.get_function_definition = _get_function_definition
     Module.get_global_safe = _get_global_safe
+    Context.get_identified_type_if_exists = _get_identified_type_if_exists

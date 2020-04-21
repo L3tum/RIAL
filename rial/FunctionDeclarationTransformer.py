@@ -3,6 +3,7 @@ from typing import List, Tuple
 from llvmlite import ir
 from llvmlite.ir import IdentifiedStructType
 
+from rial.metadata.FunctionDefinition import FunctionDefinition
 from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
 from rial.concept.TransformerInterpreter import TransformerInterpreter
@@ -128,7 +129,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
 
         # Add class as implicit self parameter
         if self.llvmgen.current_struct is not None:
-            llvm_args.insert(0, ir.PointerType(self.llvmgen.current_struct.struct))
+            llvm_args.insert(0, ir.PointerType(self.llvmgen.current_struct))
             args.insert(0, (self.llvmgen.current_struct.name, "this"))
 
         # Check if main method
@@ -167,17 +168,17 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
         func = self.llvmgen.create_function_with_type(full_function_name, func_type, linkage,
                                                       calling_convention,
                                                       list(map(lambda arg: arg[1], args)),
-                                                      args,
-                                                      has_body, access_modifier,
-                                                      return_type)
+                                                      has_body,
+                                                      FunctionDefinition(return_type, access_modifier, args))
 
         # Always inline the main function into the compiler supplied one
         if main_function:
             func.attributes.add('alwaysinline')
 
         # If it's in a struct or class we add it to that struct's archives
-        if self.llvmgen.current_struct is not None:
-            self.llvmgen.current_struct.functions.append(func)
+        # TODO: Metadata? Do we even need that?
+        # if self.llvmgen.current_struct is not None:
+        #     self.llvmgen.current_struct.functions.append(func)
 
         # If it has no body we do not need to go through it later as it's already declared with this method.
         if not has_body:

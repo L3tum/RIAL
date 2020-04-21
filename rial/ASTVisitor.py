@@ -380,12 +380,12 @@ class ASTVisitor(Interpreter):
         full_name = node.metadata['struct_name']
         function_decls = node.metadata['functions']
 
-        llvm_struct = ParserState.search_structs(full_name)
+        struct = ParserState.search_structs(full_name)
 
-        if llvm_struct is None:
-            raise KeyError("Expected a struct but couldn't find it!")
+        if struct is None:
+            raise KeyError(f"Expected a struct {full_name} but couldn't find it!")
 
-        self.llvmgen.current_struct = llvm_struct
+        self.llvmgen.current_struct = struct
 
         # Create functions
         for function_decl in function_decls:
@@ -441,10 +441,10 @@ class ASTVisitor(Interpreter):
         mangled_name = mangle_function_name(full_function_name, [arg.type for arg in arguments])
 
         # Check if it's an instantiation
-        llvm_struct = ParserState.find_struct(full_function_name)
+        struct = ParserState.find_struct(full_function_name)
 
-        if llvm_struct is not None:
-            arguments.append(self.llvmgen.builder.alloca(llvm_struct.struct))
+        if struct is not None:
+            arguments.append(self.llvmgen.builder.alloca(struct))
             instantiation = True
 
         try:

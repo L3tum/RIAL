@@ -49,32 +49,28 @@ class StructDeclarationTransformer(Transformer_InPlaceRecursive):
                 variable = node.children
                 rial_type = variable[0].value
                 variable_name = variable[1].value
-                llvm_type = ParserState.map_type_to_llvm(rial_type)
                 variable_value = None
 
                 if len(variable) > 2:
                     variable_value = variable[2]
 
-                body.append(RIALVariable(variable_name, rial_type, llvm_type, initial_value=variable_value))
+                body.append(RIALVariable(variable_name, rial_type, initial_value=variable_value))
             elif isinstance(node, Tree) and node.data == "function_decl":
                 function_decls.append(node)
             elif isinstance(node, Token) and node.type == "IDENTIFIER":
                 bases.append(node.value)
             i += 1
 
-        base_llvm_structs = list()
+        # base_llvm_structs = list()
 
-        for base in bases:
-            llvm_struct = ParserState.find_struct(base)
-            base_llvm_structs.append(llvm_struct)
+        # for base in bases:
+        #     llvm_struct = ParserState.find_struct(base)
+        #     base_llvm_structs.append(llvm_struct)
 
         llvm_struct = self.llvmgen.create_identified_struct(full_name,
-                                                            ParserState.module().name,
                                                             access_modifier.get_linkage(),
                                                             access_modifier,
-                                                            base_llvm_structs,
                                                             body)
-        ParserState.structs[full_name] = llvm_struct
 
         declared_functions = list()
 

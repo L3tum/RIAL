@@ -2,15 +2,16 @@ from typing import Optional, Union, Tuple, List, Literal, Dict
 
 from llvmlite import ir
 from llvmlite.ir import IRBuilder, Function, AllocaInstr, Branch, FunctionType, Type, VoidType, PointerType, \
-    Argument, CallInstr, Block
+    Argument, CallInstr, Block, IdentifiedStructType
 
 from rial.LLVMBlock import LLVMBlock, create_llvm_block
-from rial.LLVMStruct import LLVMStruct
 from rial.LLVMUIntType import LLVMUIntType
 from rial.ParserState import ParserState
 from rial.builtin_type_to_llvm_mapper import map_llvm_to_type
 from rial.compilation_manager import CompilationManager
 from rial.log import log_fail
+from rial.metadata.FunctionDefinition import FunctionDefinition
+from rial.metadata.StructDefinition import StructDefinition
 from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 from rial.rial_types.RIALVariable import RIALVariable
 
@@ -21,7 +22,7 @@ class LLVMGen:
     conditional_block: Optional[LLVMBlock]
     end_block: Optional[LLVMBlock]
     current_block: Optional[LLVMBlock]
-    current_struct: Optional[LLVMStruct]
+    current_struct: Optional[IdentifiedStructType]
     global_variables: Dict
 
     def __init__(self):
@@ -177,6 +178,10 @@ class LLVMGen:
         if func is None:
             return None
 
+        # Check if function is declared in current module
+        if ParserState.module().get_global_safe(func.name) is None:
+            func = ir.Function(ParserState.module(), func.function_type, func.name)
+
         args = list()
 
         # Gen a load if it doesn't expect a pointer
@@ -205,8 +210,8 @@ class LLVMGen:
             ParserState.module().get_global('llvm.donothing')
         except KeyError:
             func_type = self.create_function_type(ir.VoidType(), [], False)
-            self.create_function_with_type('llvm.donothing', func_type, "external", "", [], [], False,
-                                           RIALAccessModifier.PUBLIC, "void")
+            self.create_function_with_type('llvm.donothing', func_type, "external", "", [], False,
+                                           FunctionDefinition("void", RIALAccessModifier.PUBLIC, []))
 
         self.gen_function_call("llvm.donothing", "llvm.donothing", "llvm.donothing", [])
 
@@ -301,49 +306,49 @@ class LLVMGen:
         self.current_block = llvmblock
         self.builder.position_at_start(self.current_block.block)
 
-    def create_identified_struct(self, name: str, module_name: str,
-                                 linkage: Union[Literal["internal"], Literal["external"]],
+    def create_identified_struct(self, name: str, linkage: Union[Literal["internal"], Literal["external"]],
                                  rial_access_modifier: RIALAccessModifier,
-                                 derived: List[LLVMStruct],
-                                 body: List[RIALVariable]):
+                                 body: List[RIALVariable]) -> IdentifiedStructType:
         struct = ParserState.module().context.get_identified_type(name)
         props = list()
-        for deriv in derived:
-            props.extend([bod[1].llvm_type for bod in deriv.properties.values()])
+        # for deriv in derived:
+        #     props.extend([ParserState.map_type_to_llvm(bod[1].rial_type) for bod in deriv.properties.values()])
 
-        props.extend([bod.llvm_type for bod in body])
+        props.extend([ParserState.map_type_to_llvm(bod.rial_type) for bod in body])
 
         struct.set_body(*tuple(props))
-        llvm_struct = LLVMStruct(struct, name, module_name, rial_access_modifier)
-        llvm_struct.base_structs = derived
-        self.current_struct = llvm_struct
+        self.current_struct = struct
+
+        # Create metadata definition
+        struct_def = StructDefinition(rial_access_modifier)
 
         # Create base constructor
         function_type = self.create_function_type(ir.VoidType(), [ir.PointerType(struct)], False)
-        func = self.create_function_with_type(f"{name}.constructor", function_type, linkage, "", ["this"],
-                                              [("this", name), ], True,
-                                              rial_access_modifier, name)
+        func = self.create_function_with_type(f"{name}.constructor", function_type, linkage, "", ["this"], True,
+                                              FunctionDefinition(name, rial_access_modifier, [("this", name), ]))
         self.create_function_body(func, [name])
         self_value = func.args[0]
 
         # Call derived constructors
-        for deriv in derived:
-            if deriv.constructor is not None:
-                self.gen_function_call(deriv.constructor.name, deriv.constructor.name, deriv.constructor.name,
-                                       [self.builder.bitcast(self_value, ir.PointerType(deriv.struct)), ])
+        # for deriv in derived:
+        #     if deriv.constructor is not None:
+        #         self.gen_function_call(deriv.constructor.name, deriv.constructor.name, deriv.constructor.name,
+        #                                [self.builder.bitcast(self_value, ir.PointerType(deriv.struct)), ])
 
         # Set initial values
         for i, bod in enumerate(body):
             loaded_var = self.builder.gep(self_value, [ir.Constant(ir.IntType(32), 0), ir.Constant(ir.IntType(32), i)])
             self.builder.store(bod.initial_value, loaded_var)
 
-            # Store reference in llvm_struct
-            llvm_struct.properties[bod.name] = (i, bod)
+            # Store reference in metadata
+            struct_def.properties[bod.name] = (i, bod)
+
+        # Store def in metadata
+        ParserState.module().add_named_metadata(f"{name.replace(':', '_')}.definition", struct_def.to_list())
 
         self.builder.ret_void()
-        llvm_struct.constructor = self.current_func
 
-        return llvm_struct
+        return struct
 
     def finish_struct(self):
         self.current_struct = None
@@ -354,21 +359,17 @@ class LLVMGen:
                                   linkage: Union[Literal["internal"], Literal["external"]],
                                   calling_convention: str,
                                   arg_names: List[str],
-                                  rial_args: List[Tuple[str, str]],
                                   generate_body: bool,
-                                  rial_access_modifier: RIALAccessModifier,
-                                  rial_return_type: str):
+                                  function_def: FunctionDefinition):
         """
         Creates an IR Function with the specified arguments. NOTHING MORE.
+        :param function_def:
         :param name:
         :param ty:
         :param linkage:
         :param calling_convention:
         :param arg_names:
-        :param rial_args:
         :param generate_body:
-        :param rial_access_modifier:
-        :param rial_return_type:
         :return:
         """
 
@@ -379,8 +380,7 @@ class LLVMGen:
 
         if generate_body:
             func.set_metadata('function_definition',
-                              ParserState.module().add_metadata(
-                                  (rial_return_type, str(rial_access_modifier), rial_args)))
+                              ParserState.module().add_metadata(tuple(function_def.to_list())))
 
         # Set argument names
         for i, arg in enumerate(func.args):

@@ -1,19 +1,18 @@
 import threading
-from typing import Dict, Optional, List, Tuple
+from typing import Optional, List, Tuple
 
-from llvmlite import ir
-from llvmlite.ir import Module, Function
+from llvmlite.ir import Module, Function, IdentifiedStructType
 
-from rial.LLVMStruct import LLVMStruct
 from rial.builtin_type_to_llvm_mapper import map_type_to_llvm
 from rial.compilation_manager import CompilationManager
 from rial.log import log_fail
+from rial.metadata.FunctionDefinition import FunctionDefinition
+from rial.metadata.StructDefinition import StructDefinition
 from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 
 
 class ParserState:
     implemented_functions: List[str]
-    structs: Dict[str, LLVMStruct]
     threadLocalUsings: threading.local
     threadLocalModule: threading.local
 
@@ -23,7 +22,6 @@ class ParserState:
     @staticmethod
     def init():
         ParserState.implemented_functions = list()
-        ParserState.structs = dict()
         ParserState.threadLocalUsings = threading.local()
         ParserState.threadLocalModule = threading.local()
 
@@ -45,7 +43,15 @@ class ParserState:
 
     @staticmethod
     def search_function(name: str) -> Optional[Function]:
-        for key, mod in CompilationManager.modules.items():
+        # Check if in current module
+        try:
+            return ParserState.module().get_global(name)
+        except KeyError:
+            pass
+
+        mods = dict(CompilationManager.modules)
+
+        for key, mod in mods.items():
             try:
                 return mod.get_global(name)
             except KeyError:
@@ -54,29 +60,57 @@ class ParserState:
         return None
 
     @staticmethod
-    def search_structs(name: str) -> Optional[LLVMStruct]:
-        if name in ParserState.structs:
-            return ParserState.structs[name]
+    def search_structs(name: str) -> Optional[IdentifiedStructType]:
+        # Does a global search. We then need to find the module it's actually defined in.
+        ty = ParserState.module().context.get_identified_type_if_exists(name)
 
-        return None
+        if ty is None:
+            return None
+
+        if hasattr(ty, 'module'):
+            return ty
+
+        # Check if in current module
+        try:
+            ParserState.module().get_named_metadata(f"{ty.name.replace(':', '_')}.definition")
+            ty.module = ParserState.module()
+
+            return ty
+        except KeyError:
+            pass
+
+        mods = dict(CompilationManager.modules)
+
+        for key, mod in mods.items():
+            try:
+                mod.get_named_metadata(f"{ty.name.replace(':', '_')}.definition")
+                ty.module = mod
+
+                return ty
+            except KeyError:
+                pass
+
+        if not hasattr(ty, 'module'):
+            return None
+        return ty
 
     @staticmethod
     def find_function(full_function_name: str) -> Optional[Function]:
+
         # Try to find function in current module
-        func = next((func for func in ParserState.module().functions if func.name == full_function_name), None)
+        func = ParserState.module().get_global_safe(full_function_name)
 
         # Try to find function in current module with module specifier
         if func is None:
-            func = next((func for func in ParserState.module().functions if
-                         func.name == f"{ParserState.module().name}:{full_function_name}"), None)
+            func = ParserState.module().get_global_safe(f"{ParserState.module().name}:{full_function_name}")
 
         # If func isn't in current module
         if func is None:
             # Try to find function by full name
-            function = ParserState.search_function(full_function_name)
+            func = ParserState.search_function(full_function_name)
 
             # If couldn't find it, iterate through usings and try to find function
-            if function is None:
+            if func is None:
                 functions_found: List[Tuple[str, Function]] = list()
 
                 for use in ParserState.usings():
@@ -93,28 +127,25 @@ class ParserState:
 
                 # Check for number of functions found
                 if len(functions_found) == 1:
-                    function = functions_found[0][1]
+                    func = functions_found[0][1]
 
-            if function is not None:
-                # Function cannot be accessed if:
-                #   - Function is not public and
-                #   - Function is internal but not in same TLM (top level module) or
-                #   - Function is private but not in same module
-                if function.get_access_modifier() != RIALAccessModifier.PUBLIC and \
-                        ((function.get_access_modifier() == RIALAccessModifier.INTERNAL and
-                          function.module.name.split(':')[0] != ParserState.module().name.split(':')[0]) or
-                         (function.get_access_modifier() == RIALAccessModifier.PRIVATE and
-                          function.module.name != ParserState.module().name)):
-                    log_fail(
-                        f"Cannot access method {full_function_name} in module {function.module.name}!")
-                    return None
-
-                # Check if it has been declared previously (by another function call for example)
-                func = ParserState.module().get_global_safe(function.name)
-
-                # Declare function if not declared in current module
-                if func is None:
-                    func = ir.Function(ParserState.module(), function.function_type, name=function.name)
+            if func is not None:
+                # Function is in current module and only a declaration, safe to assume that it's a redeclared function
+                # from another module or originally declared in this module anyways
+                if func.module.name != ParserState.module().name and not func.is_declaration:
+                    # Function cannot be accessed if:
+                    #   - Function is not public and
+                    #   - Function is internal but not in same TLM (top level module) or
+                    #   - Function is private but not in same module
+                    func_def: FunctionDefinition = func.get_function_definition()
+                    if func_def.access_modifier != RIALAccessModifier.PUBLIC and \
+                            ((func_def.access_modifier == RIALAccessModifier.INTERNAL and
+                              func.module.name.split(':')[0] != ParserState.module().name.split(':')[0]) or
+                             (func_def.access_modifier == RIALAccessModifier.PRIVATE and
+                              func.module.name != ParserState.module().name)):
+                        log_fail(
+                            f"Cannot access method {full_function_name} in module {func.module.name}!")
+                        return None
 
         # Try request the module that the function might(!) be in
         if func is None:
@@ -130,7 +161,7 @@ class ParserState:
         return func
 
     @staticmethod
-    def find_struct(struct_name: str):
+    def find_struct(struct_name: str) -> Optional[IdentifiedStructType]:
         # Search with name
         struct = ParserState.search_structs(struct_name)
 
@@ -155,17 +186,21 @@ class ParserState:
                 return None
             struct = structs_found[0][1]
 
+        # Get metadata for struct
+        struct_def = StructDefinition.from_mdvalue(
+            struct.module.get_named_metadata(f"{struct.name.replace(':', '_')}.definition"))
+
         # Struct cannot be accessed if:
         #   - Struct is not public and
         #   - Struct is internal but not in same TLM (top level module) or
         #   - Struct is private but not in same module
-        if struct.access_modifier != RIALAccessModifier.PUBLIC and \
-                ((struct.access_modifier == RIALAccessModifier.INTERNAL and
+        if struct_def.access_modifier != RIALAccessModifier.PUBLIC and \
+                ((struct_def.access_modifier == RIALAccessModifier.INTERNAL and
                   struct.module_name.split(':')[0] != ParserState.module().name.split(':')[0]) or
-                 (struct.access_modifier == RIALAccessModifier.PRIVATE and
+                 (struct_def.access_modifier == RIALAccessModifier.PRIVATE and
                   struct.module_name != ParserState.module().name)):
             log_fail(
-                f"Cannot access struct {struct_name} in module {struct.module_name}!")
+                f"Cannot access struct {struct_name} in module {struct.module.name}!")
             return None
 
         return struct
@@ -176,10 +211,10 @@ class ParserState:
 
         # Check if builtin type
         if llvm_type is None:
-            llvm_struct = ParserState.find_struct(name)
+            struct = ParserState.find_struct(name)
 
-            if llvm_struct is not None:
-                llvm_type = llvm_struct.struct
+            if struct is not None:
+                llvm_type = struct
             else:
                 log_fail(f"Referenced unknown type {name}")
                 return None

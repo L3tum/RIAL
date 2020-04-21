@@ -42,6 +42,7 @@ public int main() {
 	//printDouble(-5.0e4);
 
 	printInteger(50000000uL + 1uL);
+	printInteger(500 + -5000);
 
 	if(5 == 5){
 	    println("HI");
