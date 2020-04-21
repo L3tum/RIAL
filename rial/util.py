@@ -33,6 +33,10 @@ def pythonify(data: dict):
     return data
 
 
+def good_hash(w: str):
+    return hashlib.md5(w.encode()).hexdigest()
+
+
 def _get_function_definition(self: Function) -> FunctionDefinition:
     md_value: MDValue = self.metadata['function_definition']
     return FunctionDefinition.from_mdvalue(md_value)
@@ -59,10 +63,6 @@ def _get_dependencies(self: Module) -> List[str]:
             mods.append(op.operands[0].string)
 
     return mods
-
-
-def good_hash(w: str):
-    return hashlib.md5(w.encode()).hexdigest()
 
 
 def monkey_patch():

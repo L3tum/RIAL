@@ -89,6 +89,8 @@ def parse_prelim_arguments():
     parser.add_argument('--release', action='store_true', help="Release mode", default=None)
     parser.add_argument('--use-object-files', action='store_true',
                         help="Use object files rather than LLVM bitcode files for linking", default=None)
+    parser.add_argument('--disable-cache', action='store_true',
+                        help="Disable cache", default=None)
 
     return parser.parse_known_args()
 
@@ -111,6 +113,7 @@ if __name__ == "__main__":
             'print_tokens': False,
             'print_asm': False,
             'print_ir': False,
+            'disable_cache': False,
             'use_object_files': True,
             'opt_level': '0',
             'print_link_command': False,

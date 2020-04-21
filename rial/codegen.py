@@ -8,6 +8,7 @@ from llvmlite.binding import ExecutionEngine, ModuleRef, TargetMachine, PassMana
 from llvmlite.ir import Module
 
 from rial.log import log_fail
+from rial.profiling import run_with_profiling, ExecutionStep
 
 
 class CodeGen:
@@ -91,16 +92,18 @@ class CodeGen:
         return module
 
     def load_module(self, path: str) -> Optional[Module]:
-        try:
-            with open(path, "rb") as file:
-                return pickle.load(file)
-        except Exception:
-            return None
+        with run_with_profiling(path.split('/')[-1], ExecutionStep.READ_CACHE):
+            try:
+                with open(path, "rb") as file:
+                    return pickle.load(file)
+            except Exception:
+                return None
 
     def save_module(self, module: Module, path: str):
-        self._check_dirs_exist(path)
-        with open(path, "wb") as file:
-            pickle.dump(module, file)
+        with run_with_profiling(path.split('/')[-1], ExecutionStep.WRITE_CACHE):
+            self._check_dirs_exist(path)
+            with open(path, "wb") as file:
+                pickle.dump(module, file)
 
     def compile_ir(self, module: Module) -> ModuleRef:
         with self.lock:

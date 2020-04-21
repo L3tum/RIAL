@@ -7,3 +7,4 @@ ruamel.yaml~=0.16.10
 toml~=0.10.0
 jsonschema~=3.2.0
 munch~=2.5.0
+jsonpickle~=1.4.1

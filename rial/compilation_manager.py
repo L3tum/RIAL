@@ -126,3 +126,13 @@ class CompilationManager:
     def mod_name_from_path(path: str) -> str:
         s = path.strip('/').replace('.rial', '').replace('/', ':')
         return s
+
+    @staticmethod
+    def filename_from_path(path: str) -> str:
+        """
+        Replaces source path, rial path and cache path
+        :param path:
+        :return:
+        """
+        return path.replace(str(CompilationManager.config.source_path), "").replace(
+            str(CompilationManager.config.rial_path), "").replace(str(CompilationManager.config.cache_path), "")

@@ -4,11 +4,13 @@ import sys
 import threading
 import traceback
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from llvmlite.binding import ModuleRef
+from llvmlite.ir import Module
 
 from rial.ASTVisitor import ASTVisitor
+from rial.Cache import Cache
 from rial.FunctionDeclarationTransformer import FunctionDeclarationTransformer
 from rial.ParserState import ParserState
 from rial.PrimitiveASTTransformer import PrimitiveASTTransformer
@@ -24,6 +26,7 @@ from rial.util import good_hash
 
 
 def compiler():
+    Cache.load_cache()
     path = CompilationManager.config.rial_path.joinpath("builtin").joinpath("start.rial")
     # path = source_path.joinpath("main.rial")
 
@@ -42,6 +45,7 @@ def compiler():
         threads.append(t)
 
     CompilationManager.files_to_compile.join()
+    Cache.save_cache()
 
     modules: Dict[str, ModuleRef] = dict()
 
@@ -51,7 +55,8 @@ def compiler():
         if not Path(cache_path).exists():
             CompilationManager.codegen.save_module(mod, cache_path)
 
-        modules[key] = CompilationManager.codegen.compile_ir(mod)
+        with run_with_profiling(CompilationManager.filename_from_path(key), ExecutionStep.COMPILE_MOD):
+            modules[key] = CompilationManager.codegen.compile_ir(mod)
 
     object_files: List[str] = list()
     llvm_bitcode_files: List[str] = list()
@@ -102,46 +107,41 @@ def compile_file():
                 CompilationManager.files_to_compile.task_done()
                 continue
 
-            file = str(path).replace(str(CompilationManager.config.source_path), "")
-            file = file.replace(str(CompilationManager.config.rial_path), "")
+            # Check beforehand because we'd rather compile it once too often than once too less
+            last_modified = os.path.getmtime(path)
+            module = Cache.get_cached_module(path)
 
-            # TODO: Check for easier things (like last modified etc.)
-            with run_with_profiling(file, ExecutionStep.READ_FILE):
-                with open(path, "r") as src:
-                    contents = src.read()
+            if isinstance(module, Module):
+                dependency_invalidated = False
 
-            with run_with_profiling(file, ExecutionStep.HASH_FILE):
-                hashed_contents = good_hash(contents)
+                # Check for dependencies
+                for mod in module.get_dependencies():
+                    if CompilationManager.check_module_already_compiled(mod):
+                        if not mod in CompilationManager.cached_modules:
+                            dependency_invalidated = True
+                    CompilationManager.request_module(mod)
+
+                # If a dependency got invalidated
+                # we need to compile this module again as well
+                if not dependency_invalidated:
+                    CompilationManager.modules[str(path)] = module
+                    CompilationManager.cached_modules.append(module.name)
+                    CompilationManager.finish_file(path)
+                    CompilationManager.files_to_compile.task_done()
+                    continue
+
+            file = CompilationManager.filename_from_path(path)
+
+            if module is None:
+                with run_with_profiling(file, ExecutionStep.READ_FILE):
+                    with open(path, "r") as src:
+                        contents = src.read()
+
+                with run_with_profiling(file, ExecutionStep.HASH_FILE):
+                    hashed_contents = good_hash(contents)
 
             # Try to load cached
             cache_path = str(CompilationManager.get_cache_path_str(path)).replace(".rial", ".cache")
-            if Path(cache_path).exists():
-                with run_with_profiling(cache_path.replace(str(CompilationManager.config.cache_path), ""),
-                                        ExecutionStep.READ_CACHE):
-                    module = CompilationManager.codegen.load_module(cache_path)
-                    CompilationManager.modules[str(path)] = module
-
-                # Skip this module if cache was successful
-                if module is not None:
-                    # Check if hash matches
-                    if 'hash' in module.namedmetadata and \
-                            module.get_named_metadata('hash').operands[0].operands[0].string == hashed_contents:
-                        dependency_invalidated = False
-
-                        # Check for dependencies
-                        for mod in module.get_dependencies():
-                            if CompilationManager.check_module_already_compiled(mod):
-                                if not mod in CompilationManager.cached_modules:
-                                    dependency_invalidated = True
-                            CompilationManager.request_module(mod)
-
-                        # If a dependency got invalidated
-                        # we need to compile this module again as well
-                        if not dependency_invalidated:
-                            CompilationManager.cached_modules.append(module.name)
-                            CompilationManager.finish_file(path)
-                            CompilationManager.files_to_compile.task_done()
-                            continue
 
             # Cache is invalid (or doesn't exist). Delete the file
             if Path(cache_path).exists():
@@ -155,7 +155,6 @@ def compile_file():
                 module_name = CompilationManager.config.project_name + ":" + module_name
             module = CompilationManager.codegen.get_module(module_name, file.split('/')[-1],
                                                            str(CompilationManager.config.source_path))
-            module.add_named_metadata('hash', (str(hashed_contents),))
             ParserState.reset_usings()
             ParserState.set_module(module)
 
@@ -168,6 +167,8 @@ def compile_file():
 
             with run_with_profiling(file, ExecutionStep.PARSE_FILE):
                 ast = parser.parse(contents)
+
+            with run_with_profiling(file, ExecutionStep.GEN_IR):
                 ast = struct_declaration_transformer.transform(ast)
                 ast = function_declaration_transformer.visit(ast)
 
@@ -180,6 +181,7 @@ def compile_file():
             if CompilationManager.config.raw_opts.print_tokens:
                 print(ast.pretty())
 
+            Cache.cache_module(module, path, cache_path, hashed_contents, last_modified)
             CompilationManager.files_to_compile.task_done()
     except Exception as e:
         log_fail("Internal Compiler Error: ")
@@ -187,3 +189,7 @@ def compile_file():
         os._exit(-1)
     finally:
         del parser
+
+
+def try_load_from_cache(path: str) -> Optional[Module]:
+    pass
