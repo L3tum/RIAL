@@ -1,5 +1,5 @@
 import threading
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict
 
 from llvmlite import ir
 from llvmlite.ir import Module, Function, IdentifiedStructType
@@ -13,6 +13,8 @@ from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 
 
 class ParserState:
+    cached_functions: Dict[str, Function]
+    cached_struct_modules: Dict[str, Module]
     implemented_functions: List[str]
     threadLocalUsings: threading.local
     threadLocalModule: threading.local
@@ -25,6 +27,8 @@ class ParserState:
         ParserState.implemented_functions = list()
         ParserState.threadLocalUsings = threading.local()
         ParserState.threadLocalModule = threading.local()
+        ParserState.cached_functions = dict()
+        ParserState.cached_struct_modules = dict()
 
     @staticmethod
     def reset_usings():
@@ -44,21 +48,26 @@ class ParserState:
 
     @staticmethod
     def search_function(name: str) -> Optional[Function]:
+        # Check if cached
+        if name in ParserState.cached_functions:
+            return ParserState.cached_functions[name]
+
         # Check if in current module
         func = ParserState.module().get_global_safe(name)
 
+        if func is None:
+            mods = dict(CompilationManager.modules)
+
+            for key, mod in mods.items():
+                func = mod.get_global_safe(name)
+
+                if func is not None:
+                    break
+
         if func is not None:
-            return func
+            ParserState.cached_functions[name] = func
 
-        mods = dict(CompilationManager.modules)
-
-        for key, mod in mods.items():
-            func = mod.get_global_safe(name)
-
-            if func is not None:
-                return func
-
-        return None
+        return func
 
     @staticmethod
     def search_structs(name: str) -> Optional[IdentifiedStructType]:
@@ -71,33 +80,43 @@ class ParserState:
         if hasattr(ty, 'module'):
             return ty
 
+        module = None
+
+        # Check in cache
+        if name in ParserState.cached_struct_modules:
+            module = ParserState.cached_struct_modules[name]
+
         # Check if in current module
-        try:
-            ParserState.module().get_named_metadata(f"{ty.name.replace(':', '_')}.definition")
-            ty.module = ParserState.module()
-
-            return ty
-        except KeyError:
-            pass
-
-        mods = dict(CompilationManager.modules)
-
-        for key, mod in mods.items():
+        if module is None:
             try:
-                mod.get_named_metadata(f"{ty.name.replace(':', '_')}.definition")
-                ty.module = mod
-
-                return ty
+                ParserState.module().get_named_metadata(f"{ty.name.replace(':', '_')}.definition")
+                module = ParserState.module()
             except KeyError:
                 pass
 
-        if not hasattr(ty, 'module'):
+        # Check all modules
+        if module is None:
+            mods = dict(CompilationManager.modules)
+
+            for key, mod in mods.items():
+                try:
+                    mod.get_named_metadata(f"{ty.name.replace(':', '_')}.definition")
+                    ty.module = mod
+
+                    return ty
+                except KeyError:
+                    pass
+
+        if module is None:
             return None
+
+        ParserState.cached_struct_modules[name] = module
+        ty.module = module
+
         return ty
 
     @staticmethod
     def find_function(full_function_name: str) -> Optional[Function]:
-
         # Try to find function in current module
         func = ParserState.module().get_global_safe(full_function_name)
 
