@@ -6,6 +6,8 @@ public struct OSInformation{
     CString identifier = "";
 }
 
+var test = OSInformation();
+
 public OSInformation GetOsInformation(){
     var info = new OSInformation();
     var os = #targetOS;

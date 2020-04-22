@@ -3,6 +3,7 @@ from llvmlite.ir import PointerType
 
 from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
+from rial.builtin_type_to_llvm_mapper import map_llvm_to_type
 from rial.concept.metadata_token import MetadataToken
 from rial.concept.name_mangler import mangle_function_name
 from rial.concept.parser import Interpreter, Tree, Token
@@ -171,8 +172,12 @@ class ASTVisitor(Interpreter):
         value = self.transform_helper(nodes[2])
         value_type = value.type
 
-        # TODO: Infer type based on value, essentially map LLVM type to RIAL type
-        return self.llvmgen.declare_variable(identifier, value_type, value, "")
+        return self.llvmgen.declare_variable(identifier, value_type, value, map_llvm_to_type(value_type))
+
+    def global_variable_decl(self, tree: Tree):
+        # nodes = tree.children
+        # print(nodes)
+        pass
 
     def continue_rule(self, tree: Tree):
         if self.llvmgen.conditional_block is None:

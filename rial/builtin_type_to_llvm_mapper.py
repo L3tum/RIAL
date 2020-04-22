@@ -98,6 +98,9 @@ def map_type_to_llvm(rial_type: str) -> Optional[Type]:
 
 
 def map_llvm_to_type(llvm_type: Type):
+    # TODO: Handle more types
+    # TODO: Handle structs
+    # TODO: Handle strings
     if isinstance(llvm_type, LLVMUIntType):
         return f"UInt{llvm_type.width}"
 

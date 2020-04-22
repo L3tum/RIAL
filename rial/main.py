@@ -91,6 +91,7 @@ def parse_prelim_arguments():
                         help="Use object files rather than LLVM bitcode files for linking", default=None)
     parser.add_argument('--disable-cache', action='store_true',
                         help="Disable cache", default=None)
+    parser.add_argument('--profile', help="Profiles the compiler", action="store_true", default=None)
 
     return parser.parse_known_args()
 

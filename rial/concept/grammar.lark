@@ -1,4 +1,4 @@
-?start : [(struct_decl|attributed_func_decl|function_decl|using|attributed_compiler_directive)*]
+?start : [(struct_decl|global_variable_decl|attributed_func_decl|function_decl|using|attributed_compiler_directive)*]
 ?statement : conditional_block
            | for_loop
            | while_loop
@@ -28,6 +28,7 @@ return_rule : "return" ";"
 shorthand_if : "if" expression "?" expression ":" expression
 
 // Variables
+global_variable_decl : variable_decl ";"
 variable_decl : "var" IDENTIFIER ASSIGN expression
 variable_assignment : var ASSIGN expression
 
