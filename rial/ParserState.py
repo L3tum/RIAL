@@ -1,6 +1,7 @@
 import threading
 from typing import Optional, List, Tuple
 
+from llvmlite import ir
 from llvmlite.ir import Module, Function, IdentifiedStructType
 
 from rial.builtin_type_to_llvm_mapper import map_type_to_llvm
@@ -197,9 +198,9 @@ class ParserState:
         #   - Struct is private but not in same module
         if struct_def.access_modifier != RIALAccessModifier.PUBLIC and \
                 ((struct_def.access_modifier == RIALAccessModifier.INTERNAL and
-                  struct.module_name.split(':')[0] != ParserState.module().name.split(':')[0]) or
+                  struct.module.name.split(':')[0] != ParserState.module().name.split(':')[0]) or
                  (struct_def.access_modifier == RIALAccessModifier.PRIVATE and
-                  struct.module_name != ParserState.module().name)):
+                  struct.module.name != ParserState.module().name)):
             log_fail(
                 f"Cannot access struct {struct_name} in module {struct.module.name}!")
             return None
@@ -215,7 +216,7 @@ class ParserState:
             struct = ParserState.find_struct(name)
 
             if struct is not None:
-                llvm_type = struct
+                llvm_type = ir.PointerType(struct)
             else:
                 log_fail(f"Referenced unknown type {name}")
                 return None

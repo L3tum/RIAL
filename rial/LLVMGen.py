@@ -1,4 +1,4 @@
-from typing import Optional, Union, Tuple, List, Literal, Dict
+from typing import Optional, Union, Tuple, List, Literal, Dict, Any
 
 from llvmlite import ir
 from llvmlite.ir import IRBuilder, Function, AllocaInstr, Branch, FunctionType, Type, VoidType, PointerType, \
@@ -34,6 +34,32 @@ class LLVMGen:
         self.current_struct = None
         self.global_variables = dict()
 
+    def get_var(self, identifier: str):
+        identifiers = identifier.split('.')
+        variable = None
+
+        for ident in identifiers:
+            if not variable is None and isinstance(variable.type, PointerType):
+                if isinstance(variable.type.pointee, IdentifiedStructType):
+                    struct = ParserState.find_struct(variable.type.pointee.name)
+
+                    if struct is None:
+                        return None
+
+                    struct_def = StructDefinition.from_mdvalue(
+                        struct.module.get_named_metadata(f"{struct.name.replace(':', '_')}.definition"))
+                    prop = struct_def.properties[ident]
+
+                    if prop is None:
+                        return None
+                    variable = self.builder.gep(variable, [ir.Constant(ir.IntType(32), 0),
+                                                           ir.Constant(ir.IntType(32), prop[0])])
+
+            else:
+                variable = self.current_block.get_named_value(ident)
+
+        return variable
+
     def gen_integer(self, number: int, length: int, unsigned: bool = False):
         return ir.Constant((unsigned and LLVMUIntType(length) or ir.IntType(length)), number)
 
@@ -61,7 +87,8 @@ class LLVMGen:
         return glob
 
     def gen_load_if_necessary(self, value):
-        if isinstance(value, PointerType) or isinstance(value, AllocaInstr) or isinstance(value, Argument):
+        if isinstance(value, AllocaInstr) or isinstance(value, Argument) or (
+                hasattr(value, 'type') and isinstance(value.type, PointerType)):
             return self.builder.load(value)
         return value
 
@@ -221,7 +248,7 @@ class LLVMGen:
         if variable is not None:
             return None
 
-        if isinstance(variable_type, PointerType) and isinstance(value.type, PointerType):
+        if isinstance(variable_type, PointerType) and value is not None and isinstance(value.type, PointerType):
             variable = value
             variable.name = identifier
         else:
@@ -236,8 +263,11 @@ class LLVMGen:
 
         return variable
 
-    def assign_to_variable(self, identifier: str, value):
-        variable = self.current_block.get_named_value(identifier)
+    def assign_to_variable(self, identifier: Union[str, Any], value):
+        if isinstance(identifier, str):
+            variable = self.get_var(identifier)
+        else:
+            variable = identifier
 
         if variable is None:
             return None
@@ -295,8 +325,7 @@ class LLVMGen:
 
     def create_conditional_jump(self, condition, true_block: LLVMBlock, false_block: LLVMBlock):
         # Check if condition is a variable, we need to load that for LLVM
-        if isinstance(condition, AllocaInstr) or isinstance(condition, PointerType) or isinstance(condition, Argument):
-            condition = self.builder.load(condition)
+        condition = self.gen_load_if_necessary(condition)
         return self.builder.cbranch(condition, true_block.block, false_block.block)
 
     def create_jump(self, target_block: LLVMBlock):

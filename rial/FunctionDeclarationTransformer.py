@@ -54,19 +54,17 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
         calling_convention = "ccc"
 
         if nodes[0].type == "EXTERNAL":
+            external = True
+            linkage = "external"
             if nodes[1].type == "ACCESS_MODIFIER":
                 return_type = nodes[2].value
                 name = nodes[3].value
                 start_args = 4
-                external = True
-                linkage = "external"
                 access_modifier = RIALAccessModifier[nodes[1].value.upper()]
             else:
                 return_type = nodes[1].value
                 name = nodes[2].value
                 start_args = 3
-                external = True
-                linkage = "external"
                 access_modifier = RIALAccessModifier.PUBLIC
         elif nodes[0].type == "ACCESS_MODIFIER":
             access_modifier = RIALAccessModifier[nodes[0].value.upper()]

@@ -40,4 +40,4 @@ class StructDefinition:
                 int(ops[0].string),
                 RIALVariable(ops[1].string, ops[3].string, RIALAccessModifier(ops[2].string), initial_value=ops[4]))
 
-        return StructDefinition()
+        return struct_def

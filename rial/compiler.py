@@ -4,7 +4,7 @@ import sys
 import threading
 import traceback
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict
 
 from llvmlite.binding import ModuleRef
 from llvmlite.ir import Module
@@ -24,8 +24,12 @@ from rial.platform.Platform import Platform
 from rial.profiling import run_with_profiling, ExecutionStep
 from rial.util import good_hash
 
+global exceptions
+
 
 def compiler():
+    global exceptions
+    exceptions = False
     Cache.load_cache()
     path = CompilationManager.config.rial_path.joinpath("builtin").joinpath("start.rial")
     # path = source_path.joinpath("main.rial")
@@ -45,6 +49,10 @@ def compiler():
         threads.append(t)
 
     CompilationManager.files_to_compile.join()
+
+    if exceptions:
+        return
+
     Cache.save_cache()
 
     modules: Dict[str, ModuleRef] = dict()
@@ -56,7 +64,12 @@ def compiler():
             CompilationManager.codegen.save_module(mod, cache_path)
 
         with run_with_profiling(CompilationManager.filename_from_path(key), ExecutionStep.COMPILE_MOD):
-            modules[key] = CompilationManager.codegen.compile_ir(mod)
+            try:
+                modules[key] = CompilationManager.codegen.compile_ir(mod)
+            except Exception as e:
+                log_fail(f"Exception when compiling module {mod.name}")
+                log_fail(e)
+                return
 
     object_files: List[str] = list()
     llvm_bitcode_files: List[str] = list()
@@ -97,8 +110,10 @@ def compiler():
 
 
 def compile_file():
-    try:
-        while True:
+    global exceptions
+    while True:
+        path = ""
+        try:
             path = str(CompilationManager.files_to_compile.get())
 
             if not Path(path).exists():
@@ -131,6 +146,10 @@ def compile_file():
                     continue
 
             file = CompilationManager.filename_from_path(path)
+
+            if isinstance(module, str):
+                contents = module
+                hashed_contents = good_hash(contents)
 
             if module is None:
                 with run_with_profiling(file, ExecutionStep.READ_FILE):
@@ -166,7 +185,15 @@ def compile_file():
             parser = Lark_StandAlone(transformer=primitive_transformer, postlex=Postlexer())
 
             with run_with_profiling(file, ExecutionStep.PARSE_FILE):
-                ast = parser.parse(contents)
+                try:
+                    ast = parser.parse(contents)
+                except Exception as e:
+                    log_fail(f"Exception when parsing {file}")
+                    log_fail(e)
+                    CompilationManager.finish_file(path)
+                    CompilationManager.files_to_compile.task_done()
+                    exceptions = True
+                    continue
 
             with run_with_profiling(file, ExecutionStep.GEN_IR):
                 ast = struct_declaration_transformer.transform(ast)
@@ -183,13 +210,9 @@ def compile_file():
 
             Cache.cache_module(module, path, cache_path, hashed_contents, last_modified)
             CompilationManager.files_to_compile.task_done()
-    except Exception as e:
-        log_fail("Internal Compiler Error: ")
-        log_fail(traceback.format_exc())
-        os._exit(-1)
-    finally:
-        del parser
-
-
-def try_load_from_cache(path: str) -> Optional[Module]:
-    pass
+        except Exception as e:
+            log_fail("Internal Compiler Error: ")
+            log_fail(traceback.format_exc())
+            CompilationManager.finish_file(path)
+            CompilationManager.files_to_compile.task_done()
+            exceptions = True

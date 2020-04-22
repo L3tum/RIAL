@@ -11,6 +11,22 @@ class Postlexer:
         if value.startswith("#"):
             if value == "#programMain":
                 value = f"{CompilationManager.config.project_name}:main:main"
+            elif value == "#targetTriple":
+                value = CompilationManager.codegen.target_machine.triple
+                token.type = "STRING"
+            elif value == "#targetOS":
+                triple = CompilationManager.codegen.target_machine.triple
+                token.type = "STRING"
+
+                # TODO: Better detection
+                if '-linux-' in triple:
+                    value = "linux"
+                elif "-windows-" in triple:
+                    value = "windows"
+                elif "-darwin-" in triple:
+                    value = "darwin"
+                else:
+                    value = triple
 
         token.value = value
 

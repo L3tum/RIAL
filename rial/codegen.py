@@ -92,7 +92,8 @@ class CodeGen:
         return module
 
     def load_module(self, path: str) -> Optional[Module]:
-        with run_with_profiling(path.split('/')[-1], ExecutionStep.READ_CACHE):
+        from rial.compilation_manager import CompilationManager
+        with run_with_profiling(CompilationManager.filename_from_path(path), ExecutionStep.READ_CACHE):
             try:
                 with open(path, "rb") as file:
                     return pickle.load(file)

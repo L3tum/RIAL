@@ -1,11 +1,11 @@
 from llvmlite import ir
-from llvmlite.ir import PointerType, IdentifiedStructType
+from llvmlite.ir import PointerType
 
 from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
 from rial.concept.metadata_token import MetadataToken
 from rial.concept.name_mangler import mangle_function_name
-from rial.concept.parser import Interpreter, Tree
+from rial.concept.parser import Interpreter, Tree, Token
 from rial.log import log_fail
 
 
@@ -18,28 +18,9 @@ class ASTVisitor(Interpreter):
 
     def transform_helper(self, node):
         if isinstance(node, Tree):
-            return self.visit(node)
+            node = self.visit(node)
 
         return node
-
-    def load_nested(self, val, name: str):
-        if isinstance(val.type, PointerType):
-            if isinstance(val.type.pointee, IdentifiedStructType):
-                llvm_struct = self.find_struct(val.type.pointee.name)
-
-                if llvm_struct is None:
-                    return None
-
-                prop = llvm_struct.properties[name]
-
-                if prop is None:
-                    return None
-
-                return self.llvmgen.builder.gep(val,
-                                                [ir.Constant(ir.IntType(32), prop[0]),
-                                                 ir.Constant(ir.IntType(32), 0)])
-
-        return val
 
     def addition(self, tree: Tree):
         nodes = tree.children
@@ -104,25 +85,34 @@ class ASTVisitor(Interpreter):
 
         return self.llvmgen.gen_comparison('==', left, right)
 
-    def get_var(self, identifier: str):
-        variable = self.llvmgen.current_block.get_named_value(identifier)
-
-        if variable is None:
-            log_fail(f"Variable not found {identifier}")
-            return None
-
-        return variable
-
     def var(self, tree: Tree):
-        nodes = tree.children
+        if isinstance(tree, Tree):
+            nodes = tree.children
+        else:
+            nodes = [tree]
+        token: Token
 
-        va = self.get_var(nodes[0].value)
+        if isinstance(nodes[0], Tree):
+            identifier = '.'.join([node.value for node in nodes[0].children])
+            token = nodes[0].children[0]
+        elif isinstance(nodes, list):
+            identifier = '.'.join([node.value for node in nodes])
+            token = nodes[0]
+        else:
+            identifier = nodes[0].value
+            token = nodes[0]
+
+        va = self.llvmgen.get_var(identifier)
+
+        if va is None:
+            log_fail(f"{ParserState.module().name}[{token.line}:{token.column}] Error 0001")
+            log_fail(f"Could not find identifier {identifier}")
 
         return va
 
     def variable_increment(self, tree: Tree):
         nodes = tree.children
-        variable = self.get_var(nodes[0].value)
+        variable = self.var(nodes[0])
 
         if len(nodes) > 1:
             value = self.transform_helper(nodes[1])
@@ -138,7 +128,7 @@ class ASTVisitor(Interpreter):
 
     def variable_decrement(self, tree: Tree):
         nodes = tree.children
-        variable = self.get_var(nodes[0].value)
+        variable = self.var(nodes[0])
 
         if len(nodes) > 1:
             value = self.transform_helper(nodes[1])
@@ -154,30 +144,31 @@ class ASTVisitor(Interpreter):
 
     def variable_multiplication(self, tree: Tree):
         nodes = tree.children
-        variable = self.get_var(nodes[0].value)
+        variable = self.var(nodes[0])
         value = self.transform_helper(nodes[1])
 
         return self.llvmgen.gen_shorthand(variable, value, '*')
 
     def variable_division(self, tree: Tree):
         nodes = tree.children
-        variable = self.get_var(nodes[0].value)
+        variable = self.var(nodes[0])
         value = self.transform_helper(nodes[1])
 
         return self.llvmgen.gen_shorthand(variable, value, '/')
 
     def variable_assignment(self, tree: Tree):
         nodes = tree.children
-        identifier = nodes[0].value
-        value = self.transform_helper(nodes[1])
+
+        variable = self.var(nodes[0])
+        value = self.transform_helper(nodes[2])
 
         # TODO: Check if types are matching based on both LLVM value and inferred and metadata RIAL type
-        return self.llvmgen.assign_to_variable(identifier, value)
+        return self.llvmgen.assign_to_variable(variable, value)
 
     def variable_decl(self, tree: Tree):
         nodes = tree.children
         identifier = nodes[0].value
-        value = self.transform_helper(nodes[1])
+        value = self.transform_helper(nodes[2])
         value_type = value.type
 
         # TODO: Infer type based on value, essentially map LLVM type to RIAL type
@@ -204,7 +195,9 @@ class ASTVisitor(Interpreter):
             log_fail(f"'return' after return found!")
             return None
 
-        return self.llvmgen.create_return_statement(self.transform_helper(nodes[0]))
+        return_val = self.llvmgen.create_return_statement(self.transform_helper(nodes[0]))
+
+        return return_val
 
     def loop_loop(self, tree: Tree):
         nodes = tree.children
@@ -402,10 +395,8 @@ class ASTVisitor(Interpreter):
         instantiation = False
 
         if len(nodes) > 1 and not isinstance(nodes[1], Tree) and nodes[1].type == "IDENTIFIER":
+            identifier = nodes[0].value
             full_function_name = function_name = nodes[1].value
-
-            # Get initial value
-            implicit_parameter = self.get_var(nodes[0].value)
 
             # Go along the nested properties to get to the function call
             for i, node in enumerate(nodes):
@@ -415,13 +406,15 @@ class ASTVisitor(Interpreter):
                 if not isinstance(node, Tree) and node.type == "IDENTIFIER":
                     # If next node is still identifier, we keep going
                     if len(nodes) > i + 1 and not isinstance(nodes[i + 1], Tree) and nodes[i + 1].type == "IDENTIFIER":
-                        implicit_parameter = self.load_nested(implicit_parameter, node.value)
+                        identifier += f".{node.value}"
                     else:
                         start = i + 1
                         break
                 else:
                     start = i
                     break
+
+            implicit_parameter = self.llvmgen.get_var(identifier)
 
         else:
             full_function_name = function_name = nodes[0].value

@@ -33,7 +33,7 @@ class Cache:
     cached_modules: Dict[str, CachedModule]
 
     @staticmethod
-    @run_with_profiling("cache/index.json", ExecutionStep.READ_CACHE)
+    @run_with_profiling("/cache/index.json", ExecutionStep.READ_CACHE)
     def load_cache():
         if CompilationManager.config.raw_opts.disable_cache:
             Cache.cached_modules = dict()
@@ -51,7 +51,7 @@ class Cache:
         Cache.cached_modules[src_path] = CachedModule(cache_path, module, hashed, last_modified)
 
     @staticmethod
-    @run_with_profiling("cache/index.json", ExecutionStep.WRITE_CACHE)
+    @run_with_profiling("/cache/index.json", ExecutionStep.WRITE_CACHE)
     def save_cache():
         index = CompilationManager.config.cache_path.joinpath("index.json")
 
