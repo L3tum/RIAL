@@ -1,4 +1,3 @@
-import base64
 from typing import List
 
 from llvmlite import ir
@@ -8,7 +7,7 @@ from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
 from rial.builtin_type_to_llvm_mapper import NULL, TRUE, FALSE
 from rial.compilation_manager import CompilationManager
-from rial.concept.parser import Transformer_InPlaceRecursive, Token
+from rial.concept.parser import Transformer_InPlaceRecursive, Token, Discard
 from rial.log import log_warn, log_warn_short
 from rial.util import good_hash
 
@@ -29,6 +28,7 @@ class PrimitiveASTTransformer(Transformer_InPlaceRecursive):
         ParserState.module().add_named_metadata('dependencies', (mod_name,))
         CompilationManager.request_module(mod_name)
         ParserState.usings().append(mod_name)
+        raise Discard()
 
     def null(self, nodes):
         return NULL

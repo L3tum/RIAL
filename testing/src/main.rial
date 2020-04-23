@@ -48,5 +48,13 @@ public int main() {
 	    println("HI");
 	}
 
+	if(5 < 5){
+	    printBoolean(false);
+	} elif(5 > 5){
+	    printBoolean(false);
+	} else{
+	    printBoolean(true);
+	}
+
 	return 0;
 }

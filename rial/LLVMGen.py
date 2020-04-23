@@ -295,6 +295,18 @@ class LLVMGen:
 
         return conditional_llvm_block, body_llvm_block, end_llvm_block,
 
+    def create_switch_blocks(self, base_block_name: str, parent: LLVMBlock, count_of_cases: int, default_case: bool) -> \
+            List[LLVMBlock]:
+        blocks = list()
+
+        for i in range(0, count_of_cases):
+            blocks.append(self.create_block(f"{base_block_name}.case.{i}", parent, None))
+
+        if default_case:
+            blocks.append(self.create_block(f"{base_block_name}.default", parent))
+
+        return blocks
+
     def create_conditional_block(self, base_block_name: str, parent: LLVMBlock) -> Tuple[
         LLVMBlock, LLVMBlock, LLVMBlock]:
         # Create three blocks, one condition, one body, and one after the loop

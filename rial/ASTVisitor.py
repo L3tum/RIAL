@@ -320,7 +320,7 @@ class ASTVisitor(Interpreter):
         self.llvmgen.create_jump(conditional_block)
         self.llvmgen.enter_block(conditional_block)
         cond = self.transform_helper(nodes[0])
-        self.llvmgen.create_conditional_jump(cond, body_block, end_block)
+        self.llvmgen.create_conditional_jump(cond, body_block, else_block is not None and else_block or end_block)
 
         # Create body
         self.llvmgen.enter_block(body_block)

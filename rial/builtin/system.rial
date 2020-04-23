@@ -2,8 +2,8 @@ public struct OSInformation{
     bool windows = false;
     bool linux = false;
     bool darwin = false;
-    CString target_triple = "";
-    CString identifier = "";
+    CString target_triple = #targetTriple;
+    CString identifier = #targetOS;
 }
 
 var test = OSInformation();
@@ -23,9 +23,6 @@ public OSInformation GetOsInformation(){
             }
         }
     }
-
-    info.identifier = os;
-    info.target_triple = #targetTriple;
 
     return info;
 }

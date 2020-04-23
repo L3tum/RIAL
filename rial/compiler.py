@@ -11,6 +11,7 @@ from llvmlite.ir import Module
 
 from rial.ASTVisitor import ASTVisitor
 from rial.Cache import Cache
+from rial.DesugarTransformer import DesugarTransformer
 from rial.FunctionDeclarationTransformer import FunctionDeclarationTransformer
 from rial.ParserState import ParserState
 from rial.PrimitiveASTTransformer import PrimitiveASTTransformer
@@ -178,11 +179,12 @@ def compile_file():
             ParserState.set_module(module)
 
             primitive_transformer = PrimitiveASTTransformer()
+            desugar_transformer = DesugarTransformer()
             function_declaration_transformer = FunctionDeclarationTransformer()
             struct_declaration_transformer = StructDeclarationTransformer()
             transformer = ASTVisitor()
 
-            parser = Lark_StandAlone(transformer=primitive_transformer, postlex=Postlexer())
+            parser = Lark_StandAlone(postlex=Postlexer())
 
             with run_with_profiling(file, ExecutionStep.PARSE_FILE):
                 try:
@@ -196,6 +198,8 @@ def compile_file():
                     continue
 
             with run_with_profiling(file, ExecutionStep.GEN_IR):
+                ast = primitive_transformer.transform(ast)
+                ast = desugar_transformer.transform(ast)
                 ast = struct_declaration_transformer.transform(ast)
                 ast = function_declaration_transformer.visit(ast)
 
