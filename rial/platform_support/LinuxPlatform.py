@@ -1,7 +1,7 @@
 from shutil import which
 
 from rial.linking.linking_options import LinkingOptions
-from rial.platform.IPlatform import IPlatform
+from rial.platform_support.IPlatform import IPlatform
 
 
 class LinuxPlatform(IPlatform):

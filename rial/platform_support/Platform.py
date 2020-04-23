@@ -2,8 +2,8 @@ import platform
 from typing import List, Dict
 
 from rial.linking.linking_options import LinkingOptions
-from rial.platform.IPlatform import IPlatform
-from rial.platform.LinuxPlatform import LinuxPlatform
+from rial.platform_support.IPlatform import IPlatform
+from rial.platform_support.LinuxPlatform import LinuxPlatform
 
 platforms: Dict[str, IPlatform] = {
     "Linux": LinuxPlatform()

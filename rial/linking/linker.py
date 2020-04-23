@@ -3,7 +3,7 @@ import subprocess
 from shutil import which
 from typing import List
 
-from rial.platform.Platform import Platform
+from rial.platform_support.Platform import Platform
 
 
 class Linker:

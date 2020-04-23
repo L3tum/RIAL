@@ -1,7 +1,6 @@
 import argparse
 import os
 import shutil
-import sys
 import tracemalloc
 from pathlib import Path
 from timeit import default_timer as timer
@@ -18,9 +17,35 @@ from rial.log import log_fail
 from rial.profiling import set_profiling, execution_events, display_top
 from rial.util import pythonify, monkey_patch
 
+DEFAULT_OPTIONS = {
+    'config': {
+        'print_tokens': False,
+        'print_asm': False,
+        'print_ir': False,
+        'disable_cache': False,
+        'use_object_files': True,
+        'opt_level': '0',
+        'print_link_command': False,
+        'release': False,
+        'profile': False,
+        'profile_mem': False,
+        'strip': False,
+        'file': None
+    },
+    'release': {
+        'opt_level': '3',
+        'release': True,
+        'strip': True,
+    }
+}
+
 
 def main(options):
     start = timer()
+
+    # Monkey patch functions in
+    monkey_patch()
+
     init()
     ParserState.init()
 
@@ -52,8 +77,7 @@ def main(options):
     bin_path.mkdir(parents=False, exist_ok=False)
 
     if not source_path.exists():
-        log_fail("Source path does not exist!")
-        sys.exit(1)
+        raise FileNotFoundError(str(source_path))
 
     config = Configuration(project_name, source_path, cache_path, output_path, bin_path, Path(self_dir), options)
     CompilationManager.init(config)
@@ -79,6 +103,7 @@ def main(options):
 def parse_prelim_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('-w', '--workdir', help="Overwrite working directory", type=str, default="")
+    parser.add_argument('-f', '--file', help="Overwrite start file", type=str, default=None)
     parser.add_argument('--print-tokens', help="Prints the list of tokens to stdout", action="store_true", default=None)
     parser.add_argument('--print-asm', help="Prints the native assembly", action="store_true", default=None)
     parser.add_argument('--print-ir', help="Prints the LLVM IR", action="store_true", default=None)
@@ -109,26 +134,7 @@ def parse_config_file_arguments(workdir: str):
 
 
 if __name__ == "__main__":
-    opts = {
-        'config': {
-            'print_tokens': False,
-            'print_asm': False,
-            'print_ir': False,
-            'disable_cache': False,
-            'use_object_files': True,
-            'opt_level': '0',
-            'print_link_command': False,
-            'release': False,
-            'profile': False,
-            'profile_mem': False,
-            'strip': False,
-        },
-        'release': {
-            'opt_level': '3',
-            'release': True,
-            'strip': True,
-        }
-    }
+    opts = DEFAULT_OPTIONS
 
     # Remove default (None) values
     ops = {k: v for k, v in vars(parse_prelim_arguments()[0]).items() if v is not None}
@@ -166,8 +172,5 @@ if __name__ == "__main__":
     #     file.write(schema_s)
 
     opts = munchify(opts)
-
-    # Monkey patch functions in
-    monkey_patch()
 
     main(opts)

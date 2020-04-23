@@ -21,7 +21,7 @@ from rial.concept.Postlexer import Postlexer
 from rial.concept.parser import Lark_StandAlone
 from rial.linking.linker import Linker
 from rial.log import log_fail
-from rial.platform.Platform import Platform
+from rial.platform_support.Platform import Platform
 from rial.profiling import run_with_profiling, ExecutionStep
 from rial.util import good_hash
 
@@ -32,12 +32,15 @@ def compiler():
     global exceptions
     exceptions = False
     Cache.load_cache()
-    path = CompilationManager.config.rial_path.joinpath("builtin").joinpath("start.rial")
+
+    if CompilationManager.config.raw_opts.file is not None:
+        path = Path(CompilationManager.config.raw_opts.file)
+    else:
+        path = CompilationManager.config.rial_path.joinpath("builtin").joinpath("start.rial")
     # path = source_path.joinpath("main.rial")
 
     if not path.exists():
-        log_fail("Main file not found in source path!")
-        sys.exit(1)
+        raise FileNotFoundError(str(path))
 
     threads = list()
 
