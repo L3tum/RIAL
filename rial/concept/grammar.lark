@@ -1,6 +1,7 @@
 ?start : [(struct_decl|global_variable_decl|attributed_func_decl|function_decl|using|attributed_compiler_directive)*]
 ?statement : conditional_block
            | conditional_elif_block
+           | switch_block
            | for_loop
            | while_loop
            | loop_loop
@@ -19,6 +20,9 @@ conditional_block : "if" "(" expression ")" "{" [statement*] "}"
                   | "if" "(" expression ")" "{" [statement*] "}" "else" "{" [statement*] "}"
 conditional_elif_block : "if" "(" expression ")" "{" [statement*] "}" ("elif" "(" expression ")" "{" [statement*] "}")+
                        | "if" "(" expression ")" "{" [statement*] "}" ("elif" "(" expression ")" "{" [statement*] "}")+ "else" "{" [statement*] "}"
+switch_block : "switch" "(" expression ")" "{" (switch_case|default_case)+ "}"
+switch_case : "case" expression ":" ("{" [statement*] "}")?
+default_case : "default" ":" ("{" [statement*] "}")?
 for_loop : "for" "(" variable_decl ";" expression ";" expression ")" "{" [statement*] "}"
 while_loop : "while" "(" expression ")" "{" [statement*] "}"
 loop_loop : "loop" "{" [statement*] "}"

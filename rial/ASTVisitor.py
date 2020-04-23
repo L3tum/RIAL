@@ -372,6 +372,85 @@ class ASTVisitor(Interpreter):
 
         return phi
 
+    def switch_block(self, tree: Tree):
+        nodes = tree.children
+        parent = self.llvmgen.current_block
+        variable = self.llvmgen.gen_load_if_necessary(self.transform_helper(nodes[0]))
+        end_block = self.llvmgen.create_block(f"{self.llvmgen.current_block.block.name}.end_switch",
+                                              sibling=self.llvmgen.current_block)
+        self.llvmgen.end_block = end_block
+        switch = self.llvmgen.builder.switch(variable, None)
+        collected_empties = list()
+
+        i = 1
+        while i < len(nodes):
+            var, block = self.transform_helper(nodes[i])
+
+            # Check if just case, collect for future use
+            if block is None:
+                collected_empties.append(var)
+            else:
+                self.llvmgen.enter_block_end(block)
+
+                # Check if default case and set as default
+                if var is None:
+                    if switch.default is not None:
+                        log_fail(f"{ParserState.module().name} Duplicate default case in switch statement")
+                    else:
+                        switch.default = block.block
+                else:
+                    switch.add_case(var, block.block)
+
+                # Add all collected cases
+                for collected_empty in collected_empties:
+                    switch.add_case(collected_empty, block.block)
+
+                collected_empties.clear()
+
+            self.llvmgen.enter_block_end(parent)
+
+            i += 1
+
+        if switch.default is None:
+            switch.default = end_block.block
+
+        if len(collected_empties) > 0:
+            log_fail("Empty cases in switch statement!")
+
+        self.llvmgen.end_block = None
+        self.llvmgen.enter_block(end_block)
+
+    def switch_case(self, tree: Tree):
+        nodes = tree.children
+        var = self.llvmgen.gen_load_if_necessary(self.transform_helper(nodes[0]))
+
+        if len(nodes) == 1:
+            return var, None
+        block = self.llvmgen.create_block(f"{self.llvmgen.current_block.block.name}.switch.case",
+                                          self.llvmgen.current_block)
+        self.llvmgen.enter_block(block)
+
+        i = 1
+        while i < len(nodes):
+            self.transform_helper(nodes[i])
+            i += 1
+
+        self.llvmgen.finish_current_block()
+
+        return var, block
+
+    def default_case(self, tree: Tree):
+        nodes = tree.children
+        block = self.llvmgen.create_block(f"{self.llvmgen.current_block.block.name}.switch.default",
+                                          self.llvmgen.current_block)
+        self.llvmgen.enter_block(block)
+        for node in nodes:
+            self.transform_helper(node)
+
+        self.llvmgen.finish_current_block()
+
+        return None, block
+
     def struct_decl(self, tree: Tree):
         nodes = tree.children
         node = nodes[0]

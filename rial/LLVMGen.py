@@ -347,6 +347,10 @@ class LLVMGen:
         self.current_block = llvmblock
         self.builder.position_at_start(self.current_block.block)
 
+    def enter_block_end(self, llvmblock: LLVMBlock):
+        self.current_block = llvmblock
+        self.builder.position_at_end(self.current_block.block)
+
     def create_identified_struct(self, name: str, linkage: Union[Literal["internal"], Literal["external"]],
                                  rial_access_modifier: RIALAccessModifier,
                                  body: List[RIALVariable]) -> IdentifiedStructType:
@@ -458,7 +462,7 @@ class LLVMGen:
         if self.current_block.block.terminator is None:
             self.builder.position_at_end(self.current_block.block)
             self.builder.ret_void()
-        self.current_block = None
+        self.current_block = self.current_block.parent
 
     def finish_current_func(self):
         # If we're in release mode

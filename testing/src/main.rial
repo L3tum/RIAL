@@ -56,5 +56,20 @@ public int main() {
 	    printBoolean(true);
 	}
 
+	switch(i){
+	    case 0:
+	    case 1:
+	    case 6:{
+	        println("0");
+	        println("1");
+	        break;
+	    }
+	    default:{
+	        printInteger(i);
+	        println("Default");
+	        break;
+	    }
+	}
+
 	return 0;
 }
