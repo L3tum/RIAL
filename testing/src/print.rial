@@ -32,10 +32,10 @@ internal void print(CString arg){
     printf(arg);
 }
 
-private struct Test{
+internal struct Test{
     int a = 5;
 
-    private void printTest(){
+    internal void printTest(){
         println("Test");
     }
 }

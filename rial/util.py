@@ -3,9 +3,10 @@ import random
 import string
 from typing import List
 
-from llvmlite.ir import Function, MDValue, Module, Context
+from llvmlite.ir import Function, MDValue, Module, Context, IdentifiedStructType
 
 from rial.metadata.FunctionDefinition import FunctionDefinition
+from rial.metadata.StructDefinition import StructDefinition
 
 
 def generate_random_name(count: int):
@@ -38,8 +39,14 @@ def good_hash(w: str):
 
 
 def _get_function_definition(self: Function) -> FunctionDefinition:
-    md_value: MDValue = self.metadata['function_definition']
+    module: Module = self.module
+    md_value: MDValue = module.get_named_metadata(f"function_definition_{self.name.replace(':', '_')}")
     return FunctionDefinition.from_mdvalue(md_value)
+
+
+def _get_struct_definition(self: IdentifiedStructType) -> StructDefinition:
+    return StructDefinition.from_mdvalue(
+        self.module.get_named_metadata(f"{self.name.replace(':', '_')}.definition"))
 
 
 def _get_global_safe(self: Module, name: str):
@@ -70,3 +77,4 @@ def monkey_patch():
     Module.get_global_safe = _get_global_safe
     Module.get_dependencies = _get_dependencies
     Context.get_identified_type_if_exists = _get_identified_type_if_exists
+    IdentifiedStructType.get_struct_definition = _get_struct_definition

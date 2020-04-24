@@ -47,14 +47,25 @@ class StructDeclarationTransformer(Transformer_InPlaceRecursive):
 
             if isinstance(node, Tree) and node.data == "struct_property_declaration":
                 variable = node.children
-                rial_type = variable[0].value
-                variable_name = variable[1].value
+                acc_modifier = RIALAccessModifier.PRIVATE
                 variable_value = None
 
-                if len(variable) > 2:
-                    variable_value = variable[2]
+                if variable[0].type == "ACCESS_MODIFIER":
+                    acc_modifier = RIALAccessModifier(variable[0].value)
+                    rial_type = variable[1].value
+                    variable_name = variable[2].value
 
-                body.append(RIALVariable(variable_name, rial_type, initial_value=variable_value))
+                    if len(variable) > 3:
+                        variable_value = variable[3]
+                else:
+                    rial_type = variable[0].value
+                    variable_name = variable[1].value
+
+                    if len(variable) > 2:
+                        variable_value = variable[2]
+
+                body.append(RIALVariable(variable_name, rial_type, initial_value=variable_value,
+                                         access_modifier=acc_modifier))
             elif isinstance(node, Tree) and node.data == "function_decl":
                 function_decls.append(node)
             elif isinstance(node, Token) and node.type == "IDENTIFIER":

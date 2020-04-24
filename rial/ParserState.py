@@ -8,7 +8,6 @@ from rial.builtin_type_to_llvm_mapper import map_type_to_llvm
 from rial.compilation_manager import CompilationManager
 from rial.log import log_fail
 from rial.metadata.FunctionDefinition import FunctionDefinition
-from rial.metadata.StructDefinition import StructDefinition
 from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 
 
@@ -206,23 +205,6 @@ class ParserState:
                 log_fail(f"Specify one of them by using {structs_found[0][0]}:{struct_name} for example")
                 return None
             struct = structs_found[0][1]
-
-        # Get metadata for struct
-        struct_def = StructDefinition.from_mdvalue(
-            struct.module.get_named_metadata(f"{struct.name.replace(':', '_')}.definition"))
-
-        # Struct cannot be accessed if:
-        #   - Struct is not public and
-        #   - Struct is internal but not in same TLM (top level module) or
-        #   - Struct is private but not in same module
-        if struct_def.access_modifier != RIALAccessModifier.PUBLIC and \
-                ((struct_def.access_modifier == RIALAccessModifier.INTERNAL and
-                  struct.module.name.split(':')[0] != ParserState.module().name.split(':')[0]) or
-                 (struct_def.access_modifier == RIALAccessModifier.PRIVATE and
-                  struct.module.name != ParserState.module().name)):
-            log_fail(
-                f"Cannot access struct {struct_name} in module {struct.module.name}!")
-            return None
 
         return struct
 

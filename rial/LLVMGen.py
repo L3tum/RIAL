@@ -9,7 +9,6 @@ from rial.LLVMUIntType import LLVMUIntType
 from rial.ParserState import ParserState
 from rial.builtin_type_to_llvm_mapper import map_llvm_to_type
 from rial.compilation_manager import CompilationManager
-from rial.log import log_fail
 from rial.metadata.FunctionDefinition import FunctionDefinition
 from rial.metadata.StructDefinition import StructDefinition
 from rial.rial_types.RIALAccessModifier import RIALAccessModifier
@@ -48,13 +47,21 @@ class LLVMGen:
 
                     struct_def = StructDefinition.from_mdvalue(
                         struct.module.get_named_metadata(f"{struct.name.replace(':', '_')}.definition"))
+
+                    if not self.check_struct_access_allowed(struct, struct_def):
+                        raise PermissionError(f"Tried accesssing struct {struct.name}")
+
                     prop = struct_def.properties[ident]
 
                     if prop is None:
                         return None
+
+                    # Check property access
+                    if not self.check_property_access_allowed(struct, prop[1]):
+                        raise PermissionError(f"Tried to access property {prop[1].name} but it was not allowed!")
+
                     variable = self.builder.gep(variable, [ir.Constant(ir.IntType(32), 0),
                                                            ir.Constant(ir.IntType(32), prop[0])])
-
             else:
                 variable = self.current_block.get_named_value(ident)
 
@@ -205,9 +212,16 @@ class LLVMGen:
         if func is None:
             return None
 
+        func_def: FunctionDefinition = func.get_function_definition()
+
+        # Check if call is allowed
+        if not self.check_function_call_allowed(func, func_def):
+            raise PermissionError(f"Tried calling function {func.name} from {self.current_func.name}")
+
         # Check if function is declared in current module
         if ParserState.module().get_global_safe(func.name) is None:
-            func = ir.Function(ParserState.module(), func.function_type, func.name)
+            func = self.create_function_with_type(func.name, func.function_type, func.linkage, func.calling_convention,
+                                                  [arg.name for arg in func.args], func_def)
 
         args = list()
 
@@ -225,7 +239,7 @@ class LLVMGen:
         for i, arg in enumerate(args):
             if len(func.args) > i and arg.type != func.args[i].type:
                 # TODO: SLOC information
-                log_fail(
+                raise TypeError(
                     f"Function {function_name} expects a {map_llvm_to_type(func.args[i].type)} but got a {map_llvm_to_type(arg.type)}")
 
         # Gen call
@@ -237,10 +251,53 @@ class LLVMGen:
             ParserState.module().get_global('llvm.donothing')
         except KeyError:
             func_type = self.create_function_type(ir.VoidType(), [], False)
-            self.create_function_with_type('llvm.donothing', func_type, "external", "", [], False,
+            self.create_function_with_type('llvm.donothing', func_type, "external", "", [],
                                            FunctionDefinition("void", RIALAccessModifier.PUBLIC, []))
 
         self.gen_function_call("llvm.donothing", "llvm.donothing", "llvm.donothing", [])
+
+    def check_function_call_allowed(self, func: Function, func_def: FunctionDefinition):
+        # Public is always okay
+        if func_def.access_modifier == RIALAccessModifier.PUBLIC:
+            return True
+        # Internal only when it's the same TLM
+        if func_def.access_modifier == RIALAccessModifier.INTERNAL:
+            return func.module.name.split(':')[0] == ParserState.module().name.split(':')[0]
+        # Private is harder
+        if func_def.access_modifier == RIALAccessModifier.PRIVATE:
+            # Allowed if not in struct and in current module
+            if func_def.struct == "" and func.module.name == ParserState.module().name:
+                return True
+            # Allowed if in same struct irregardless of module
+            if self.current_struct is not None and self.current_struct.name == func_def.struct:
+                return True
+        return False
+
+    def check_property_access_allowed(self, struct: IdentifiedStructType, prop: RIALVariable):
+        # Same struct, anything goes
+        if self.current_struct is not None and self.current_struct.name == struct.name:
+            return True
+
+        # Unless it's private it's okay
+        if prop.access_modifier == RIALAccessModifier.PRIVATE:
+            return False
+
+        return True
+
+    def check_struct_access_allowed(self, struct: IdentifiedStructType, struct_def: StructDefinition):
+        # Public is always okay
+        if struct_def.access_modifier == RIALAccessModifier.PUBLIC:
+            return True
+
+        # Private and same module
+        if struct_def.access_modifier == RIALAccessModifier.PRIVATE:
+            return struct.module.name == ParserState.module().name
+
+        # Internal and same TLM
+        if struct_def.access_modifier == RIALAccessModifier.INTERNAL:
+            return struct.module.name.split(':')[0] == ParserState.module().name.split(':')[0]
+
+        return False
 
     def declare_variable(self, identifier: str, variable_type, value, rial_type: str) -> Optional[AllocaInstr]:
         variable = self.current_block.get_named_value(identifier)
@@ -362,6 +419,7 @@ class LLVMGen:
         props.extend([ParserState.map_type_to_llvm(bod.rial_type) for bod in body])
 
         struct.set_body(*tuple(props))
+        struct.module = ParserState.module()
         self.current_struct = struct
 
         # Create metadata definition
@@ -369,8 +427,8 @@ class LLVMGen:
 
         # Create base constructor
         function_type = self.create_function_type(ir.VoidType(), [ir.PointerType(struct)], False)
-        func = self.create_function_with_type(f"{name}.constructor", function_type, linkage, "", ["this"], True,
-                                              FunctionDefinition(name, rial_access_modifier, [("this", name), ]))
+        func = self.create_function_with_type(f"{name}.constructor", function_type, linkage, "", ["this"],
+                                              FunctionDefinition(name, rial_access_modifier, [("this", name), ], name))
         self.create_function_body(func, [name])
         self_value = func.args[0]
 
@@ -404,7 +462,6 @@ class LLVMGen:
                                   linkage: Union[Literal["internal"], Literal["external"]],
                                   calling_convention: str,
                                   arg_names: List[str],
-                                  generate_body: bool,
                                   function_def: FunctionDefinition):
         """
         Creates an IR Function with the specified arguments. NOTHING MORE.
@@ -414,7 +471,6 @@ class LLVMGen:
         :param linkage:
         :param calling_convention:
         :param arg_names:
-        :param generate_body:
         :return:
         """
 
@@ -423,9 +479,9 @@ class LLVMGen:
         func.linkage = linkage
         func.calling_convention = calling_convention
 
-        if generate_body:
-            func.set_metadata('function_definition',
-                              ParserState.module().add_metadata(tuple(function_def.to_list())))
+        if not f"function_definition_{name.replace(':', '_')}" in ParserState.module().namedmetadata:
+            ParserState.module().add_named_metadata(f"function_definition_{name.replace(':', '_')}",
+                                                    ParserState.module().add_metadata(tuple(function_def.to_list())))
 
         # Set argument names
         for i, arg in enumerate(func.args):

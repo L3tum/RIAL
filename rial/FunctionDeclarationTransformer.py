@@ -166,8 +166,8 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
         func = self.llvmgen.create_function_with_type(full_function_name, func_type, linkage,
                                                       calling_convention,
                                                       list(map(lambda arg: arg[1], args)),
-                                                      has_body,
-                                                      FunctionDefinition(return_type, access_modifier, args))
+                                                      FunctionDefinition(return_type, access_modifier, args,
+                                                                         self.llvmgen.current_struct is not None and self.llvmgen.current_struct.name or ""))
 
         # Always inline the main function into the compiler supplied one
         if main_function:

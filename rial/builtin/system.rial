@@ -1,9 +1,9 @@
 public struct OSInformation{
-    bool windows = false;
-    bool linux = false;
-    bool darwin = false;
-    CString target_triple = #targetTriple;
-    CString identifier = #targetOS;
+    public bool windows = false;
+    public bool linux = false;
+    public bool darwin = false;
+    public CString target_triple = #targetTriple;
+    public CString identifier = #targetOS;
 }
 
 var test = OSInformation();
