@@ -58,7 +58,7 @@ struct_property_declaration : ACCESS_MODIFIER? IDENTIFIER IDENTIFIER ["=" expres
 // Functions
 function_call : IDENTIFIER ("." IDENTIFIER)* "(" [expression ("," expression)*] ")"
                | "new" IDENTIFIER ("." IDENTIFIER)* "(" [expression ("," expression)*] ")"
-function_decl : ACCESS_MODIFIER? IDENTIFIER IDENTIFIER "(" [PARAMS? IDENTIFIER IDENTIFIER ("," IDENTIFIER IDENTIFIER | "," PARAMS IDENTIFIER IDENTIFIER)*] ")" "{" [statement*] "}"
+function_decl : ACCESS_MODIFIER? IDENTIFIER IDENTIFIER "(" [(PARAMS|THIS)? IDENTIFIER IDENTIFIER ("," IDENTIFIER IDENTIFIER | "," PARAMS IDENTIFIER IDENTIFIER)*] ")" "{" [statement*] "}"
                | EXTERNAL ACCESS_MODIFIER? IDENTIFIER IDENTIFIER "(" [PARAMS? IDENTIFIER IDENTIFIER ("," IDENTIFIER IDENTIFIER | "," PARAMS IDENTIFIER IDENTIFIER)*] ")" ";"
 
 // Attributes
@@ -113,6 +113,7 @@ HEX_INT : "0x" HEXDIGIT (HEXDIGIT|"_")*
 INT : DIGIT (DIGIT|"_")*
 EXTERNAL : "external"
 PARAMS: "params"
+THIS : "this"
 PREPRO_FLAG : "#"
 
 // Taken from common definition, copied to assign -10 priority

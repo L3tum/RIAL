@@ -1,14 +1,16 @@
 from llvmlite import ir
-from llvmlite.ir import PointerType
+from llvmlite.ir import PointerType, GlobalVariable, FormattedConstant
 
 from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
 from rial.builtin_type_to_llvm_mapper import map_llvm_to_type
+from rial.compilation_manager import CompilationManager
 from rial.concept.metadata_token import MetadataToken
 from rial.concept.name_mangler import mangle_function_name
 from rial.concept.parser import Interpreter, Tree, Token
 from rial.log import log_fail
 from rial.metadata.StructDefinition import StructDefinition
+from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 
 
 class ASTVisitor(Interpreter):
@@ -176,9 +178,24 @@ class ASTVisitor(Interpreter):
         return self.llvmgen.declare_variable(identifier, value_type, value, map_llvm_to_type(value_type))
 
     def global_variable_decl(self, tree: Tree):
-        # nodes = tree.children
-        # print(nodes)
-        pass
+        nodes = tree.children[0].children
+        access_modifier = RIALAccessModifier.PRIVATE
+        variable_name = nodes[0].value
+        variable_value = nodes[2]
+        variable_type = hasattr(variable_value, 'type') and variable_value.type or None
+
+        if not isinstance(variable_value, ir.Constant) or isinstance(variable_value, FormattedConstant):
+            if isinstance(variable_value, GlobalVariable) and variable_value.global_constant:
+                variable_value = variable_value.initializer
+                variable_type = variable_value.initializer.type
+            else:
+                raise PermissionError("Global variables can only be of constant types right now")
+
+        glob = self.llvmgen.gen_global(variable_name, variable_value, variable_type, access_modifier,
+                                       access_modifier.get_linkage(),
+                                       False)
+
+        return glob
 
     def continue_rule(self, tree: Tree):
         if self.llvmgen.conditional_block is None:
@@ -525,18 +542,24 @@ class ASTVisitor(Interpreter):
             else:
                 ty = implicit_parameter.type
 
-            mangled_names.append(mangle_function_name(full_function_name, [arg.type for arg in arguments], ty.name))
+            ty = map_llvm_to_type(ty)
 
-            struct = ParserState.find_struct(ty.name)
-            struct_def: StructDefinition = struct.get_struct_definition()
+            # Check if it's a builtin type
+            if isinstance(ty, str) and ty in CompilationManager.builtin_types:
+                mangled_names.append(mangle_function_name(full_function_name, [arg.type for arg in arguments], ty))
+            else:
+                mangled_names.append(mangle_function_name(full_function_name, [arg.type for arg in arguments], ty.name))
 
-            # Also mangle base structs to see if it's a derived function
-            for base_struct in struct_def.base_structs:
-                arg_tys = arg_types
-                arg_tys.pop(0)
-                arg_tys.insert(0, base_struct)
-                mangled_names.append(
-                    mangle_function_name(full_function_name, arg_types, base_struct))
+                struct = ParserState.find_struct(ty.name)
+                struct_def: StructDefinition = struct.get_struct_definition()
+
+                # Also mangle base structs to see if it's a derived function
+                for base_struct in struct_def.base_structs:
+                    arg_tys = arg_types
+                    arg_tys.pop(0)
+                    arg_tys.insert(0, base_struct)
+                    mangled_names.append(
+                        mangle_function_name(full_function_name, arg_types, base_struct))
         else:
             mangled_names.append(mangle_function_name(full_function_name, arg_types))
 
@@ -549,6 +572,9 @@ class ASTVisitor(Interpreter):
 
         try:
             call_instr = self.llvmgen.gen_function_call([*mangled_names, full_function_name, function_name], arguments)
+
+            if call_instr is None and not instantiation:
+                log_fail(f"Failed to generate call to function {function_name}")
 
             if instantiation:
                 return arguments[0]

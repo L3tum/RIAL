@@ -11,6 +11,10 @@ TRUE = ir.Constant(ir.IntType(1), 1)
 FALSE = ir.Constant(ir.IntType(1), 0)
 
 
+def is_builtin_type(ty: str):
+    return ty in ("Int32", "Int64", "UInt64", "UInt64", "Double64", "Float32", "Boolean", "Byte", "Char", "Half")
+
+
 def map_shortcut_to_type(shortcut: str) -> str:
     if shortcut == "int":
         return "Int32"
@@ -115,3 +119,5 @@ def map_llvm_to_type(llvm_type: Type):
 
     if isinstance(llvm_type, ir.VoidType):
         return "void"
+
+    return llvm_type

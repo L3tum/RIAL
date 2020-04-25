@@ -1,0 +1,9 @@
+use builtin:ffi:print;
+
+public void println(CString arg){
+    printf("%s\n", arg);
+}
+
+public void printInteger(int arg){
+    printf("%i\n", arg);
+}

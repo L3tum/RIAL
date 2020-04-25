@@ -65,6 +65,9 @@ class LLVMGen:
             else:
                 variable = self.current_block.get_named_value(ident)
 
+                if variable is None:
+                    variable = ParserState.module().get_global_safe(ident)
+
         return variable
 
     def gen_integer(self, number: int, length: int, unsigned: bool = False):
@@ -79,17 +82,23 @@ class LLVMGen:
     def gen_double(self, number: float):
         return ir.Constant(ir.DoubleType(), number)
 
+    def gen_global(self, name: str, value: ir.Constant, ty: Type, access_modifier: RIALAccessModifier, linkage: str,
+                   constant: bool):
+        glob = ir.GlobalVariable(ParserState.module(), ty, name=name)
+        glob.linkage = linkage
+        glob.unnamed_addr = True
+        glob.global_constant = constant
+        glob.initializer = value
+
+        return glob
+
     def gen_string_lit(self, name: str, value: str):
         value = eval("'{}'".format(value))
 
         # TODO: Remove the always-added \0 once we don't need that anymore
         arr = bytearray(value.encode("utf-8") + b"\x00")
         const_char_arr = ir.Constant(ir.ArrayType(ir.IntType(8), len(arr)), arr)
-        glob = ir.GlobalVariable(ParserState.module(), const_char_arr.type, name=name)
-        glob.linkage = 'private'
-        glob.global_constant = True
-        glob.initializer = const_char_arr
-        glob.unnamed_addr = True
+        glob = self.gen_global(name, const_char_arr, const_char_arr.type, RIALAccessModifier.PRIVATE, "private", True)
 
         return glob
 
@@ -240,26 +249,28 @@ class LLVMGen:
                 ty = isinstance(arg.type, PointerType) and arg.type.pointee or arg.type
                 func_arg_type = isinstance(func.args[i].type, PointerType) and func.args[i].type.pointee or func.args[
                     i].type
-                struct = ParserState.find_struct(ty.name)
 
-                if struct is not None:
-                    struct_def: StructDefinition = struct.get_struct_definition()
-                    found = False
+                if isinstance(ty, IdentifiedStructType):
+                    struct = ParserState.find_struct(ty.name)
 
-                    # Check if a base struct matches the type expected
-                    # TODO: Recursive check
-                    for base_struct in struct_def.base_structs:
-                        if base_struct == func_arg_type.name:
-                            args.remove(arg)
-                            args.insert(i, self.builder.bitcast(arg, ir.PointerType(base_struct)))
-                            found = True
-                            break
-                    if found:
-                        continue
+                    if struct is not None:
+                        struct_def: StructDefinition = struct.get_struct_definition()
+                        found = False
+
+                        # Check if a base struct matches the type expected
+                        # TODO: Recursive check
+                        for base_struct in struct_def.base_structs:
+                            if base_struct == func_arg_type.name:
+                                args.remove(arg)
+                                args.insert(i, self.builder.bitcast(arg, ir.PointerType(base_struct)))
+                                found = True
+                                break
+                        if found:
+                            continue
 
                     # TODO: SLOC information
                 raise TypeError(
-                    f"Function {func.name} expects a {map_llvm_to_type(func.args[i].type)} but got a {map_llvm_to_type(arg.type)}")
+                    f"Function {func.name} expects a {func.args[i].type} but got a {arg.type}")
 
         # Gen call
         return self.builder.call(func, args)

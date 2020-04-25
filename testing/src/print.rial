@@ -1,6 +1,5 @@
 use builtin:attribute;
-
-external private void printf(CString format, params CString args);
+use builtin:ffi:print;
 
 internal void printInteger(int arg){
     printf("%i\n", arg);

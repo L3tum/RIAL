@@ -11,6 +11,17 @@ class TransformerInterpreter(Interpreter):
     The user has to explicitly call visit_children, or use the @visit_children_decor
     """
 
+    def visit(self, tree):
+        f = getattr(self, tree.data)
+        wrapper = getattr(f, 'visit_wrapper', None)
+        try:
+            if wrapper is not None:
+                return f.visit_wrapper(f, tree.data, tree.children, tree.meta)
+            else:
+                return f(tree)
+        except Discard:
+            pass
+
     def visit_children(self, tree) -> Tree:
         children = list()
 

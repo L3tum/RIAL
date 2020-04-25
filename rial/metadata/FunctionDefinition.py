@@ -28,7 +28,7 @@ class FunctionDefinition:
     def from_mdvalue(value: MDValue):
         definition = FunctionDefinition()
         definition.rial_return_type = value.operands[0].operands[0].string
-        definition.access_modifier = RIALAccessModifier(value.operands[0].operands[1].string)
+        definition.access_modifier = RIALAccessModifier[value.operands[0].operands[1].string.upper()]
         definition.struct = value.operands[0].operands[3].string
         # TODO: RIAL Args parsing
 

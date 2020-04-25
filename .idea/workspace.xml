@@ -19,20 +19,25 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Implemented access checking&#10;&#10;Moved function metadata to module to fix bugs&#10;Closes #38">
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Preliminary support for inheritance">
+      <change afterPath="$PROJECT_DIR$/rial/builtin/always_imported/int32.rial" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/builtin/box.rial" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/builtin/ffi/print.rial" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/builtin/print.rial" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/ASTVisitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ASTVisitor.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/LLVMGen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMGen.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/codegen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/codegen.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/builtin/system.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin/system.rial" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/compilation_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compilation_manager.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/compiler.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compiler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/name_mangler.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/name_mangler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/concept/TransformerInterpreter.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/TransformerInterpreter.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/metadata/FunctionDefinition.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/metadata/FunctionDefinition.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/metadata/StructDefinition.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/metadata/StructDefinition.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/platform_support/LinuxPlatform.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/platform_support/LinuxPlatform.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/util.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/rial.ini" beforeDir="false" afterPath="$PROJECT_DIR$/testing/rial.ini" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/testing/src/print.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/print.rial" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -78,15 +83,16 @@
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
   <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Tom\source\repos\RIAL\rial\builtin\always_imported" />
+      <recent name="C:\Users\Tom\source\repos\RIAL\rial\metadata" />
+      <recent name="C:\Users\Tom\source\repos\RIAL\rial\linking" />
+      <recent name="C:\Users\Tom\source\repos\RIAL\testing\src" />
+    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\Tom\source\repos\RIAL\fuzzing_in" />
       <recent name="C:\Users\Tom\source\repos\RIAL\testing\src" />
       <recent name="C:\Users\Tom\source\repos\RIAL\rial" />
-    </key>
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="C:\Users\Tom\source\repos\RIAL\rial\metadata" />
-      <recent name="C:\Users\Tom\source\repos\RIAL\rial\linking" />
-      <recent name="C:\Users\Tom\source\repos\RIAL\testing\src" />
     </key>
   </component>
   <component name="SvnConfiguration">
@@ -177,7 +183,7 @@
       <workItem from="1587632067683" duration="20006000" />
       <workItem from="1587713271911" duration="11117000" />
       <workItem from="1587728446288" duration="4186000" />
-      <workItem from="1587803368180" duration="4510000" />
+      <workItem from="1587803368180" duration="13179000" />
     </task>
     <task id="LOCAL-00001" summary="Update">
       <created>1585486198876</created>
@@ -438,7 +444,14 @@
       <option name="project" value="LOCAL" />
       <updated>1587724608567</updated>
     </task>
-    <option name="localTasksCounter" value="38" />
+    <task id="LOCAL-00038" summary="Preliminary support for inheritance">
+      <created>1587811707692</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1587811707692</updated>
+    </task>
+    <option name="localTasksCounter" value="39" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -457,7 +470,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Added support for specifying access modifier for external functions&#10;&#10;This in turn revealed a slew of bugs with the current implementation of functions and arguments.&#10;Which have been fixed, but....&#10;...All arguments are now passed as references.&#10;Special cases will need to be added to make this more secure (like specifying a const argument and thus invoking the generation of a new variable).&#10;&#10;Closes #20" />
     <MESSAGE value="Added support for &quot;e&quot; scientific notation&#10;Closes #16" />
     <MESSAGE value="Support &quot;u&quot;, &quot;l&quot; and &quot;ul&quot; suffixes&#10;Warning about using lowercase &quot;l&quot; as suffix&#10;Support &quot;long&quot;, &quot;ulong&quot; and &quot;uint&quot; shortcuts" />
     <MESSAGE value="Adds support for unsigned integers in math operations&#10;Closes #18&#10;&#10;Improves name mangling and error messages" />
@@ -482,17 +494,18 @@
     <MESSAGE value="Added support for switch/case statement&#10;With default statement&#10;And multiple cases per block" />
     <MESSAGE value="Moved platform to platform_support since it apparently conflicts with Python's platform" />
     <MESSAGE value="Implemented access checking&#10;&#10;Moved function metadata to module to fix bugs&#10;Closes #38" />
-    <option name="LAST_COMMIT_MESSAGE" value="Implemented access checking&#10;&#10;Moved function metadata to module to fix bugs&#10;Closes #38" />
+    <MESSAGE value="Preliminary support for inheritance" />
+    <option name="LAST_COMMIT_MESSAGE" value="Preliminary support for inheritance" />
   </component>
   <component name="WindowStateProjectService">
     <state x="906" y="378" key="#Inspections" timestamp="1587735451423">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="906" y="378" key="#Inspections/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587735451423" />
-    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1587714667061">
+    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1587817417821">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587714667061" />
+    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587817417821" />
     <state x="1085" y="416" key="#com.intellij.ide.util.MemberChooser" timestamp="1585056818881">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -526,11 +539,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586869276582" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1587724609703">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1587811708933">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587724609703" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587811708933" />
     <state x="92" y="92" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1585249165802">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -559,10 +572,10 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="374" y="358" width="565" height="560" key="dock-window-3/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584965812228" />
-    <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1587810342970">
+    <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1587814066615">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587810342970" />
+    <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587814066615" />
     <state x="1123" y="472" key="refactoring.ChangeSignatureDialog" timestamp="1586600798541">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

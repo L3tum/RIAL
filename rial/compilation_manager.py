@@ -3,7 +3,7 @@ from queue import Queue
 from threading import Lock, Event
 from typing import Dict, List
 
-from llvmlite.ir import Module
+from llvmlite.ir import Module, Function
 
 from rial.codegen import CodeGen
 from rial.configuration import Configuration
@@ -17,6 +17,8 @@ class CompilationManager:
     lock: Lock
     config: Configuration
     codegen: CodeGen
+    always_imported: List[str]
+    builtin_types: Dict[str, Dict[str, List[Function]]]
 
     def __init__(self):
         raise PermissionError()
@@ -30,6 +32,8 @@ class CompilationManager:
         CompilationManager.config = config
         CompilationManager.modules = dict()
         CompilationManager.codegen = CodeGen(config.raw_opts.opt_level)
+        CompilationManager.always_imported = list()
+        CompilationManager.builtin_types = dict()
 
     @staticmethod
     def finish_file(path: str):

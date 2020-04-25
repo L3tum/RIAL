@@ -5,6 +5,8 @@ from llvmlite.ir import IdentifiedStructType
 
 from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
+from rial.builtin_type_to_llvm_mapper import is_builtin_type, map_shortcut_to_type
+from rial.compilation_manager import CompilationManager
 from rial.concept.TransformerInterpreter import TransformerInterpreter
 from rial.concept.metadata_token import MetadataToken
 from rial.concept.name_mangler import mangle_function_name
@@ -77,11 +79,11 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
             name = nodes[1].value
             start_args = 2
 
-        full_function_name = f"{ParserState.module().name}:{name}"
         args: List[Tuple[str, str]] = list()
 
         i = start_args
         var_args = False
+        this_arg = None
         has_body = False
 
         while i < len(nodes):
@@ -94,6 +96,17 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
             if nodes[i].type == "PARAMS":
                 var_args = True
                 i += 1
+            elif nodes[i].type == "THIS":
+                i += 1
+                this_arg = nodes[i].value
+                this_arg = map_shortcut_to_type(this_arg)
+                arg_type = nodes[i].value
+                i += 1
+                arg_name = nodes[i].value
+                args.append((arg_type, arg_name))
+                i += 1
+                continue
+
             if nodes[i].type == "IDENTIFIER":
                 arg_type = nodes[i].value
                 i += 1
@@ -130,6 +143,20 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
             llvm_args.insert(0, ir.PointerType(self.llvmgen.current_struct))
             args.insert(0, (self.llvmgen.current_struct.name, "this"))
 
+        # If it's external we need to use the actual defined name instead of the compiler-internal one
+        if external or self.mangling == False:
+            full_function_name = name
+        else:
+            if self.llvmgen.current_struct is not None:
+                full_function_name = mangle_function_name(name, llvm_args,
+                                                          self.llvmgen.current_struct.name)
+            else:
+                if this_arg is not None:
+                    full_function_name = mangle_function_name(name, llvm_args, this_arg)
+                else:
+                    full_function_name = mangle_function_name(name, llvm_args)
+            full_function_name = f"{ParserState.module().name}:{full_function_name}"
+
         # Check if main method
         if full_function_name.endswith("main:main") and full_function_name.count(':') == 2:
             main_function = True
@@ -137,16 +164,6 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
             # Check that main method returns either Int32 or void
             if return_type != "Int32" and return_type != "void":
                 log_fail(f"Main method must return an integer status code or void, {return_type} given!")
-
-        # If it's external we need to use the actual defined name instead of the compiler-internal one
-        if external or self.mangling == False:
-            full_function_name = name
-        else:
-            if self.llvmgen.current_struct is not None:
-                full_function_name = mangle_function_name(full_function_name, llvm_args,
-                                                          self.llvmgen.current_struct.name)
-            else:
-                full_function_name = mangle_function_name(full_function_name, llvm_args)
 
         # Search for function in the archives
         # func = ParserState.search_function(full_function_name)
@@ -187,6 +204,13 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
         # If it has no body we do not need to go through it later as it's already declared with this method.
         if not has_body:
             raise Discard()
+
+        if this_arg is not None:
+            if is_builtin_type(this_arg):
+                if this_arg not in CompilationManager.builtin_types:
+                    CompilationManager.builtin_types[this_arg] = dict()
+
+                CompilationManager.builtin_types[this_arg][func.name] = func
 
         token = nodes[0]
         metadata_token = MetadataToken(token.type, token.value)

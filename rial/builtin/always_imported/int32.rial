@@ -1,0 +1,9 @@
+use builtin:print;
+
+public CString ToString(this Int32 arg){
+    return "";
+}
+
+public void print(this Int32 arg){
+    printInteger(arg);
+}

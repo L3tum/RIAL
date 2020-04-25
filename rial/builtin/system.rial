@@ -1,3 +1,5 @@
+use builtin:print;
+
 public struct OSInformation{
     public bool windows = false;
     public bool linux = false;
@@ -6,9 +8,12 @@ public struct OSInformation{
     public CString identifier = #targetOS;
 }
 
-var test = OSInformation();
+var test = 500;
 
 public OSInformation GetOsInformation(){
+    test = 50;
+    test.print();
+
     var info = new OSInformation();
     var os = #targetOS;
 

@@ -88,9 +88,12 @@ class StructDeclarationTransformer(Transformer_InPlaceRecursive):
 
         # Create functions
         for function_decl in function_decls:
-            metadata_node = self.fdt.visit(function_decl)
+            try:
+                metadata_node = self.fdt.visit(function_decl)
+                declared_functions.append(metadata_node)
+            except Discard:
+                pass
             nodes.remove(function_decl)
-            declared_functions.append(metadata_node)
 
         self.llvmgen.finish_struct()
 

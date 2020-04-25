@@ -2,6 +2,9 @@ import multiprocessing
 import os
 import threading
 import traceback
+
+from os import listdir
+from os.path import isfile, join
 from pathlib import Path
 from typing import List, Dict
 
@@ -41,9 +44,17 @@ def compiler():
     if not path.exists():
         raise FileNotFoundError(str(path))
 
+    # Collect all always imported paths
+    builtin_path = str(CompilationManager.config.rial_path.joinpath("builtin").joinpath("always_imported"))
+    for file in [join(builtin_path, f) for f in listdir(builtin_path) if isfile(join(builtin_path, f))]:
+        CompilationManager.files_to_compile.put_nowait(file)
+        module_name = CompilationManager.mod_name_from_path(CompilationManager.filename_from_path(str(file)))
+        module_name = f"rial:{module_name}"
+        CompilationManager.always_imported.append(module_name)
+
     threads = list()
 
-    CompilationManager.files_to_compile.put(path)
+    CompilationManager.files_to_compile.put_nowait(path)
 
     for i in range(multiprocessing.cpu_count()):
         t = threading.Thread(target=compile_file)
@@ -155,9 +166,7 @@ def compile_file():
                 with run_with_profiling(file, ExecutionStep.HASH_FILE):
                     hashed_contents = good_hash(contents)
 
-            # Try to load cached
             cache_path = str(CompilationManager.get_cache_path_str(path)).replace(".rial", ".cache")
-
             # Cache is invalid (or doesn't exist). Delete the file
             if Path(cache_path).exists():
                 os.remove(cache_path)
@@ -172,6 +181,7 @@ def compile_file():
                                                            str(CompilationManager.config.source_path))
             ParserState.reset_usings()
             ParserState.set_module(module)
+            ParserState.usings().extend(CompilationManager.always_imported)
 
             primitive_transformer = PrimitiveASTTransformer()
             desugar_transformer = DesugarTransformer()
@@ -196,13 +206,16 @@ def compile_file():
                 ast = primitive_transformer.transform(ast)
                 ast = desugar_transformer.transform(ast)
                 ast = struct_declaration_transformer.transform(ast)
-                ast = function_declaration_transformer.visit(ast)
+
+                if ast is not None:
+                    ast = function_declaration_transformer.visit(ast)
 
                 # Declarations are all already collected so we can move on.
                 CompilationManager.modules[str(path)] = module
                 CompilationManager.finish_file(path)
 
-                transformer.visit(ast)
+                if ast is not None:
+                    transformer.visit(ast)
 
             if CompilationManager.config.raw_opts.print_tokens:
                 print(ast.pretty())

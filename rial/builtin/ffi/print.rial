@@ -1,0 +1,1 @@
+external public void printf(CString format, params CString args);
