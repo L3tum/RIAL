@@ -1,3 +1,5 @@
+use builtin:attribute;
+
 external private void printf(CString format, params CString args);
 
 internal void printInteger(int arg){
@@ -32,7 +34,7 @@ internal void print(CString arg){
     printf(arg);
 }
 
-internal struct Test{
+internal struct Test : Attribute {
     int a = 5;
 
     internal void printTest(){

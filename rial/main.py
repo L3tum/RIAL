@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import shutil
 import tracemalloc
@@ -13,7 +14,6 @@ from rial.ParserState import ParserState
 from rial.compilation_manager import CompilationManager
 from rial.compiler import compiler
 from rial.configuration import Configuration
-from rial.log import log_fail
 from rial.profiling import set_profiling, execution_events, display_top
 from rial.util import pythonify, monkey_patch
 
@@ -117,6 +117,7 @@ def parse_prelim_arguments():
     parser.add_argument('--disable-cache', action='store_true',
                         help="Disable cache", default=None)
     parser.add_argument('--profile', help="Profiles the compiler", action="store_true", default=None)
+    parser.add_argument('--print-options', help="Prints the passed options", action="store_true", default=False)
 
     return parser.parse_known_args()
 
@@ -170,6 +171,9 @@ if __name__ == "__main__":
     #
     # with open(__file__.replace("main.py", "") + "/concept/config_schema.json", "w") as file:
     #     file.write(schema_s)
+
+    if opts['print_options']:
+        print(json.dumps(opts, sort_keys=True, indent=4))
 
     opts = munchify(opts)
 

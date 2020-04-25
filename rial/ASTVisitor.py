@@ -8,6 +8,7 @@ from rial.concept.metadata_token import MetadataToken
 from rial.concept.name_mangler import mangle_function_name
 from rial.concept.parser import Interpreter, Tree, Token
 from rial.log import log_fail
+from rial.metadata.StructDefinition import StructDefinition
 
 
 class ASTVisitor(Interpreter):
@@ -515,7 +516,29 @@ class ASTVisitor(Interpreter):
             arguments.append(self.transform_helper(nodes[i]))
             i += 1
 
-        mangled_name = mangle_function_name(full_function_name, [arg.type for arg in arguments])
+        arg_types = [arg.type for arg in arguments]
+        mangled_names = list()
+
+        if implicit_parameter is not None:
+            if isinstance(implicit_parameter.type, PointerType):
+                ty = implicit_parameter.type.pointee
+            else:
+                ty = implicit_parameter.type
+
+            mangled_names.append(mangle_function_name(full_function_name, [arg.type for arg in arguments], ty.name))
+
+            struct = ParserState.find_struct(ty.name)
+            struct_def: StructDefinition = struct.get_struct_definition()
+
+            # Also mangle base structs to see if it's a derived function
+            for base_struct in struct_def.base_structs:
+                arg_tys = arg_types
+                arg_tys.pop(0)
+                arg_tys.insert(0, base_struct)
+                mangled_names.append(
+                    mangle_function_name(full_function_name, arg_types, base_struct))
+        else:
+            mangled_names.append(mangle_function_name(full_function_name, arg_types))
 
         # Check if it's an instantiation
         struct = ParserState.find_struct(full_function_name)
@@ -525,7 +548,7 @@ class ASTVisitor(Interpreter):
             instantiation = True
 
         try:
-            call_instr = self.llvmgen.gen_function_call(function_name, full_function_name, mangled_name, arguments)
+            call_instr = self.llvmgen.gen_function_call([*mangled_names, full_function_name, function_name], arguments)
 
             if instantiation:
                 return arguments[0]

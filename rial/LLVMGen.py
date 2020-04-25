@@ -196,18 +196,16 @@ class LLVMGen:
 
         return mathed
 
-    def gen_function_call(self, function_name: str, full_function_name: str, mangled_function_name: str,
+    def gen_function_call(self, possible_function_names: List[str],
                           llvm_args: List) -> Optional[CallInstr]:
-        # Try to find by mangled function name
-        func = ParserState.find_function(mangled_function_name)
-
-        # Try to find by full function name
-        if func is None:
-            func = ParserState.find_function(full_function_name)
+        func = None
 
         # Try to find by function name
-        if func is None:
+        for function_name in possible_function_names:
             func = ParserState.find_function(function_name)
+
+            if func is not None:
+                break
 
         if func is None:
             return None
@@ -238,9 +236,30 @@ class LLVMGen:
         # Check type matching
         for i, arg in enumerate(args):
             if len(func.args) > i and arg.type != func.args[i].type:
-                # TODO: SLOC information
+                # Check for base types
+                ty = isinstance(arg.type, PointerType) and arg.type.pointee or arg.type
+                func_arg_type = isinstance(func.args[i].type, PointerType) and func.args[i].type.pointee or func.args[
+                    i].type
+                struct = ParserState.find_struct(ty.name)
+
+                if struct is not None:
+                    struct_def: StructDefinition = struct.get_struct_definition()
+                    found = False
+
+                    # Check if a base struct matches the type expected
+                    # TODO: Recursive check
+                    for base_struct in struct_def.base_structs:
+                        if base_struct == func_arg_type.name:
+                            args.remove(arg)
+                            args.insert(i, self.builder.bitcast(arg, ir.PointerType(base_struct)))
+                            found = True
+                            break
+                    if found:
+                        continue
+
+                    # TODO: SLOC information
                 raise TypeError(
-                    f"Function {function_name} expects a {map_llvm_to_type(func.args[i].type)} but got a {map_llvm_to_type(arg.type)}")
+                    f"Function {func.name} expects a {map_llvm_to_type(func.args[i].type)} but got a {map_llvm_to_type(arg.type)}")
 
         # Gen call
         return self.builder.call(func, args)
@@ -254,7 +273,7 @@ class LLVMGen:
             self.create_function_with_type('llvm.donothing', func_type, "external", "", [],
                                            FunctionDefinition("void", RIALAccessModifier.PUBLIC, []))
 
-        self.gen_function_call("llvm.donothing", "llvm.donothing", "llvm.donothing", [])
+        self.gen_function_call(["llvm.donothing"], [])
 
     def check_function_call_allowed(self, func: Function, func_def: FunctionDefinition):
         # Public is always okay
@@ -333,7 +352,8 @@ class LLVMGen:
 
         return variable
 
-    def create_block(self, block_name: str, parent: Optional[LLVMBlock] = None, sibling: Optional[LLVMBlock] = None) -> \
+    def create_block(self, block_name: str, parent: Optional[LLVMBlock] = None,
+                     sibling: Optional[LLVMBlock] = None) -> \
             Optional[LLVMBlock]:
         if parent is None and sibling is None and block_name != "entry" and len(self.current_func.basic_blocks) > 0:
             return None
@@ -352,7 +372,8 @@ class LLVMGen:
 
         return conditional_llvm_block, body_llvm_block, end_llvm_block,
 
-    def create_switch_blocks(self, base_block_name: str, parent: LLVMBlock, count_of_cases: int, default_case: bool) -> \
+    def create_switch_blocks(self, base_block_name: str, parent: LLVMBlock, count_of_cases: int,
+                             default_case: bool) -> \
             List[LLVMBlock]:
         blocks = list()
 
@@ -410,44 +431,60 @@ class LLVMGen:
 
     def create_identified_struct(self, name: str, linkage: Union[Literal["internal"], Literal["external"]],
                                  rial_access_modifier: RIALAccessModifier,
+                                 base_llvm_structs: List[IdentifiedStructType],
                                  body: List[RIALVariable]) -> IdentifiedStructType:
         struct = ParserState.module().context.get_identified_type(name)
-        props = list()
-        # for deriv in derived:
-        #     props.extend([ParserState.map_type_to_llvm(bod[1].rial_type) for bod in deriv.properties.values()])
 
-        props.extend([ParserState.map_type_to_llvm(bod.rial_type) for bod in body])
+        # Create metadata definition
+        struct_def = StructDefinition(rial_access_modifier)
+
+        # Build body and body definition
+        props_def = dict()
+        props = list()
+        prop_offset = 0
+        for deriv in base_llvm_structs:
+            stru_def: StructDefinition = deriv.get_struct_definition()
+
+            for prop in stru_def.properties.values():
+                props.append(ParserState.map_type_to_llvm(prop[1].rial_type))
+                props_def[prop[1].name] = (prop_offset, prop[1])
+                prop_offset += 1
+
+            struct_def.base_structs.append(deriv.name)
+        for bod in body:
+            props.append(ParserState.map_type_to_llvm(bod.rial_type))
+            props_def[bod.name] = (prop_offset, bod)
+            prop_offset += 1
 
         struct.set_body(*tuple(props))
         struct.module = ParserState.module()
         self.current_struct = struct
 
-        # Create metadata definition
-        struct_def = StructDefinition(rial_access_modifier)
+        struct_def.properties = props_def
 
         # Create base constructor
         function_type = self.create_function_type(ir.VoidType(), [ir.PointerType(struct)], False)
         func = self.create_function_with_type(f"{name}.constructor", function_type, linkage, "", ["this"],
-                                              FunctionDefinition(name, rial_access_modifier, [("this", name), ], name))
+                                              FunctionDefinition(name, rial_access_modifier, [("this", name), ],
+                                                                 name))
+        struct_def.functions.append(func.name)
         self.create_function_body(func, [name])
         self_value = func.args[0]
 
         # Call derived constructors
-        # for deriv in derived:
-        #     if deriv.constructor is not None:
-        #         self.gen_function_call(deriv.constructor.name, deriv.constructor.name, deriv.constructor.name,
-        #                                [self.builder.bitcast(self_value, ir.PointerType(deriv.struct)), ])
+        for deriv in base_llvm_structs:
+            constructor_name = f"{deriv.name}.constructor"
+            self.gen_function_call([constructor_name], [self.builder.bitcast(self_value, ir.PointerType(deriv)), ])
 
         # Set initial values
-        for i, bod in enumerate(body):
-            loaded_var = self.builder.gep(self_value, [ir.Constant(ir.IntType(32), 0), ir.Constant(ir.IntType(32), i)])
+        for bod in body:
+            index = props_def[bod.name][0]
+            loaded_var = self.builder.gep(self_value,
+                                          [ir.Constant(ir.IntType(32), 0), ir.Constant(ir.IntType(32), index)])
             self.builder.store(bod.initial_value, loaded_var)
 
-            # Store reference in metadata
-            struct_def.properties[bod.name] = (i, bod)
-
         # Store def in metadata
-        ParserState.module().add_named_metadata(f"{name.replace(':', '_')}.definition", struct_def.to_list())
+        ParserState.module().update_named_metadata(f"{name.replace(':', '_')}.definition", struct_def.to_list())
 
         self.builder.ret_void()
 
@@ -480,8 +517,9 @@ class LLVMGen:
         func.calling_convention = calling_convention
 
         if not f"function_definition_{name.replace(':', '_')}" in ParserState.module().namedmetadata:
-            ParserState.module().add_named_metadata(f"function_definition_{name.replace(':', '_')}",
-                                                    ParserState.module().add_metadata(tuple(function_def.to_list())))
+            ParserState.module().update_named_metadata(f"function_definition_{name.replace(':', '_')}",
+                                                       ParserState.module().add_metadata(
+                                                           tuple(function_def.to_list())))
 
         # Set argument names
         for i, arg in enumerate(func.args):

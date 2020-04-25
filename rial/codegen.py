@@ -12,6 +12,7 @@ from rial.profiling import run_with_profiling, ExecutionStep
 
 
 class CodeGen:
+    size_level: int
     opt_level: int
     engine: ExecutionEngine
     binding: binding
@@ -23,6 +24,14 @@ class CodeGen:
     def __init__(self, opt_level: str):
         self.lock = Lock()
         self.opt_level = opt_level in ("0", "1", "2", "3") and int(opt_level) or 0
+
+        # Set opt level when smaller size is preferred
+        if opt_level == "s":
+            self.opt_level = 1
+        elif opt_level == "z":
+            self.opt_level = 2
+
+        self.size_level = opt_level == "s" and 1 or opt_level == "z" and 2 or 0
 
         self.binding = binding
         self.binding.initialize()
@@ -49,9 +58,9 @@ class CodeGen:
     def _optimize_module(self, module: ModuleRef):
         if self.opt_level > 0:
             pm_manager = self.binding.create_pass_manager_builder()
-            pm_manager.loop_vectorize = True
-            pm_manager.slp_vectorize = True
-            pm_manager.size_level = 0
+            pm_manager.loop_vectorize = self.size_level != 2
+            pm_manager.slp_vectorize = self.size_level != 2
+            pm_manager.size_level = self.size_level
             pm_manager.opt_level = self.opt_level
             pm_manager.inlining_threshold = 9999
             pm_module = self.binding.create_module_pass_manager()
@@ -101,7 +110,8 @@ class CodeGen:
                 return None
 
     def save_module(self, module: Module, path: str):
-        with run_with_profiling(path.split('/')[-1], ExecutionStep.WRITE_CACHE):
+        from rial.compilation_manager import CompilationManager
+        with run_with_profiling(CompilationManager.filename_from_path(path), ExecutionStep.WRITE_CACHE):
             self._check_dirs_exist(path)
             with open(path, "wb") as file:
                 pickle.dump(module, file)

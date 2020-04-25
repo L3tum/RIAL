@@ -72,15 +72,16 @@ class StructDeclarationTransformer(Transformer_InPlaceRecursive):
                 bases.append(node.value)
             i += 1
 
-        # base_llvm_structs = list()
+        base_llvm_structs = list()
 
-        # for base in bases:
-        #     llvm_struct = ParserState.find_struct(base)
-        #     base_llvm_structs.append(llvm_struct)
+        for base in bases:
+            llvm_struct = ParserState.find_struct(base)
+            base_llvm_structs.append(llvm_struct)
 
         llvm_struct = self.llvmgen.create_identified_struct(full_name,
                                                             access_modifier.get_linkage(),
                                                             access_modifier,
+                                                            base_llvm_structs,
                                                             body)
 
         declared_functions = list()

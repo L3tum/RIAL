@@ -142,7 +142,11 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
         if external or self.mangling == False:
             full_function_name = name
         else:
-            full_function_name = mangle_function_name(full_function_name, llvm_args)
+            if self.llvmgen.current_struct is not None:
+                full_function_name = mangle_function_name(full_function_name, llvm_args,
+                                                          self.llvmgen.current_struct.name)
+            else:
+                full_function_name = mangle_function_name(full_function_name, llvm_args)
 
         # Search for function in the archives
         # func = ParserState.search_function(full_function_name)
@@ -158,6 +162,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
         #     # TODO: LLVM checks this anyways but maybe we wanna do it, too?
         #     log_fail(f"Function {full_function_name} already declared elsewhere")
         #     raise Discard()
+
         # Hasn't been declared previously, redeclare the function type here
         llvm_return_type = ParserState.map_type_to_llvm(return_type)
         func_type = self.llvmgen.create_function_type(llvm_return_type, llvm_args, var_args)
@@ -169,14 +174,15 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
                                                       FunctionDefinition(return_type, access_modifier, args,
                                                                          self.llvmgen.current_struct is not None and self.llvmgen.current_struct.name or ""))
 
+        if self.llvmgen.current_struct is not None:
+            struct_def = self.llvmgen.current_struct.get_struct_definition()
+            struct_def.functions.append(func.name)
+            self.llvmgen.current_struct.module.update_named_metadata(
+                f"{self.llvmgen.current_struct.name.replace(':', '_')}.definition", struct_def.to_list())
+
         # Always inline the main function into the compiler supplied one
         if main_function:
             func.attributes.add('alwaysinline')
-
-        # If it's in a struct or class we add it to that struct's archives
-        # TODO: Metadata? Do we even need that?
-        # if self.llvmgen.current_struct is not None:
-        #     self.llvmgen.current_struct.functions.append(func)
 
         # If it has no body we do not need to go through it later as it's already declared with this method.
         if not has_body:
