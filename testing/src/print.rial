@@ -1,37 +1,5 @@
 use builtin:attribute;
-use builtin:ffi:print;
-
-internal void printInteger(int arg){
-    printf("%i\n", arg);
-}
-
-internal void printInteger(bool arg){
-    printf("%i\n", arg);
-}
-
-internal void printInteger(long arg){
-    printf("%i\n", arg);
-}
-
-internal void printInteger(ulong arg){
-    printf("%i\n", arg);
-}
-
-internal void printFloat(float arg){
-    printf("%f\n", arg);
-}
-
-internal void printDouble(double arg){
-    printf("%f\n", arg);
-}
-
-internal void println(CString arg){
-    printf("%s \n", arg);
-}
-
-internal void print(CString arg){
-    printf(arg);
-}
+use builtin:print;
 
 internal struct Test : Attribute {
     int a = 5;

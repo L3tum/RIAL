@@ -1,4 +1,5 @@
 use testing:print;
+use builtin:print;
 use testing:boolean;
 
 public int main() {

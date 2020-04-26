@@ -19,25 +19,19 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Preliminary support for inheritance">
-      <change afterPath="$PROJECT_DIR$/rial/builtin/always_imported/int32.rial" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/builtin/box.rial" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/builtin/ffi/print.rial" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/builtin/print.rial" afterDir="false" />
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Update&#10;&#10;Added const global variables&#10;Fixed name mangling bug&#10;Fixed type mapping bug&#10;Added ability to specify &quot;always imported&quot; modules that will always be added to the current usings. Currently limited to builtin.&#10;Fixed bug that could occur if a module only had external functions&#10;Added Extension Functions&#10;Added &quot;Primitive Boxed Types&quot; via extension functions, right now only int32.rial&#10;Fixed bug in parsing access modifier from Metadata&#10;Fixed bug that could occur when an argument is a pointer to something else than a struct&#10;Fixed bug in StructDeclarationTransformer.py when the FDT would discard a function">
+      <change afterPath="$PROJECT_DIR$/rial/type_casting.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/ASTVisitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ASTVisitor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/LLVMGen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMGen.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/builtin/always_imported/int32.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin/always_imported/int32.rial" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/builtin/print.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin/print.rial" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/builtin/system.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin/system.rial" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/compilation_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compilation_manager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/compiler.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compiler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/TransformerInterpreter.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/TransformerInterpreter.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/metadata/FunctionDefinition.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/metadata/FunctionDefinition.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/metadata/StructDefinition.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/metadata/StructDefinition.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing/src/boolean.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/boolean.rial" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing/src/main.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/main.rial" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/testing/src/print.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/print.rial" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -183,7 +177,9 @@
       <workItem from="1587632067683" duration="20006000" />
       <workItem from="1587713271911" duration="11117000" />
       <workItem from="1587728446288" duration="4186000" />
-      <workItem from="1587803368180" duration="13179000" />
+      <workItem from="1587803368180" duration="15689000" />
+      <workItem from="1587894252663" duration="5320000" />
+      <workItem from="1587917603551" duration="2581000" />
     </task>
     <task id="LOCAL-00001" summary="Update">
       <created>1585486198876</created>
@@ -451,7 +447,14 @@
       <option name="project" value="LOCAL" />
       <updated>1587811707692</updated>
     </task>
-    <option name="localTasksCounter" value="39" />
+    <task id="LOCAL-00039" summary="Update&#10;&#10;Added const global variables&#10;Fixed name mangling bug&#10;Fixed type mapping bug&#10;Added ability to specify &quot;always imported&quot; modules that will always be added to the current usings. Currently limited to builtin.&#10;Fixed bug that could occur if a module only had external functions&#10;Added Extension Functions&#10;Added &quot;Primitive Boxed Types&quot; via extension functions, right now only int32.rial&#10;Fixed bug in parsing access modifier from Metadata&#10;Fixed bug that could occur when an argument is a pointer to something else than a struct&#10;Fixed bug in StructDeclarationTransformer.py when the FDT would discard a function">
+      <created>1587839801223</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1587839801223</updated>
+    </task>
+    <option name="localTasksCounter" value="40" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -470,7 +473,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Added support for &quot;e&quot; scientific notation&#10;Closes #16" />
     <MESSAGE value="Support &quot;u&quot;, &quot;l&quot; and &quot;ul&quot; suffixes&#10;Warning about using lowercase &quot;l&quot; as suffix&#10;Support &quot;long&quot;, &quot;ulong&quot; and &quot;uint&quot; shortcuts" />
     <MESSAGE value="Adds support for unsigned integers in math operations&#10;Closes #18&#10;&#10;Improves name mangling and error messages" />
     <MESSAGE value="Update&#10;Fix passing variables as arguments (require a load)&#10;Refactor mod/path transition&#10;Add attributed functions as a possibility with an example being NoMangle&#10;Added inheritance and inherited constructor calls in constructor&#10;Refactored main.py to give control back a bit faster&#10;Refactored builtin and std resolution" />
@@ -495,7 +497,8 @@
     <MESSAGE value="Moved platform to platform_support since it apparently conflicts with Python's platform" />
     <MESSAGE value="Implemented access checking&#10;&#10;Moved function metadata to module to fix bugs&#10;Closes #38" />
     <MESSAGE value="Preliminary support for inheritance" />
-    <option name="LAST_COMMIT_MESSAGE" value="Preliminary support for inheritance" />
+    <MESSAGE value="Update&#10;&#10;Added const global variables&#10;Fixed name mangling bug&#10;Fixed type mapping bug&#10;Added ability to specify &quot;always imported&quot; modules that will always be added to the current usings. Currently limited to builtin.&#10;Fixed bug that could occur if a module only had external functions&#10;Added Extension Functions&#10;Added &quot;Primitive Boxed Types&quot; via extension functions, right now only int32.rial&#10;Fixed bug in parsing access modifier from Metadata&#10;Fixed bug that could occur when an argument is a pointer to something else than a struct&#10;Fixed bug in StructDeclarationTransformer.py when the FDT would discard a function" />
+    <option name="LAST_COMMIT_MESSAGE" value="Update&#10;&#10;Added const global variables&#10;Fixed name mangling bug&#10;Fixed type mapping bug&#10;Added ability to specify &quot;always imported&quot; modules that will always be added to the current usings. Currently limited to builtin.&#10;Fixed bug that could occur if a module only had external functions&#10;Added Extension Functions&#10;Added &quot;Primitive Boxed Types&quot; via extension functions, right now only int32.rial&#10;Fixed bug in parsing access modifier from Metadata&#10;Fixed bug that could occur when an argument is a pointer to something else than a struct&#10;Fixed bug in StructDeclarationTransformer.py when the FDT would discard a function" />
   </component>
   <component name="WindowStateProjectService">
     <state x="906" y="378" key="#Inspections" timestamp="1587735451423">
@@ -539,11 +542,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586869276582" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1587811708933">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1587839802300">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587811708933" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587839802300" />
     <state x="92" y="92" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1585249165802">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -572,10 +575,10 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="374" y="358" width="565" height="560" key="dock-window-3/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584965812228" />
-    <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1587814066615">
+    <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1587919462184">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587814066615" />
+    <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587919462184" />
     <state x="1123" y="472" key="refactoring.ChangeSignatureDialog" timestamp="1586600798541">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

@@ -1,4 +1,4 @@
-from typing import Optional, Union, Tuple, List, Literal, Dict, Any
+from typing import Optional, Union, Tuple, List, Dict, Any
 
 from llvmlite import ir
 from llvmlite.ir import IRBuilder, Function, AllocaInstr, Branch, FunctionType, Type, VoidType, PointerType, \
@@ -7,7 +7,6 @@ from llvmlite.ir import IRBuilder, Function, AllocaInstr, Branch, FunctionType, 
 from rial.LLVMBlock import LLVMBlock, create_llvm_block
 from rial.LLVMUIntType import LLVMUIntType
 from rial.ParserState import ParserState
-from rial.builtin_type_to_llvm_mapper import map_llvm_to_type
 from rial.compilation_manager import CompilationManager
 from rial.metadata.FunctionDefinition import FunctionDefinition
 from rial.metadata.StructDefinition import StructDefinition
@@ -440,7 +439,7 @@ class LLVMGen:
         self.current_block = llvmblock
         self.builder.position_at_end(self.current_block.block)
 
-    def create_identified_struct(self, name: str, linkage: Union[Literal["internal"], Literal["external"]],
+    def create_identified_struct(self, name: str, linkage: str,
                                  rial_access_modifier: RIALAccessModifier,
                                  base_llvm_structs: List[IdentifiedStructType],
                                  body: List[RIALVariable]) -> IdentifiedStructType:
@@ -507,7 +506,7 @@ class LLVMGen:
         self.current_block = None
 
     def create_function_with_type(self, name: str, ty: FunctionType,
-                                  linkage: Union[Literal["internal"], Literal["external"]],
+                                  linkage: str,
                                   calling_convention: str,
                                   arg_names: List[str],
                                   function_def: FunctionDefinition):

@@ -87,6 +87,7 @@ attributed_compiler_directive : PREPRO_FLAG attribute
             | variable_arithmetic
             | shorthand_if
             | "(" expression ")"
+            | "(" IDENTIFIER ")" expression -> cast
 
 var : IDENTIFIER ("." IDENTIFIER)*
 

@@ -1,4 +1,4 @@
-use testing:print;
+use builtin:print;
 use builtin:system;
 
 internal void printBoolean(bool boolean){

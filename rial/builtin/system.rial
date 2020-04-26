@@ -13,6 +13,7 @@ var test = 500;
 public OSInformation GetOsInformation(){
     test = 50;
     test.print();
+    printDouble((double) test.ToLong());
 
     var info = new OSInformation();
     var os = #targetOS;

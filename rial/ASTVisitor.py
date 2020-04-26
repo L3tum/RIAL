@@ -7,10 +7,11 @@ from rial.builtin_type_to_llvm_mapper import map_llvm_to_type
 from rial.compilation_manager import CompilationManager
 from rial.concept.metadata_token import MetadataToken
 from rial.concept.name_mangler import mangle_function_name
-from rial.concept.parser import Interpreter, Tree, Token
+from rial.concept.parser import Interpreter, Tree, Token, Discard
 from rial.log import log_fail
 from rial.metadata.StructDefinition import StructDefinition
 from rial.rial_types.RIALAccessModifier import RIALAccessModifier
+from rial.type_casting import get_casting_function
 
 
 class ASTVisitor(Interpreter):
@@ -196,6 +197,19 @@ class ASTVisitor(Interpreter):
                                        False)
 
         return glob
+
+    def cast(self, tree: Tree):
+        nodes = tree.children
+        ty = ParserState.map_type_to_llvm(nodes[0])
+        value = self.llvmgen.gen_load_if_necessary(self.transform_helper(nodes[1]))
+        cast_function = get_casting_function(value.type, ty)
+
+        if hasattr(self.llvmgen.builder, cast_function):
+            return getattr(self.llvmgen.builder, cast_function)(value, ty)
+
+        log_fail(f"Invalid cast from {value.type} to {ty}")
+
+        raise Discard()
 
     def continue_rule(self, tree: Tree):
         if self.llvmgen.conditional_block is None:

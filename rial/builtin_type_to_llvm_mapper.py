@@ -50,6 +50,8 @@ def map_shortcut_to_type(shortcut: str) -> str:
 
 
 def map_type_to_llvm(rial_type: str) -> Optional[Type]:
+    rial_type = map_shortcut_to_type(rial_type)
+
     if rial_type == "Int32":
         # 32bit integer
         return ir.IntType(32)
