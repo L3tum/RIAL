@@ -1,8 +1,8 @@
 import argparse
 import json
+import multiprocessing
 import os
 import shutil
-import tracemalloc
 from pathlib import Path
 from timeit import default_timer as timer
 
@@ -30,7 +30,8 @@ DEFAULT_OPTIONS = {
         'profile': False,
         'profile_mem': False,
         'strip': False,
-        'file': None
+        'file': None,
+        'compile_units': multiprocessing.cpu_count()
     },
     'release': {
         'opt_level': '3',
@@ -50,6 +51,7 @@ def main(options):
     ParserState.init()
 
     if options.profile_mem:
+        import tracemalloc
         tracemalloc.start()
         start_snapshot = tracemalloc.take_snapshot()
 
@@ -96,6 +98,7 @@ def main(options):
         print("")
 
     if options.profile_mem:
+        import tracemalloc
         end_snapshot = tracemalloc.take_snapshot()
         display_top(end_snapshot)
 
@@ -118,6 +121,7 @@ def parse_prelim_arguments():
                         help="Disable cache", default=None)
     parser.add_argument('--profile', help="Profiles the compiler", action="store_true", default=None)
     parser.add_argument('--print-options', help="Prints the passed options", action="store_true", default=False)
+    parser.add_argument('--compile-units', help="Number of compile units to use", type=int, default=None)
 
     return parser.parse_known_args()
 

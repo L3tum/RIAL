@@ -1,5 +1,5 @@
-use builtin:attribute;
-use builtin:print;
+use rial:builtin:attribute;
+use rial:builtin:print;
 
 internal struct Test : Attribute {
     int a = 5;

@@ -1,9 +1,3 @@
-use builtin:print;
-
-public void print(this Int32 arg){
-    printInteger(arg);
-}
-
 public long ToLong(this int arg){
     return (long) arg;
 }

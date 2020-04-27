@@ -10,7 +10,9 @@ class Postlexer:
         # TODO: Add some kind of external registration / handling of this instead of inlining it all into this function
         if value.startswith("#"):
             if value == "#programMain":
-                value = f"{CompilationManager.config.project_name}:main:main"
+                value = f"main"
+            elif value == "#programMainFile":
+                value = f"{CompilationManager.config.project_name}:main"
             elif value == "#targetTriple":
                 value = CompilationManager.codegen.target_machine.triple
                 token.type = "STRING"

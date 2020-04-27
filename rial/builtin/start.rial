@@ -1,4 +1,5 @@
-use builtin:no_mangle_attribute;
+use rial:builtin:no_mangle_attribute;
+use #programMainFile;
 
 [NoMangle()]
 public void main(){

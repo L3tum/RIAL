@@ -1,16 +1,18 @@
 from pathlib import Path
-from queue import Queue
 from threading import Lock, Event
 from typing import Dict, List
 
 from llvmlite.ir import Module, Function
 
 from rial.codegen import CodeGen
+from rial.concept.compilation_unit import CompilationUnit
+from rial.concept.ordered_set_queue import OrderedSetQueue
 from rial.configuration import Configuration
 
 
 class CompilationManager:
-    files_to_compile: Queue
+    files_to_compile: OrderedSetQueue
+    phase_two_queue: OrderedSetQueue
     files_compiled: Dict[str, Event]
     modules: Dict[str, Module]
     cached_modules: List[str]
@@ -19,13 +21,15 @@ class CompilationManager:
     codegen: CodeGen
     always_imported: List[str]
     builtin_types: Dict[str, Dict[str, List[Function]]]
+    compilation_units: Dict[str, CompilationUnit]
 
     def __init__(self):
         raise PermissionError()
 
     @staticmethod
     def init(config: Configuration):
-        CompilationManager.files_to_compile = Queue()
+        CompilationManager.files_to_compile = OrderedSetQueue()
+        CompilationManager.phase_two_queue = OrderedSetQueue()
         CompilationManager.files_compiled = dict()
         CompilationManager.cached_modules = list()
         CompilationManager.lock = Lock()
@@ -34,6 +38,7 @@ class CompilationManager:
         CompilationManager.codegen = CodeGen(config.raw_opts.opt_level)
         CompilationManager.always_imported = list()
         CompilationManager.builtin_types = dict()
+        CompilationManager.compilation_units = dict()
 
     @staticmethod
     def finish_file(path: str):
@@ -59,6 +64,19 @@ class CompilationManager:
         return False
 
     @staticmethod
+    def check_module_still_compiling(mod_name: str) -> bool:
+        """
+        Checks if a module is currently compiling
+        :param mod_name:
+        :return:
+        """
+        path = CompilationManager.path_from_mod_name(mod_name)
+        with CompilationManager.lock:
+            if path in CompilationManager.files_compiled:
+                return not CompilationManager.files_compiled[path].is_set()
+            return False
+
+    @staticmethod
     def request_module(mod_name: str) -> bool:
         """
         Adds a module with the name :mod_name: to the list of modules that need to be compiled.
@@ -66,21 +84,16 @@ class CompilationManager:
         :param mod_name:
         :return:
         """
-        path = CompilationManager.path_from_mod_name(mod_name)
-        is_compiling = False
+        return CompilationManager.request_file(CompilationManager.path_from_mod_name(mod_name))
 
+    @staticmethod
+    def request_file(path: str) -> bool:
         with CompilationManager.lock:
-            if path in CompilationManager.files_compiled:
-                is_compiling = True
-            else:
+            if not path in CompilationManager.files_compiled:
                 CompilationManager.files_compiled[path] = Event()
+                CompilationManager.files_to_compile.put(path)
 
-        if is_compiling:
-            return CompilationManager.files_compiled[path].wait()
-
-        CompilationManager.files_to_compile.put(path)
-
-        return CompilationManager.files_compiled[path].wait()
+            return CompilationManager.files_compiled[path].is_set()
 
     @staticmethod
     def get_cache_path(path: Path) -> Path:
@@ -128,8 +141,12 @@ class CompilationManager:
 
     @staticmethod
     def mod_name_from_path(path: str) -> str:
-        s = path.strip('/').replace('.rial', '').replace('/', ':')
-        return s
+        module_name = path.strip('/').replace('.rial', '').replace('/', ':')
+        if module_name.startswith("builtin") or module_name.startswith("std"):
+            module_name = f"rial:{module_name}"
+        else:
+            module_name = CompilationManager.config.project_name + ":" + module_name
+        return module_name
 
     @staticmethod
     def filename_from_path(path: str) -> str:

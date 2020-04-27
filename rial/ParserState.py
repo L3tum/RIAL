@@ -17,6 +17,7 @@ class ParserState:
     implemented_functions: List[str]
     threadLocalUsings: threading.local
     threadLocalModule: threading.local
+    builtin_types: Dict[str, Dict[str, List[Function]]]
 
     def __init__(self):
         raise PermissionError()
@@ -28,6 +29,7 @@ class ParserState:
         ParserState.threadLocalModule = threading.local()
         ParserState.cached_functions = dict()
         ParserState.cached_struct_modules = dict()
+        ParserState.builtin_types = dict()
 
     @staticmethod
     def reset_usings():
@@ -165,18 +167,6 @@ class ParserState:
                         log_fail(
                             f"Cannot access method {full_function_name} in module {func.module.name}!")
                         return None
-
-        # Try request the module that the function might(!) be in
-        if func is None:
-            true_function_name = full_function_name.split('.')[0]
-            if ":" in true_function_name:
-                mod_name = ':'.join(true_function_name.split(':')[0:-1])
-
-                # Check that the module hasn't been compiled yet
-                if not CompilationManager.check_module_already_compiled(mod_name):
-                    ParserState.module().add_named_metadata('dependencies', (mod_name,))
-                    CompilationManager.request_module(mod_name)
-                    return ParserState.find_function(full_function_name)
 
         return func
 

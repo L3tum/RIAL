@@ -8,4 +8,4 @@ toml~=0.10.0
 jsonschema~=3.2.0
 munch~=2.5.0
 jsonpickle~=1.4.1
-pythonfuzz~=1.0.3
+hurry~=1.1

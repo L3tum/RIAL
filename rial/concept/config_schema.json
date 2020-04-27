@@ -33,6 +33,9 @@
     },
     "workdir": {
       "type": "string"
+    },
+    "compile_units": {
+      "type": "integer"
     }
   }
 }

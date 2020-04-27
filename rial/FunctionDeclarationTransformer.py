@@ -207,10 +207,10 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
 
         if this_arg is not None:
             if is_builtin_type(this_arg):
-                if this_arg not in CompilationManager.builtin_types:
-                    CompilationManager.builtin_types[this_arg] = dict()
+                if this_arg not in ParserState.builtin_types:
+                    ParserState.builtin_types[this_arg] = dict()
 
-                CompilationManager.builtin_types[this_arg][func.name] = func
+                ParserState.builtin_types[this_arg][func.name] = func
 
         token = nodes[0]
         metadata_token = MetadataToken(token.type, token.value)

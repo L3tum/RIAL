@@ -1,5 +1,4 @@
 import linecache
-import tracemalloc
 from contextlib import contextmanager
 from enum import Enum
 from timeit import default_timer as timer
@@ -58,10 +57,21 @@ def run_with_profiling(file: str, step: ExecutionStep):
     yield
     if profiling:
         end = timer()
-        execution_events.append(ExecutionEvent(file, (end - start), step))
+        same_event = None
+
+        for execution_event in execution_events:
+            if execution_event.file == file and execution_event.step == step:
+                same_event = execution_event
+                break
+
+        if same_event is not None:
+            same_event.time_taken_seconds += (end - start)
+        else:
+            execution_events.append(ExecutionEvent(file, (end - start), step))
 
 
 def display_top(snapshot, key_type='lineno', limit=10):
+    import tracemalloc
     snapshot = snapshot.filter_traces((
         tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
         tracemalloc.Filter(False, "<unknown>"),

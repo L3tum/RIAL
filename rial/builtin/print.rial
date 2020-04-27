@@ -1,4 +1,4 @@
-use builtin:ffi:print;
+use rial:builtin:ffi:print;
 
 public void printInteger(int arg){
     printf("%i\n", arg);

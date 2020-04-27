@@ -1,3 +1,6 @@
-python3.8 -m cProfile -s time -o main.profile -m rial.main --workdir ./testing --opt-level 3 --release
+py-spy record -F -f raw -o profile.txt -- python3.8 -m rial.main --workdir testing --disable-cache --compilation-units 1
+#grep -v _find_and_load profile.txt > new_profile.txt
+~/FlameGraph/flamegraph.pl profile.txt > profile.svg
 
-gprof2dot -f pstats main.profile | dot -Tsvg -o callgraph.svg
+rm profile.txt
+#rm new_profile.txt

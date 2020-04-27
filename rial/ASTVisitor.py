@@ -559,7 +559,7 @@ class ASTVisitor(Interpreter):
             ty = map_llvm_to_type(ty)
 
             # Check if it's a builtin type
-            if isinstance(ty, str) and ty in CompilationManager.builtin_types:
+            if isinstance(ty, str) and ty in ParserState.builtin_types:
                 mangled_names.append(mangle_function_name(full_function_name, [arg.type for arg in arguments], ty))
             else:
                 mangled_names.append(mangle_function_name(full_function_name, [arg.type for arg in arguments], ty.name))

@@ -20,14 +20,10 @@ class PrimitiveASTTransformer(Transformer_InPlaceRecursive):
         self.llvmgen = LLVMGen()
 
     def using(self, nodes):
-        mod_name = ':'.join(nodes)
-
-        if mod_name.startswith("builtin") or mod_name.startswith("std"):
-            mod_name = f"rial:{mod_name}"
-
-        ParserState.module().add_named_metadata('dependencies', (mod_name,))
-        CompilationManager.request_module(mod_name)
+        mod_name = ':'.join([node.value for node in nodes])
+        ParserState.module().update_named_metadata('dependencies', (mod_name,))
         ParserState.usings().append(mod_name)
+        CompilationManager.request_module(mod_name)
         raise Discard()
 
     def null(self, nodes):
