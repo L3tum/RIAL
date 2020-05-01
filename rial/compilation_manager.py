@@ -1,26 +1,23 @@
 from pathlib import Path
 from threading import Lock, Event
-from typing import Dict, List
-
-from llvmlite.ir import Module, Function
+from typing import Dict, List, Optional
 
 from rial.codegen import CodeGen
 from rial.concept.compilation_unit import CompilationUnit
 from rial.concept.ordered_set_queue import OrderedSetQueue
 from rial.configuration import Configuration
+from rial.metadata.RIALModule import RIALModule
 
 
 class CompilationManager:
     files_to_compile: OrderedSetQueue
-    phase_two_queue: OrderedSetQueue
     files_compiled: Dict[str, Event]
-    modules: Dict[str, Module]
+    modules: Dict[str, RIALModule]
     cached_modules: List[str]
-    lock: Lock
+    compiled_lock: Lock
     config: Configuration
     codegen: CodeGen
     always_imported: List[str]
-    builtin_types: Dict[str, Dict[str, List[Function]]]
     compilation_units: Dict[str, CompilationUnit]
 
     def __init__(self):
@@ -29,21 +26,28 @@ class CompilationManager:
     @staticmethod
     def init(config: Configuration):
         CompilationManager.files_to_compile = OrderedSetQueue()
-        CompilationManager.phase_two_queue = OrderedSetQueue()
         CompilationManager.files_compiled = dict()
         CompilationManager.cached_modules = list()
-        CompilationManager.lock = Lock()
+        CompilationManager.compiled_lock = Lock()
         CompilationManager.config = config
         CompilationManager.modules = dict()
         CompilationManager.codegen = CodeGen(config.raw_opts.opt_level)
         CompilationManager.always_imported = list()
-        CompilationManager.builtin_types = dict()
         CompilationManager.compilation_units = dict()
 
     @staticmethod
+    def get_compile_unit_if_exists(path: str) -> Optional[CompilationUnit]:
+        if path in CompilationManager.compilation_units:
+            return CompilationManager.compilation_units[path]
+        return None
+
+    @staticmethod
+    def set_compile_unit(path: str, unit: CompilationUnit):
+        CompilationManager.compilation_units[path] = unit
+
+    @staticmethod
     def finish_file(path: str):
-        if path in CompilationManager.files_compiled:
-            CompilationManager.files_compiled[path].set()
+        CompilationManager.files_compiled[path].set()
 
     @staticmethod
     def check_module_already_compiled(mod_name: str) -> bool:
@@ -54,46 +58,39 @@ class CompilationManager:
         :param mod_name:
         :return:
         """
-        path = CompilationManager.path_from_mod_name(mod_name)
-        with CompilationManager.lock:
-            if path in CompilationManager.files_compiled:
-                CompilationManager.files_compiled[path].wait()
-
-                return True
-
-        return False
+        return CompilationManager.check_path_already_compiled(CompilationManager.path_from_mod_name(mod_name))
 
     @staticmethod
-    def check_module_still_compiling(mod_name: str) -> bool:
-        """
-        Checks if a module is currently compiling
-        :param mod_name:
-        :return:
-        """
-        path = CompilationManager.path_from_mod_name(mod_name)
-        with CompilationManager.lock:
-            if path in CompilationManager.files_compiled:
-                return not CompilationManager.files_compiled[path].is_set()
+    def check_path_already_compiled(path: str) -> bool:
+        return path in CompilationManager.files_compiled and CompilationManager.files_compiled[path].is_set()
+
+    @staticmethod
+    def wait_for_module_compiled(mod_name: str) -> bool:
+        return CompilationManager.wait_for_path_compiled(CompilationManager.path_from_mod_name(mod_name))
+
+    @staticmethod
+    def wait_for_path_compiled(path: str) -> bool:
+        if not path in CompilationManager.files_compiled:
             return False
 
+        return CompilationManager.files_compiled[path].wait()
+
     @staticmethod
-    def request_module(mod_name: str) -> bool:
+    def request_module(mod_name: str):
         """
         Adds a module with the name :mod_name: to the list of modules that need to be compiled.
         It then blocks until the module is compiled.
         :param mod_name:
         :return:
         """
-        return CompilationManager.request_file(CompilationManager.path_from_mod_name(mod_name))
+        CompilationManager.request_file(CompilationManager.path_from_mod_name(mod_name))
 
     @staticmethod
-    def request_file(path: str) -> bool:
-        with CompilationManager.lock:
+    def request_file(path: str):
+        with CompilationManager.compiled_lock:
             if not path in CompilationManager.files_compiled:
                 CompilationManager.files_compiled[path] = Event()
                 CompilationManager.files_to_compile.put(path)
-
-            return CompilationManager.files_compiled[path].is_set()
 
     @staticmethod
     def get_cache_path(path: Path) -> Path:

@@ -2,25 +2,25 @@ import os
 from typing import Dict, Optional
 
 import jsonpickle as jsonpickle
-from llvmlite.ir import Module
 
 from rial.compilation_manager import CompilationManager
+from rial.metadata.RIALModule import RIALModule
 from rial.profiling import run_with_profiling, ExecutionStep
 
 
 class CachedModule:
     cache_path: str
-    _module: Module
+    _module: RIALModule
     hashed: str
     last_modified: float
 
-    def __init__(self, cache_path: str, module: Module, last_modified: float):
+    def __init__(self, cache_path: str, module: RIALModule, last_modified: float):
         self.cache_path = cache_path
         self._module = module
         self.last_modified = last_modified
 
     @property
-    def module(self):
+    def module(self) -> RIALModule:
         if self._module is None:
             self._module = CompilationManager.codegen.load_module(self.cache_path)
 
@@ -45,7 +45,7 @@ class Cache:
             Cache.cached_modules = dict()
 
     @staticmethod
-    def cache_module(module: Module, src_path: str, cache_path: str, last_modified: float):
+    def cache_module(module: RIALModule, src_path: str, cache_path: str, last_modified: float):
         Cache.cached_modules[src_path] = CachedModule(cache_path, module, last_modified)
 
     @staticmethod
@@ -63,7 +63,7 @@ class Cache:
             file.write(jsonpickle.encode(Cache.cached_modules))
 
     @staticmethod
-    def get_cached_module(src_path: str) -> Optional[Module]:
+    def get_cached_module(src_path: str) -> Optional[RIALModule]:
         if src_path in Cache.cached_modules:
             cached_module = Cache.cached_modules[src_path]
 

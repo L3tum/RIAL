@@ -1,0 +1,1 @@
+python3.8 -m gil_load -m rial.main --profile-gil "$@"

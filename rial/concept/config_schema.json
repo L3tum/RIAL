@@ -28,6 +28,9 @@
     "profile_mem": {
       "type": "boolean"
     },
+    "profile_gil": {
+      "type": "boolean"
+    },
     "strip": {
       "type": "boolean"
     },

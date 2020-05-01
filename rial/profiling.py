@@ -18,6 +18,7 @@ class ExecutionStep(Enum):
     COMPILE_OBJ = "Compile module into object file"
     WRITE_OBJ = "Write out the object file"
     LINK_EXE = "Link all object files together into an exe"
+    WAIT_DEPENDENCIES = "Wait for all dependencies to be compiled"
 
     def __repr__(self):
         return self.name

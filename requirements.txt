@@ -9,3 +9,6 @@ jsonschema~=3.2.0
 munch~=2.5.0
 jsonpickle~=1.4.1
 hurry~=1.1
+pythonfuzz~=1.0.3
+yappi~=1.2.5
+gil_load~=0.4.0

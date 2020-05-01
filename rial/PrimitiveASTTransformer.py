@@ -21,7 +21,7 @@ class PrimitiveASTTransformer(Transformer_InPlaceRecursive):
 
     def using(self, nodes):
         mod_name = ':'.join([node.value for node in nodes])
-        ParserState.module().update_named_metadata('dependencies', (mod_name,))
+        ParserState.module().dependencies.append(mod_name)
         ParserState.usings().append(mod_name)
         CompilationManager.request_module(mod_name)
         raise Discard()

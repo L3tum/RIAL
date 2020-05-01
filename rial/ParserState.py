@@ -2,22 +2,25 @@ import threading
 from typing import Optional, List, Tuple, Dict
 
 from llvmlite import ir
-from llvmlite.ir import Module, Function, IdentifiedStructType
+from llvmlite.ir import Function
 
 from rial.builtin_type_to_llvm_mapper import map_type_to_llvm
 from rial.compilation_manager import CompilationManager
 from rial.log import log_fail
 from rial.metadata.FunctionDefinition import FunctionDefinition
+from rial.metadata.RIALFunction import RIALFunction
+from rial.metadata.RIALIdentifiedStructType import RIALIdentifiedStructType
+from rial.metadata.RIALModule import RIALModule
 from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 
 
 class ParserState:
-    cached_functions: Dict[str, Function]
-    cached_struct_modules: Dict[str, Module]
+    cached_functions: Dict[str, RIALFunction]
+    cached_struct_modules: Dict[str, RIALModule]
     implemented_functions: List[str]
     threadLocalUsings: threading.local
     threadLocalModule: threading.local
-    builtin_types: Dict[str, Dict[str, List[Function]]]
+    builtin_types: Dict[str, Dict[str, RIALFunction]]
 
     def __init__(self):
         raise PermissionError()
@@ -36,7 +39,7 @@ class ParserState:
         ParserState.threadLocalUsings.usings = list()
 
     @staticmethod
-    def set_module(module: Module):
+    def set_module(module: RIALModule):
         ParserState.threadLocalModule.module = module
 
     @classmethod
@@ -44,11 +47,11 @@ class ParserState:
         return cls.threadLocalUsings.usings
 
     @classmethod
-    def module(cls) -> Module:
+    def module(cls) -> RIALModule:
         return cls.threadLocalModule.module
 
     @staticmethod
-    def search_function(name: str) -> Optional[Function]:
+    def search_function(name: str) -> Optional[RIALFunction]:
         # Check if cached
         if name in ParserState.cached_functions:
             return ParserState.cached_functions[name]
@@ -71,53 +74,12 @@ class ParserState:
         return func
 
     @staticmethod
-    def search_structs(name: str) -> Optional[IdentifiedStructType]:
-        # Does a global search. We then need to find the module it's actually defined in.
-        ty = ParserState.module().context.get_identified_type_if_exists(name)
-
-        if ty is None:
-            return None
-
-        if hasattr(ty, 'module'):
-            return ty
-
-        module = None
-
-        # Check in cache
-        if name in ParserState.cached_struct_modules:
-            module = ParserState.cached_struct_modules[name]
-
-        # Check if in current module
-        if module is None:
-            try:
-                ParserState.module().get_named_metadata(f"{ty.name.replace(':', '_')}.definition")
-                module = ParserState.module()
-            except KeyError:
-                pass
-
-        # Check all modules
-        if module is None:
-            mods = dict(CompilationManager.modules)
-
-            for key, mod in mods.items():
-                try:
-                    mod.get_named_metadata(f"{ty.name.replace(':', '_')}.definition")
-                    ty.module = mod
-
-                    return ty
-                except KeyError:
-                    pass
-
-        if module is None:
-            return None
-
-        ParserState.cached_struct_modules[name] = module
-        ty.module = module
-
-        return ty
+    def search_structs(name: str) -> Optional[RIALIdentifiedStructType]:
+        # Does a global search.
+        return ParserState.module().context.get_identified_type_if_exists(name)
 
     @staticmethod
-    def find_function(full_function_name: str) -> Optional[Function]:
+    def find_function(full_function_name: str) -> Optional[RIALFunction]:
         # Try to find function in current module
         func = ParserState.module().get_global_safe(full_function_name)
 
@@ -158,7 +120,7 @@ class ParserState:
                     #   - Function is not public and
                     #   - Function is internal but not in same TLM (top level module) or
                     #   - Function is private but not in same module
-                    func_def: FunctionDefinition = func.get_function_definition()
+                    func_def: FunctionDefinition = func.definition
                     if func_def.access_modifier != RIALAccessModifier.PUBLIC and \
                             ((func_def.access_modifier == RIALAccessModifier.INTERNAL and
                               func.module.name.split(':')[0] != ParserState.module().name.split(':')[0]) or
@@ -171,7 +133,7 @@ class ParserState:
         return func
 
     @staticmethod
-    def find_struct(struct_name: str) -> Optional[IdentifiedStructType]:
+    def find_struct(struct_name: str) -> Optional[RIALIdentifiedStructType]:
         # Search with name
         struct = ParserState.search_structs(struct_name)
 

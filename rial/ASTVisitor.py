@@ -4,12 +4,10 @@ from llvmlite.ir import PointerType, GlobalVariable, FormattedConstant
 from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
 from rial.builtin_type_to_llvm_mapper import map_llvm_to_type
-from rial.compilation_manager import CompilationManager
 from rial.concept.metadata_token import MetadataToken
 from rial.concept.name_mangler import mangle_function_name
 from rial.concept.parser import Interpreter, Tree, Token, Discard
 from rial.log import log_fail
-from rial.metadata.StructDefinition import StructDefinition
 from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 from rial.type_casting import get_casting_function
 
@@ -565,10 +563,9 @@ class ASTVisitor(Interpreter):
                 mangled_names.append(mangle_function_name(full_function_name, [arg.type for arg in arguments], ty.name))
 
                 struct = ParserState.find_struct(ty.name)
-                struct_def: StructDefinition = struct.get_struct_definition()
 
                 # Also mangle base structs to see if it's a derived function
-                for base_struct in struct_def.base_structs:
+                for base_struct in struct.definition.base_structs:
                     arg_tys = arg_types
                     arg_tys.pop(0)
                     arg_tys.insert(0, base_struct)

@@ -1,15 +1,15 @@
+import concurrent.futures
 import os
-import threading
 import traceback
-from multiprocessing.pool import ThreadPool
 from os import listdir
 from os.path import isfile, join
 from pathlib import Path
 from queue import Empty
 from typing import List, Dict
 
+import gil_load
 from llvmlite.binding import ModuleRef
-from llvmlite.ir import Module
+from llvmlite.ir import context
 
 from rial.ASTVisitor import ASTVisitor
 from rial.Cache import Cache
@@ -30,6 +30,10 @@ from rial.profiling import run_with_profiling, ExecutionStep
 global exceptions
 
 
+def check_needs_output(module_name: str, path: str):
+    return not (module_name in CompilationManager.cached_modules and Path(path).exists())
+
+
 def compiler():
     global exceptions
     exceptions = False
@@ -41,18 +45,9 @@ def compiler():
         path = Path(CompilationManager.config.raw_opts.file)
     else:
         path = CompilationManager.config.rial_path.joinpath("builtin").joinpath("start.rial")
-    # path = source_path.joinpath("main.rial")
 
     if not path.exists():
         raise FileNotFoundError(str(path))
-
-    # Start threads
-    threads = list()
-    for i in range(CompilationManager.config.raw_opts.compile_units):
-        t = threading.Thread(target=compile_file)
-        t.daemon = True
-        t.start()
-        threads.append(t)
 
     # Collect all always imported paths
     builtin_path = str(CompilationManager.config.rial_path.joinpath("builtin").joinpath("always_imported"))
@@ -62,11 +57,43 @@ def compiler():
         CompilationManager.always_imported.append(module_name)
 
     # Request main file
-    CompilationManager.request_file(path)
+    CompilationManager.request_file(str(path))
 
-    # Wait on all files compiled
+    if CompilationManager.config.raw_opts.profile_gil:
+        gil_load.init()
+        gil_load.start()
+
+    futures = list()
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        while True:
+            for future in futures:
+                if future.done():
+                    futures.remove(future)
+
+            try:
+                # This timeout is so small, it shouldn't matter.
+                # However it serves a crucial role in regards to Python's GIL.
+                # Setting this on a higher timeout obviously means that there may be some excessive time spent waiting
+                # for nothing to appear.
+                # BUT, setting it to non-blocking means that the GIL never gives any of the compilation threads priority
+                # as well as holding up the internal threading.Lock(s).
+                # So setting this timeout so small means not much time is spent waiting for nothing, but it gives other
+                # things the opportunity to get control of the GIL and execute.
+                path = CompilationManager.files_to_compile.get(timeout=0.01)
+                future = executor.submit(compile_file, path)
+                futures.append(future)
+            except Empty:
+                pass
+
+            if len(futures) == 0 and CompilationManager.files_to_compile.empty():
+                break
+        executor.shutdown(True)
+
     CompilationManager.files_to_compile.join()
-    CompilationManager.phase_two_queue.join()
+
+    if CompilationManager.config.raw_opts.profile_gil:
+        gil_load.stop()
+        print(gil_load.format(gil_load.get()))
 
     if exceptions:
         return
@@ -98,19 +125,23 @@ def compiler():
 
         if CompilationManager.config.raw_opts.print_ir:
             ir_file = str(CompilationManager.get_output_path_str(path)).replace(".rial", ".ll")
-            CompilationManager.codegen.save_ir(ir_file, mod)
+            if check_needs_output(mod.name, ir_file):
+                CompilationManager.codegen.save_ir(ir_file, mod)
 
         if CompilationManager.config.raw_opts.print_asm:
             asm_file = str(CompilationManager.get_cache_path_str(path)).replace(".rial", ".asm")
-            CompilationManager.codegen.save_assembly(asm_file, mod)
+            if check_needs_output(mod.name, asm_file):
+                CompilationManager.codegen.save_assembly(asm_file, mod)
 
         if not CompilationManager.config.raw_opts.use_object_files:
             llvm_bitcode_file = str(CompilationManager.get_output_path_str(path)).replace(".rial", ".o")
-            CompilationManager.codegen.save_llvm_bitcode(llvm_bitcode_file, mod)
+            if check_needs_output(mod.name, llvm_bitcode_file):
+                CompilationManager.codegen.save_llvm_bitcode(llvm_bitcode_file, mod)
             object_files.append(llvm_bitcode_file)
         else:
             object_file = str(CompilationManager.get_output_path_str(path)).replace(".rial", ".o")
-            CompilationManager.codegen.save_object(object_file, mod)
+            if check_needs_output(mod.name, object_file):
+                CompilationManager.codegen.save_object(object_file, mod)
             object_files.append(object_file)
 
     with run_with_profiling(CompilationManager.config.project_name, ExecutionStep.LINK_EXE):
@@ -121,174 +152,138 @@ def compiler():
                           CompilationManager.config.raw_opts.strip)
 
 
-def finish_file_phase_one():
-    CompilationManager.files_to_compile.task_done()
+def check_cache(path: str) -> bool:
+    if CompilationManager.config.raw_opts.disable_cache:
+        return False
+
+    module = Cache.get_cached_module(path)
+
+    if module is None:
+        return False
+
+    dependency_invalid = False
+    request_recompilation = list()
+    with CompilationManager.compiled_lock:
+        for dependency in module.dependencies:
+            # If dependency has been compiled
+            if CompilationManager.check_module_already_compiled(dependency):
+                # But not cached, then it's invalid and we need to recompile
+                if not dependency in CompilationManager.cached_modules:
+                    dependency_invalid = True
+            # If it has not been compiled then we request it
+            else:
+                request_recompilation.append(dependency)
+
+    for dependency in request_recompilation:
+        CompilationManager.request_module(dependency)
+
+    for dependency in request_recompilation:
+        CompilationManager.wait_for_module_compiled(dependency)
+
+    if dependency_invalid:
+        return False
+
+    # Check cache again
+    if len(request_recompilation) > 0:
+        return check_cache(path)
+
+    CompilationManager.modules[path] = module
+
+    for struct in module.structs:
+        context.global_context.get_identified_type(struct.name)
+        context.global_context.identified_types[struct.name] = struct
+
+    for key in module.builtin_type_methods.keys():
+        if not key in ParserState.builtin_types:
+            ParserState.builtin_types[key] = dict()
+        for fun in module.builtin_type_methods[key]:
+            ParserState.builtin_types[key][fun] = next((func for func in module.functions if func.name == func),
+                                                       None)
+
+    with CompilationManager.compiled_lock:
+        CompilationManager.cached_modules.append(module.name)
+
+    return True
 
 
-def finish_file_phase_two(path):
-    CompilationManager.finish_file(path)
-    CompilationManager.phase_two_queue.task_done()
-
-
-def finish_file_overall(path):
-    finish_file_phase_one()
-    finish_file_phase_two(path)
-
-
-def compile_file():
+def compile_file(path: str):
     global exceptions
-    while True:
-        try:
-            compile_phase_one()
-            compile_phase_two()
-        except Exception as e:
-            log_fail("Internal Compiler Error: ")
-            log_fail(traceback.format_exc())
-            exceptions = True
-            finish_file_overall(e.path)
-
-
-def compile_phase_one():
-    global exceptions
-    path = None
     try:
-        try:
-            path = str(CompilationManager.files_to_compile.get(timeout=0.01))
-        except Empty:
-            return
-
-        module = None
-        last_modified = None
-
-        if not Path(path).exists():
-            log_fail(f"Could not find {path}")
-            finish_file_overall(path)
-            return
-
-        # Check beforehand because we'd rather compile it once too often than once too less
-        if not CompilationManager.config.raw_opts.disable_cache:
-            last_modified = os.path.getmtime(path)
-            module = Cache.get_cached_module(path)
-
-            if isinstance(module, Module):
-                dependency_invalidated = False
-
-                # Check for dependencies
-                for mod in module.get_dependencies():
-                    if CompilationManager.check_module_already_compiled(mod):
-                        if not mod in CompilationManager.cached_modules:
-                            dependency_invalidated = True
-                            CompilationManager.request_module(mod)
-
-                # If a dependency got invalidated
-                # we need to compile this module again as well
-                if not dependency_invalidated:
-                    CompilationManager.modules[str(path)] = module
-                    CompilationManager.cached_modules.append(module.name)
-                    finish_file_overall(path)
-                    return
-                else:
-                    module = None
-            elif isinstance(module, str):
-                contents = module
-
-        file = CompilationManager.filename_from_path(path)
-
-        # If module is None then the Cache was either disabled or has never seen the file before.
-        # Ergo we need to all the work.
-        if module is None:
-            with run_with_profiling(file, ExecutionStep.READ_FILE):
-                with open(path, "r") as src:
-                    contents = src.read()
-
-        # Cache is invalid. Delete the file
-        cache_path = str(CompilationManager.get_cache_path_str(path)).replace(".rial", ".cache")
-        if Path(cache_path).exists():
-            os.remove(cache_path)
-
-        module_name = CompilationManager.mod_name_from_path(file)
-        module = CompilationManager.codegen.get_module(module_name, file.split('/')[-1],
-                                                       str(CompilationManager.config.source_path))
+        filename = CompilationManager.filename_from_path(path)
+        unit = CompilationManager.get_compile_unit_if_exists(path)
         ParserState.reset_usings()
-        ParserState.usings().extend(CompilationManager.always_imported)
 
-        # Remove the current module in case it's in the always imported list
-        if module_name in ParserState.usings():
-            ParserState.usings().remove(module_name)
-        ParserState.set_module(module)
-        primitive_transformer = PrimitiveASTTransformer()
-        desugar_transformer = DesugarTransformer()
-        parser = Lark_StandAlone(postlex=Postlexer())
+        if unit is None:
+            last_modified = os.path.getmtime(path)
 
-        # Parse the file
-        with run_with_profiling(file, ExecutionStep.PARSE_FILE):
-            try:
-                ast = parser.parse(contents)
-            except Exception as e:
-                log_fail(f"Exception when parsing {file}")
-                log_fail(e)
-                finish_file_overall(path)
-                exceptions = True
+            if check_cache(path):
+                CompilationManager.finish_file(path)
+                CompilationManager.files_to_compile.task_done()
                 return
 
-        if CompilationManager.config.raw_opts.print_tokens:
-            print(ast.pretty())
+            module_name = CompilationManager.mod_name_from_path(filename)
+            module = CompilationManager.codegen.get_module(module_name, filename,
+                                                           str(CompilationManager.config.source_path))
+            ParserState.set_module(module)
+            ParserState.usings().extend(CompilationManager.always_imported)
 
-        # Generate primitive IR (things we don't need other modules for)
-        with run_with_profiling(file, ExecutionStep.GEN_IR):
-            ast = primitive_transformer.transform(ast)
-            ast = desugar_transformer.transform(ast)
+            # Remove the current module in case it's in the always imported list
+            if module_name in ParserState.usings():
+                ParserState.usings().remove(module_name)
 
-        # Put into phase two queue
-        CompilationManager.compilation_units[path] = CompilationUnit(ParserState.module(), ParserState.usings(),
-                                                                     last_modified, ast)
-        CompilationManager.phase_two_queue.put(path)
-        finish_file_phase_one()
-    except Exception as e:
-        e.path = path
-        raise e
+            with run_with_profiling(filename, ExecutionStep.READ_FILE):
+                with open(path, "r") as file:
+                    contents = file.read()
 
+            primitive_transformer = PrimitiveASTTransformer()
+            desugar_transformer = DesugarTransformer()
+            parser = Lark_StandAlone(postlex=Postlexer())
 
-def compile_phase_two():
-    global exceptions
-    path = None
-    try:
-        try:
-            path = str(CompilationManager.phase_two_queue.get(timeout=0.01))
-        except Empty:
-            return
+            # Parse the file
+            with run_with_profiling(filename, ExecutionStep.PARSE_FILE):
+                try:
+                    ast = parser.parse(contents)
+                except Exception as e:
+                    log_fail(f"Exception when parsing {filename}")
+                    log_fail(e)
+                    exceptions = True
+                    CompilationManager.finish_file(path)
+                    CompilationManager.files_to_compile.task_done()
+                    return
 
-        if not path in CompilationManager.compilation_units:
-            log_fail("Could not find compilation unit.")
-            finish_file_phase_two(path)
-            return
+            if CompilationManager.config.raw_opts.print_tokens:
+                print(ast.pretty())
 
-        unit = CompilationManager.compilation_units[path]
+            # Generate primitive IR (things we don't need other modules for)
+            with run_with_profiling(filename, ExecutionStep.GEN_IR):
+                ast = primitive_transformer.transform(ast)
+                ast = desugar_transformer.transform(ast)
+
+            unit = CompilationUnit(ParserState.module(), ParserState.usings(), last_modified, ast)
+        else:
+            last_modified = unit.last_modified
+            ParserState.usings().extend(unit.usings)
+            ParserState.set_module(unit.module)
+
+            ast = unit.ast
 
         # Check if all dependencies are compiled
-        all_compiled = True
-        for using in unit.usings:
-            if CompilationManager.check_module_still_compiling(using):
-                all_compiled = False
-                break
+        wait_on_modules = list()
+        with run_with_profiling(filename, ExecutionStep.WAIT_DEPENDENCIES):
+            for using in unit.usings:
+                if not CompilationManager.check_module_already_compiled(using):
+                    CompilationManager.request_module(using)
+                    wait_on_modules.append(using)
 
-        if not all_compiled:
-            CompilationManager.phase_two_queue.task_done()
-            CompilationManager.phase_two_queue.put(path)
-            return
+            for using in wait_on_modules:
+                CompilationManager.wait_for_module_compiled(using)
 
-        del CompilationManager.compilation_units[path]
-        ParserState.reset_usings()
-        ParserState.usings().extend(unit.usings)
-        ParserState.set_module(unit.module)
-
-        file = CompilationManager.filename_from_path(path)
         function_declaration_transformer = FunctionDeclarationTransformer()
         struct_declaration_transformer = StructDeclarationTransformer()
         transformer = ASTVisitor()
 
-        with run_with_profiling(file, ExecutionStep.GEN_IR):
-            ast = struct_declaration_transformer.transform(unit.ast)
+        with run_with_profiling(filename, ExecutionStep.GEN_IR):
+            ast = struct_declaration_transformer.transform(ast)
 
             if ast is not None:
                 ast = function_declaration_transformer.visit(ast)
@@ -300,10 +295,16 @@ def compile_phase_two():
             if ast is not None:
                 transformer.visit(ast)
 
-        if not CompilationManager.config.raw_opts.disable_cache:
-            cache_path = str(CompilationManager.get_cache_path_str(path)).replace(".rial", ".cache")
-            Cache.cache_module(ParserState.module(), path, cache_path, unit.last_modified)
-        finish_file_phase_two(path)
+        cache_path = str(CompilationManager.get_cache_path_str(path)).replace(".rial", ".cache")
+        if Path(cache_path).exists() and CompilationManager.config.raw_opts.disable_cache:
+            os.remove(cache_path)
+        elif not CompilationManager.config.raw_opts.disable_cache:
+            Cache.cache_module(ParserState.module(), path, cache_path, last_modified)
+
+        CompilationManager.files_to_compile.task_done()
     except Exception as e:
-        e.path = path
-        raise e
+        log_fail("Internal Compiler Error: ")
+        log_fail(traceback.format_exc())
+        exceptions = True
+        CompilationManager.finish_file(path)
+        CompilationManager.files_to_compile.task_done()

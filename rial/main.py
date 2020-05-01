@@ -29,6 +29,7 @@ DEFAULT_OPTIONS = {
         'release': False,
         'profile': False,
         'profile_mem': False,
+        'profile_gil': False,
         'strip': False,
         'file': None,
         'compile_units': multiprocessing.cpu_count()
@@ -120,6 +121,7 @@ def parse_prelim_arguments():
     parser.add_argument('--disable-cache', action='store_true',
                         help="Disable cache", default=None)
     parser.add_argument('--profile', help="Profiles the compiler", action="store_true", default=None)
+    parser.add_argument('--profile-gil', help="Profiles the GIL", action="store_true", default=None)
     parser.add_argument('--print-options', help="Prints the passed options", action="store_true", default=False)
     parser.add_argument('--compile-units', help="Number of compile units to use", type=int, default=None)
 
@@ -138,7 +140,7 @@ def parse_config_file_arguments(workdir: str):
     ], ac_ignore_missing=True)
 
 
-if __name__ == "__main__":
+def start():
     opts = DEFAULT_OPTIONS
 
     # Remove default (None) values
@@ -182,3 +184,7 @@ if __name__ == "__main__":
     opts = munchify(opts)
 
     main(opts)
+
+
+if __name__ == "__main__":
+    start()

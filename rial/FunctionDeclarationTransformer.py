@@ -6,7 +6,6 @@ from llvmlite.ir import IdentifiedStructType
 from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
 from rial.builtin_type_to_llvm_mapper import is_builtin_type, map_shortcut_to_type
-from rial.compilation_manager import CompilationManager
 from rial.concept.TransformerInterpreter import TransformerInterpreter
 from rial.concept.metadata_token import MetadataToken
 from rial.concept.name_mangler import mangle_function_name
@@ -192,10 +191,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
                                                                          self.llvmgen.current_struct is not None and self.llvmgen.current_struct.name or ""))
 
         if self.llvmgen.current_struct is not None:
-            struct_def = self.llvmgen.current_struct.get_struct_definition()
-            struct_def.functions.append(func.name)
-            self.llvmgen.current_struct.module.update_named_metadata(
-                f"{self.llvmgen.current_struct.name.replace(':', '_')}.definition", struct_def.to_list())
+            self.llvmgen.current_struct.definition.functions.append(func.name)
 
         # Always inline the main function into the compiler supplied one
         if main_function:
@@ -211,6 +207,10 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
                     ParserState.builtin_types[this_arg] = dict()
 
                 ParserState.builtin_types[this_arg][func.name] = func
+
+                if not this_arg in ParserState.module().builtin_type_methods:
+                    ParserState.module().builtin_type_methods[this_arg] = list()
+                ParserState.module().builtin_type_methods[this_arg].append(func.name)
 
         token = nodes[0]
         metadata_token = MetadataToken(token.type, token.value)

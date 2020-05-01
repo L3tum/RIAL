@@ -1,14 +1,16 @@
 from typing import Optional, Union, Tuple, List, Dict, Any
 
 from llvmlite import ir
-from llvmlite.ir import IRBuilder, Function, AllocaInstr, Branch, FunctionType, Type, VoidType, PointerType, \
-    Argument, CallInstr, Block, IdentifiedStructType
+from llvmlite.ir import IRBuilder, AllocaInstr, Branch, FunctionType, Type, VoidType, PointerType, \
+    Argument, CallInstr, Block
 
 from rial.LLVMBlock import LLVMBlock, create_llvm_block
 from rial.LLVMUIntType import LLVMUIntType
 from rial.ParserState import ParserState
 from rial.compilation_manager import CompilationManager
 from rial.metadata.FunctionDefinition import FunctionDefinition
+from rial.metadata.RIALFunction import RIALFunction
+from rial.metadata.RIALIdentifiedStructType import RIALIdentifiedStructType
 from rial.metadata.StructDefinition import StructDefinition
 from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 from rial.rial_types.RIALVariable import RIALVariable
@@ -16,11 +18,11 @@ from rial.rial_types.RIALVariable import RIALVariable
 
 class LLVMGen:
     builder: Optional[IRBuilder]
-    current_func: Optional[Function]
+    current_func: Optional[RIALFunction]
     conditional_block: Optional[LLVMBlock]
     end_block: Optional[LLVMBlock]
     current_block: Optional[LLVMBlock]
-    current_struct: Optional[IdentifiedStructType]
+    current_struct: Optional[RIALIdentifiedStructType]
     global_variables: Dict
 
     def __init__(self):
@@ -38,19 +40,16 @@ class LLVMGen:
 
         for ident in identifiers:
             if not variable is None and isinstance(variable.type, PointerType):
-                if isinstance(variable.type.pointee, IdentifiedStructType):
+                if isinstance(variable.type.pointee, RIALIdentifiedStructType):
                     struct = ParserState.find_struct(variable.type.pointee.name)
 
                     if struct is None:
                         return None
 
-                    struct_def = StructDefinition.from_mdvalue(
-                        struct.module.get_named_metadata(f"{struct.name.replace(':', '_')}.definition"))
-
-                    if not self.check_struct_access_allowed(struct, struct_def):
+                    if not self.check_struct_access_allowed(struct):
                         raise PermissionError(f"Tried accesssing struct {struct.name}")
 
-                    prop = struct_def.properties[ident]
+                    prop = struct.definition.properties[ident]
 
                     if prop is None:
                         return None
@@ -218,16 +217,14 @@ class LLVMGen:
         if func is None:
             return None
 
-        func_def: FunctionDefinition = func.get_function_definition()
-
         # Check if call is allowed
-        if not self.check_function_call_allowed(func, func_def):
+        if not self.check_function_call_allowed(func):
             raise PermissionError(f"Tried calling function {func.name} from {self.current_func.name}")
 
         # Check if function is declared in current module
         if ParserState.module().get_global_safe(func.name) is None:
             func = self.create_function_with_type(func.name, func.function_type, func.linkage, func.calling_convention,
-                                                  [arg.name for arg in func.args], func_def)
+                                                  [arg.name for arg in func.args], func.definition)
 
         args = list()
 
@@ -249,16 +246,15 @@ class LLVMGen:
                 func_arg_type = isinstance(func.args[i].type, PointerType) and func.args[i].type.pointee or func.args[
                     i].type
 
-                if isinstance(ty, IdentifiedStructType):
+                if isinstance(ty, RIALIdentifiedStructType):
                     struct = ParserState.find_struct(ty.name)
 
                     if struct is not None:
-                        struct_def: StructDefinition = struct.get_struct_definition()
                         found = False
 
                         # Check if a base struct matches the type expected
                         # TODO: Recursive check
-                        for base_struct in struct_def.base_structs:
+                        for base_struct in struct.definition.base_structs:
                             if base_struct == func_arg_type.name:
                                 args.remove(arg)
                                 args.insert(i, self.builder.bitcast(arg, ir.PointerType(base_struct)))
@@ -285,24 +281,24 @@ class LLVMGen:
 
         self.gen_function_call(["llvm.donothing"], [])
 
-    def check_function_call_allowed(self, func: Function, func_def: FunctionDefinition):
+    def check_function_call_allowed(self, func: RIALFunction):
         # Public is always okay
-        if func_def.access_modifier == RIALAccessModifier.PUBLIC:
+        if func.definition.access_modifier == RIALAccessModifier.PUBLIC:
             return True
         # Internal only when it's the same TLM
-        if func_def.access_modifier == RIALAccessModifier.INTERNAL:
+        if func.definition.access_modifier == RIALAccessModifier.INTERNAL:
             return func.module.name.split(':')[0] == ParserState.module().name.split(':')[0]
         # Private is harder
-        if func_def.access_modifier == RIALAccessModifier.PRIVATE:
+        if func.definition.access_modifier == RIALAccessModifier.PRIVATE:
             # Allowed if not in struct and in current module
-            if func_def.struct == "" and func.module.name == ParserState.module().name:
+            if func.definition.struct == "" and func.module.name == ParserState.module().name:
                 return True
             # Allowed if in same struct irregardless of module
-            if self.current_struct is not None and self.current_struct.name == func_def.struct:
+            if self.current_struct is not None and self.current_struct.name == func.definition.struct:
                 return True
         return False
 
-    def check_property_access_allowed(self, struct: IdentifiedStructType, prop: RIALVariable):
+    def check_property_access_allowed(self, struct: RIALIdentifiedStructType, prop: RIALVariable):
         # Same struct, anything goes
         if self.current_struct is not None and self.current_struct.name == struct.name:
             return True
@@ -313,18 +309,18 @@ class LLVMGen:
 
         return True
 
-    def check_struct_access_allowed(self, struct: IdentifiedStructType, struct_def: StructDefinition):
+    def check_struct_access_allowed(self, struct: RIALIdentifiedStructType):
         # Public is always okay
-        if struct_def.access_modifier == RIALAccessModifier.PUBLIC:
+        if struct.definition.access_modifier == RIALAccessModifier.PUBLIC:
             return True
 
         # Private and same module
-        if struct_def.access_modifier == RIALAccessModifier.PRIVATE:
-            return struct.module.name == ParserState.module().name
+        if struct.definition.access_modifier == RIALAccessModifier.PRIVATE:
+            return struct.module_name == ParserState.module().name
 
         # Internal and same TLM
-        if struct_def.access_modifier == RIALAccessModifier.INTERNAL:
-            return struct.module.name.split(':')[0] == ParserState.module().name.split(':')[0]
+        if struct.definition.access_modifier == RIALAccessModifier.INTERNAL:
+            return struct.module_name.split(':')[0] == ParserState.module().name.split(':')[0]
 
         return False
 
@@ -441,9 +437,14 @@ class LLVMGen:
 
     def create_identified_struct(self, name: str, linkage: str,
                                  rial_access_modifier: RIALAccessModifier,
-                                 base_llvm_structs: List[IdentifiedStructType],
-                                 body: List[RIALVariable]) -> IdentifiedStructType:
+                                 base_llvm_structs: List[RIALIdentifiedStructType],
+                                 body: List[RIALVariable]) -> RIALIdentifiedStructType:
+        # Build normal struct and switch out with RIALStruct
         struct = ParserState.module().context.get_identified_type(name)
+        rial_struct = RIALIdentifiedStructType(struct.context, struct.name, struct.packed)
+        ParserState.module().context.identified_types[struct.name] = rial_struct
+        struct = rial_struct
+        ParserState.module().structs.append(struct)
 
         # Create metadata definition
         struct_def = StructDefinition(rial_access_modifier)
@@ -453,9 +454,7 @@ class LLVMGen:
         props = list()
         prop_offset = 0
         for deriv in base_llvm_structs:
-            stru_def: StructDefinition = deriv.get_struct_definition()
-
-            for prop in stru_def.properties.values():
+            for prop in deriv.definition.properties.values():
                 props.append(ParserState.map_type_to_llvm(prop[1].rial_type))
                 props_def[prop[1].name] = (prop_offset, prop[1])
                 prop_offset += 1
@@ -467,7 +466,7 @@ class LLVMGen:
             prop_offset += 1
 
         struct.set_body(*tuple(props))
-        struct.module = ParserState.module()
+        struct.module_name = ParserState.module().name
         self.current_struct = struct
 
         struct_def.properties = props_def
@@ -494,7 +493,7 @@ class LLVMGen:
             self.builder.store(bod.initial_value, loaded_var)
 
         # Store def in metadata
-        ParserState.module().update_named_metadata(f"{name.replace(':', '_')}.definition", struct_def.to_list())
+        struct.definition = struct_def
 
         self.builder.ret_void()
 
@@ -509,7 +508,7 @@ class LLVMGen:
                                   linkage: str,
                                   calling_convention: str,
                                   arg_names: List[str],
-                                  function_def: FunctionDefinition):
+                                  function_def: FunctionDefinition) -> RIALFunction:
         """
         Creates an IR Function with the specified arguments. NOTHING MORE.
         :param function_def:
@@ -522,14 +521,10 @@ class LLVMGen:
         """
 
         # Create function with specified linkage (internal -> module only)
-        func = ir.Function(ParserState.module(), ty, name=name)
+        func = RIALFunction(ParserState.module(), ty, name=name)
         func.linkage = linkage
         func.calling_convention = calling_convention
-
-        if not f"function_definition_{name.replace(':', '_')}" in ParserState.module().namedmetadata:
-            ParserState.module().update_named_metadata(f"function_definition_{name.replace(':', '_')}",
-                                                       ParserState.module().add_metadata(
-                                                           tuple(function_def.to_list())))
+        func.definition = function_def
 
         # Set argument names
         for i, arg in enumerate(func.args):
@@ -537,7 +532,7 @@ class LLVMGen:
 
         return func
 
-    def create_function_body(self, func: Function, rial_arg_types: List[str]):
+    def create_function_body(self, func: RIALFunction, rial_arg_types: List[str]):
         self.current_func = func
 
         # Create entry block
