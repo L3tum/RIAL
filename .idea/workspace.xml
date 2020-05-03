@@ -20,13 +20,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Improved grammar to improve readability of the AST Visitors">
-      <change afterPath="$PROJECT_DIR$/rial/metadata/RIALValue.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/ASTVisitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ASTVisitor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/LLVMGen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMGen.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/ParserState.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ParserState.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/compiler.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compiler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/src/main.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/main.rial" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

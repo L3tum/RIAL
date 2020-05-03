@@ -7,7 +7,6 @@ from pathlib import Path
 from queue import Empty
 from typing import List, Dict
 
-import gil_load
 from llvmlite.binding import ModuleRef
 from llvmlite.ir import context
 
@@ -60,6 +59,7 @@ def compiler():
     CompilationManager.request_file(str(path))
 
     if CompilationManager.config.raw_opts.profile_gil:
+        import gil_load
         gil_load.init()
         gil_load.start()
 
@@ -92,6 +92,7 @@ def compiler():
     CompilationManager.files_to_compile.join()
 
     if CompilationManager.config.raw_opts.profile_gil:
+        import gil_load
         gil_load.stop()
         print(gil_load.format(gil_load.get()))
 
