@@ -6,7 +6,6 @@ from rial.ParserState import ParserState
 from rial.concept.metadata_token import MetadataToken
 from rial.concept.parser import Transformer_InPlaceRecursive, Tree, Token, Discard
 from rial.log import log_fail
-from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 from rial.rial_types.RIALVariable import RIALVariable
 
 
@@ -21,14 +20,8 @@ class StructDeclarationTransformer(Transformer_InPlaceRecursive):
         self.fdt.llvmgen = self.llvmgen
 
     def struct_decl(self, nodes: List):
-        if nodes[0].type == "ACCESS_MODIFIER":
-            access_modifier = RIALAccessModifier[nodes[0].value.upper()]
-            name = nodes[1].value
-            start = 2
-        else:
-            access_modifier = RIALAccessModifier.PRIVATE
-            name = nodes[0].value
-            start = 1
+        access_modifier = nodes[0].access_modifier
+        name = nodes[1].value
 
         full_name = f"{ParserState.module().name}:{name}"
 
@@ -41,28 +34,19 @@ class StructDeclarationTransformer(Transformer_InPlaceRecursive):
         bases: List[str] = list()
 
         # Find body of struct (variables)
-        i = start
+        i = 2
         while i < len(nodes):
             node: Tree = nodes[i]
 
             if isinstance(node, Tree) and node.data == "struct_property_declaration":
                 variable = node.children
-                acc_modifier = RIALAccessModifier.PRIVATE
+                acc_modifier = variable[0].access_modifier
+                rial_type = variable[1].value
+                variable_name = variable[2].value
                 variable_value = None
 
-                if variable[0].type == "ACCESS_MODIFIER":
-                    acc_modifier = RIALAccessModifier(variable[0].value)
-                    rial_type = variable[1].value
-                    variable_name = variable[2].value
-
-                    if len(variable) > 3:
-                        variable_value = variable[3]
-                else:
-                    rial_type = variable[0].value
-                    variable_name = variable[1].value
-
-                    if len(variable) > 2:
-                        variable_value = variable[2]
+                if len(variable) > 3:
+                    variable_value = variable[3]
 
                 body.append(RIALVariable(variable_name, rial_type, initial_value=variable_value,
                                          access_modifier=acc_modifier))
@@ -97,7 +81,7 @@ class StructDeclarationTransformer(Transformer_InPlaceRecursive):
 
         self.llvmgen.finish_struct()
 
-        node: Token = nodes[0]
+        node: Token = nodes[1]
         md_node = MetadataToken(node.type, node.value)
 
         md_node.metadata['struct_name'] = full_name

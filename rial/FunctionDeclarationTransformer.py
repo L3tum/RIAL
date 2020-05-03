@@ -1,7 +1,6 @@
 from typing import List, Tuple
 
 from llvmlite import ir
-from llvmlite.ir import IdentifiedStructType
 
 from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
@@ -42,70 +41,33 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
             if attribute.children[0].value == "NoMangle":
                 self.mangling = False
 
-        func_decl = self.function_decl(func_decl)
+        func_decl = self.visit(func_decl)
         self.mangling = True
         return func_decl
 
-    def function_decl(self, tree: Tree):
+    def external_function_decl(self, tree: Tree):
         nodes = tree.children
-        access_modifier: RIALAccessModifier = RIALAccessModifier.PRIVATE
-        linkage = "internal"
-        external = False
-        main_function = False
+        access_modifier: RIALAccessModifier = nodes[0].access_modifier
+        linkage = "external"
         calling_convention = "ccc"
+        return_type = nodes[1].value
+        name = nodes[2].value
 
-        if nodes[0].type == "EXTERNAL":
-            external = True
-            linkage = "external"
-            if nodes[1].type == "ACCESS_MODIFIER":
-                return_type = nodes[2].value
-                name = nodes[3].value
-                start_args = 4
-                access_modifier = RIALAccessModifier[nodes[1].value.upper()]
-            else:
-                return_type = nodes[1].value
-                name = nodes[2].value
-                start_args = 3
-                access_modifier = RIALAccessModifier.PUBLIC
-        elif nodes[0].type == "ACCESS_MODIFIER":
-            access_modifier = RIALAccessModifier[nodes[0].value.upper()]
-            return_type = nodes[1].value
-            name = nodes[2].value
-            start_args = 3
-            linkage = access_modifier.get_linkage()
-        else:
-            return_type = nodes[0].value
-            name = nodes[1].value
-            start_args = 2
+        # External functions cannot be declared in a struct
+        if self.llvmgen.current_struct is not None:
+            log_fail(f"External function {name} cannot be declared inside a class!")
+            raise Discard()
 
         args: List[Tuple[str, str]] = list()
-
-        i = start_args
         var_args = False
-        this_arg = None
-        has_body = False
-
+        i = 3
         while i < len(nodes):
-            if not isinstance(nodes[i], Token):
-                has_body = True
-                break
             if var_args is True:
                 log_fail("PARAMS must be last in arguments")
                 break
             if nodes[i].type == "PARAMS":
                 var_args = True
                 i += 1
-            elif nodes[i].type == "THIS":
-                i += 1
-                this_arg = nodes[i].value
-                this_arg = map_shortcut_to_type(this_arg)
-                arg_type = nodes[i].value
-                i += 1
-                arg_name = nodes[i].value
-                args.append((arg_type, arg_name))
-                i += 1
-                continue
-
             if nodes[i].type == "IDENTIFIER":
                 arg_type = nodes[i].value
                 i += 1
@@ -116,44 +78,157 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
 
                 args.append((arg_type, arg_name))
                 i += 1
-            else:
-                break
-
-        if has_body and external:
-            log_fail("External functions cannot have a body!")
-            raise Discard()
-
-        if has_body and var_args:
-            log_fail(f"Non-externally defined functions currently cannot have a PARAMS variable length parameter")
-            raise Discard()
 
         # Map RIAL args to llvm arg types
         llvm_args = [ParserState.map_type_to_llvm(arg[0]) for arg in args if not arg[1].endswith("...")]
 
-        # Convert struct arguments into reference arguments
-        for llvm_arg in llvm_args:
-            if isinstance(llvm_arg, IdentifiedStructType):
-                index = llvm_args.index(llvm_arg)
-                llvm_args.remove(llvm_arg)
-                llvm_args.insert(index, ir.PointerType(llvm_arg))
+        # Hasn't been declared previously, redeclare the function type here
+        llvm_return_type = ParserState.map_type_to_llvm(return_type)
+        func_type = self.llvmgen.create_function_type(llvm_return_type, llvm_args, var_args)
+
+        # Create the actual function in IR
+        func = self.llvmgen.create_function_with_type(name, func_type, linkage,
+                                                      calling_convention,
+                                                      list(map(lambda arg: arg[1], args)),
+                                                      FunctionDefinition(return_type, access_modifier, args, ""))
+
+        raise Discard()
+
+    def extension_function_decl(self, tree: Tree):
+        nodes = tree.children
+        access_modifier: RIALAccessModifier = nodes[0].access_modifier
+        linkage = access_modifier.get_linkage()
+        calling_convention = "fastcc"
+        return_type = nodes[1].value
+        name = nodes[2].value
+
+        # Extension functions cannot be declared inside other classes.
+        if self.llvmgen.current_struct is not None:
+            log_fail(f"Extension function {name} cannot be declared inside another class!")
+            raise Discard()
+
+        if not self.mangling:
+            log_fail(f"Extension function {name} does not qualify for no mangling.")
+            raise Discard()
+
+        args: List[Tuple[str, str]] = list()
+        this_arg = map_shortcut_to_type(nodes[3].value)
+        has_body = False
+
+        args.append((nodes[3].value, nodes[4].value))
+
+        i = 5
+        while i < len(nodes):
+            if not isinstance(nodes[i], Token):
+                has_body = True
+                break
+            if nodes[i].type == "IDENTIFIER":
+                arg_type = nodes[i].value
+                i += 1
+                arg_name = nodes[i].value
+                args.append((arg_type, arg_name))
+                i += 1
+            else:
+                break
+
+        # Map RIAL args to llvm arg types
+        llvm_args = [ParserState.map_type_to_llvm(arg[0]) for arg in args if not arg[1].endswith("...")]
+
+        full_function_name = mangle_function_name(name, llvm_args, this_arg)
+        full_function_name = f"{ParserState.module().name}:{full_function_name}"
+
+        # Hasn't been declared previously, redeclare the function type here
+        llvm_return_type = ParserState.map_type_to_llvm(return_type)
+        func_type = self.llvmgen.create_function_type(llvm_return_type, llvm_args, False)
+
+        # Create the actual function in IR
+        func = self.llvmgen.create_function_with_type(full_function_name, func_type, linkage,
+                                                      calling_convention,
+                                                      list(map(lambda arg: arg[1], args)),
+                                                      FunctionDefinition(return_type, access_modifier, args,
+                                                                         self.llvmgen.current_struct is not None and self.llvmgen.current_struct.name or ""))
+
+        if is_builtin_type(this_arg):
+            if this_arg not in ParserState.builtin_types:
+                ParserState.builtin_types[this_arg] = dict()
+
+            ParserState.builtin_types[this_arg][func.name] = func
+
+            if not this_arg in ParserState.module().builtin_type_methods:
+                ParserState.module().builtin_type_methods[this_arg] = list()
+            ParserState.module().builtin_type_methods[this_arg].append(func.name)
+        else:
+            struct = ParserState.find_struct(this_arg)
+
+            if struct is None:
+                log_fail(f"Extension function for non-existing type {this_arg}")
+                ParserState.module().functions.remove(func)
+                raise Discard()
+
+            struct.definition.functions.append(func.name)
+
+        if not has_body:
+            raise Discard()
+
+        token = nodes[2]
+        metadata_token = MetadataToken(token.type, token.value)
+        metadata_token.metadata["full_name"] = full_function_name
+        metadata_token.metadata["body_start"] = i
+        metadata_token.metadata['rial_arg_types'] = [arg[0] for arg in args]
+        nodes.remove(token)
+        nodes.insert(0, metadata_token)
+
+        return Tree('function_decl', nodes)
+
+    def function_decl(self, tree: Tree):
+        nodes = tree.children
+
+        # Function specialisation
+        if isinstance(nodes[0], Tree):
+            return self.visit(nodes[0])
+
+        access_modifier: RIALAccessModifier = nodes[0].access_modifier
+        linkage = access_modifier.get_linkage()
+        main_function = False
+        calling_convention = "fastcc"
+        return_type = nodes[1].value
+        name = nodes[2].value
+
+        args: List[Tuple[str, str]] = list()
+
+        i = 3
+        has_body = False
+
+        while i < len(nodes):
+            if not isinstance(nodes[i], Token):
+                has_body = True
+                break
+            if nodes[i].type == "IDENTIFIER":
+                arg_type = nodes[i].value
+                i += 1
+                arg_name = nodes[i].value
+                args.append((arg_type, arg_name))
+                i += 1
+            else:
+                break
+
+        # Map RIAL args to llvm arg types
+        llvm_args = [ParserState.map_type_to_llvm(arg[0]) for arg in args if not arg[1].endswith("...")]
 
         # Add class as implicit self parameter
         if self.llvmgen.current_struct is not None:
             llvm_args.insert(0, ir.PointerType(self.llvmgen.current_struct))
             args.insert(0, (self.llvmgen.current_struct.name, "this"))
 
-        # If it's external we need to use the actual defined name instead of the compiler-internal one
-        if external or self.mangling == False:
+        # If the function has the NoMangleAttribute we need to use the normal name
+        if not self.mangling:
             full_function_name = name
         else:
             if self.llvmgen.current_struct is not None:
                 full_function_name = mangle_function_name(name, llvm_args,
                                                           self.llvmgen.current_struct.name)
             else:
-                if this_arg is not None:
-                    full_function_name = mangle_function_name(name, llvm_args, this_arg)
-                else:
-                    full_function_name = mangle_function_name(name, llvm_args)
+                full_function_name = mangle_function_name(name, llvm_args)
             full_function_name = f"{ParserState.module().name}:{full_function_name}"
 
         # Check if main method
@@ -181,7 +256,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
 
         # Hasn't been declared previously, redeclare the function type here
         llvm_return_type = ParserState.map_type_to_llvm(return_type)
-        func_type = self.llvmgen.create_function_type(llvm_return_type, llvm_args, var_args)
+        func_type = self.llvmgen.create_function_type(llvm_return_type, llvm_args, False)
 
         # Create the actual function in IR
         func = self.llvmgen.create_function_with_type(full_function_name, func_type, linkage,
@@ -201,18 +276,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
         if not has_body:
             raise Discard()
 
-        if this_arg is not None:
-            if is_builtin_type(this_arg):
-                if this_arg not in ParserState.builtin_types:
-                    ParserState.builtin_types[this_arg] = dict()
-
-                ParserState.builtin_types[this_arg][func.name] = func
-
-                if not this_arg in ParserState.module().builtin_type_methods:
-                    ParserState.module().builtin_type_methods[this_arg] = list()
-                ParserState.module().builtin_type_methods[this_arg].append(func.name)
-
-        token = nodes[0]
+        token = nodes[2]
         metadata_token = MetadataToken(token.type, token.value)
         metadata_token.metadata["full_name"] = full_function_name
         metadata_token.metadata["body_start"] = i

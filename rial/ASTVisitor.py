@@ -3,11 +3,12 @@ from llvmlite.ir import PointerType, GlobalVariable, FormattedConstant
 
 from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
-from rial.builtin_type_to_llvm_mapper import map_llvm_to_type
+from rial.builtin_type_to_llvm_mapper import map_llvm_to_type, NULL
 from rial.concept.metadata_token import MetadataToken
 from rial.concept.name_mangler import mangle_function_name
 from rial.concept.parser import Interpreter, Tree, Token, Discard
 from rial.log import log_fail
+from rial.metadata.RIALFunction import RIALFunction
 from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 from rial.type_casting import get_casting_function
 
@@ -24,34 +25,6 @@ class ASTVisitor(Interpreter):
             node = self.visit(node)
 
         return node
-
-    def addition(self, tree: Tree):
-        nodes = tree.children
-        left = self.transform_helper(nodes[0])
-        right = self.transform_helper(nodes[2])
-
-        return self.llvmgen.gen_addition(left, right)
-
-    def subtraction(self, tree: Tree):
-        nodes = tree.children
-        left = self.transform_helper(nodes[0])
-        right = self.transform_helper(nodes[2])
-
-        return self.llvmgen.gen_subtraction(left, right)
-
-    def multiplication(self, tree: Tree):
-        nodes = tree.children
-        left = self.transform_helper(nodes[0])
-        right = self.transform_helper(nodes[2])
-
-        return self.llvmgen.gen_multiplication(left, right)
-
-    def division(self, tree: Tree):
-        nodes = tree.children
-        left = self.transform_helper(nodes[0])
-        right = self.transform_helper(nodes[2])
-
-        return self.llvmgen.gen_division(left, right)
 
     def smaller_than(self, tree: Tree):
         nodes = tree.children
@@ -113,57 +86,31 @@ class ASTVisitor(Interpreter):
 
         return va
 
-    def variable_increment(self, tree: Tree):
+    def math(self, tree: Tree):
         nodes = tree.children
-        variable = self.var(nodes[0])
 
-        if len(nodes) > 1:
-            value = self.transform_helper(nodes[1])
-        else:
-            variable_type = variable.type
+        left = self.transform_helper(nodes[0])
+        right = self.transform_helper(nodes[2])
 
-            if isinstance(variable_type, PointerType):
-                variable_type = variable_type.pointee
+        op = nodes[1].type
 
-            value = ir.Constant(variable_type, 1)
-
-        return self.llvmgen.gen_shorthand(variable, value, '+')
-
-    def variable_decrement(self, tree: Tree):
-        nodes = tree.children
-        variable = self.var(nodes[0])
-
-        if len(nodes) > 1:
-            value = self.transform_helper(nodes[1])
-        else:
-            variable_type = variable.type
-
-            if isinstance(variable_type, PointerType):
-                variable_type = variable_type.pointee
-
-            value = ir.Constant(variable_type, 1)
-
-        return self.llvmgen.gen_shorthand(variable, value, '-')
-
-    def variable_multiplication(self, tree: Tree):
-        nodes = tree.children
-        variable = self.var(nodes[0])
-        value = self.transform_helper(nodes[1])
-
-        return self.llvmgen.gen_shorthand(variable, value, '*')
-
-    def variable_division(self, tree: Tree):
-        nodes = tree.children
-        variable = self.var(nodes[0])
-        value = self.transform_helper(nodes[1])
-
-        return self.llvmgen.gen_shorthand(variable, value, '/')
+        if op == "PLUS":
+            return self.llvmgen.gen_addition(left, right)
+        elif op == "MINUS":
+            return self.llvmgen.gen_subtraction(left, right)
+        elif op == "MUL":
+            return self.llvmgen.gen_multiplication(left, right)
+        elif op == "DIV":
+            return self.llvmgen.gen_division(left, right)
 
     def variable_assignment(self, tree: Tree):
         nodes = tree.children
 
         variable = self.var(nodes[0])
         value = self.transform_helper(nodes[2])
+
+        if isinstance(value, RIALFunction):
+            value = ir.PointerType(value)
 
         # TODO: Check if types are matching based on both LLVM value and inferred and metadata RIAL type
         return self.llvmgen.assign_to_variable(variable, value)
@@ -172,9 +119,11 @@ class ASTVisitor(Interpreter):
         nodes = tree.children
         identifier = nodes[0].value
         value = self.transform_helper(nodes[2])
-        value_type = value.type
 
-        return self.llvmgen.declare_variable(identifier, value_type, value, map_llvm_to_type(value_type))
+        if isinstance(value, RIALFunction):
+            value = ir.PointerType(value)
+
+        return self.llvmgen.declare_variable(identifier, value)
 
     def global_variable_decl(self, tree: Tree):
         nodes = tree.children[0].children
@@ -335,6 +284,7 @@ class ASTVisitor(Interpreter):
 
     def conditional_block(self, tree: Tree):
         nodes = tree.children
+
         name = self.llvmgen.current_block.block.name
         else_block = None
 
@@ -500,54 +450,63 @@ class ASTVisitor(Interpreter):
 
         self.llvmgen.finish_struct()
 
-    def function_call(self, tree: Tree):
+    def constructor_call(self, tree: Tree):
         nodes = tree.children
-        full_function_name: str
-        function_name: str
-        start = 1
-        implicit_parameter = None
-        instantiation = False
+        name = nodes[0]
+        struct = ParserState.find_struct(name)
 
-        if len(nodes) > 1 and not isinstance(nodes[1], Tree) and nodes[1].type == "IDENTIFIER":
-            identifier = nodes[0].value
-            full_function_name = function_name = nodes[1].value
+        if struct is None:
+            log_fail(f"Instantiation of unknown type {name}")
 
-            # Go along the nested properties to get to the function call
-            for i, node in enumerate(nodes):
-                # Skip first occurence since that is most likely the just-loaded variable
-                if i == 0:
-                    continue
-                if not isinstance(node, Tree) and node.type == "IDENTIFIER":
-                    # If next node is still identifier, we keep going
-                    if len(nodes) > i + 1 and not isinstance(nodes[i + 1], Tree) and nodes[i + 1].type == "IDENTIFIER":
-                        identifier += f".{node.value}"
-                    else:
-                        start = i + 1
-                        break
-                else:
-                    start = i
-                    break
+        arguments = list()
 
-            implicit_parameter = self.llvmgen.get_var(identifier)
+        instantiated = self.llvmgen.builder.alloca(struct)
+        arguments.append(instantiated)
 
-        else:
-            full_function_name = function_name = nodes[0].value
+        arguments.extend(self.transform_helper(nodes[1]))
 
-        i = start
-        arguments: list = list()
+        constructor_name = mangle_function_name("constructor", [arg.type for arg in arguments], name)
 
-        if implicit_parameter is not None:
-            arguments.append(implicit_parameter)
+        try:
+            call_instr = self.llvmgen.gen_function_call([constructor_name], arguments)
 
+            if call_instr is None:
+                log_fail(f"Failed to generate call to function {constructor_name}")
+                return NULL
+
+            return instantiated
+        except IndexError:
+            log_fail("Missing argument in function call")
+
+        return NULL
+
+    def nested_function_call(self, tree: Tree):
+        nodes = tree.children
+        i = 0
+        full_name = ""
+        arguments = list()
         while i < len(nodes):
-            if nodes[i] is None:
-                continue
-            arguments.append(self.transform_helper(nodes[i]))
+            if not isinstance(nodes[i], Token):
+                break
+
+            full_name += f".{nodes[i].value}"
             i += 1
+
+        implicit_parameter_name = '.'.join(full_name.split('.')[0:-1])
+        function_name = full_name.split('.')[-1]
+        implicit_parameter = self.llvmgen.get_var(implicit_parameter_name)
+
+        if implicit_parameter is None:
+            log_fail(f"Could not find implicit parameter {implicit_parameter_name} in function call {full_name}")
+            return NULL
+
+        arguments.append(implicit_parameter)
+        arguments.extend(self.transform_helper(nodes[i]))
 
         arg_types = [arg.type for arg in arguments]
         mangled_names = list()
 
+        # Generate mangled names for implicit parameter and derived
         if implicit_parameter is not None:
             if isinstance(implicit_parameter.type, PointerType):
                 ty = implicit_parameter.type.pointee
@@ -558,9 +517,9 @@ class ASTVisitor(Interpreter):
 
             # Check if it's a builtin type
             if isinstance(ty, str) and ty in ParserState.builtin_types:
-                mangled_names.append(mangle_function_name(full_function_name, [arg.type for arg in arguments], ty))
+                mangled_names.append(mangle_function_name(function_name, [arg.type for arg in arguments], ty))
             else:
-                mangled_names.append(mangle_function_name(full_function_name, [arg.type for arg in arguments], ty.name))
+                mangled_names.append(mangle_function_name(function_name, [arg.type for arg in arguments], ty.name))
 
                 struct = ParserState.find_struct(ty.name)
 
@@ -570,30 +529,58 @@ class ASTVisitor(Interpreter):
                     arg_tys.pop(0)
                     arg_tys.insert(0, base_struct)
                     mangled_names.append(
-                        mangle_function_name(full_function_name, arg_types, base_struct))
+                        mangle_function_name(function_name, arg_types, base_struct))
         else:
-            mangled_names.append(mangle_function_name(full_function_name, arg_types))
-
-        # Check if it's an instantiation
-        struct = ParserState.find_struct(full_function_name)
-
-        if struct is not None:
-            arguments.append(self.llvmgen.builder.alloca(struct))
-            instantiation = True
+            mangled_names.append(mangle_function_name(function_name, arg_types))
 
         try:
-            call_instr = self.llvmgen.gen_function_call([*mangled_names, full_function_name, function_name], arguments)
+            call_instr = self.llvmgen.gen_function_call([*mangled_names, function_name], arguments)
 
-            if call_instr is None and not instantiation:
+            if call_instr is None:
                 log_fail(f"Failed to generate call to function {function_name}")
+                return NULL
 
-            if instantiation:
-                return arguments[0]
+            return call_instr
+        except IndexError:
+            log_fail(f"Missing argument in function call to function {function_name}")
+
+        return NULL
+
+    def function_call(self, tree: Tree):
+        nodes = tree.children
+        full_function_name: str
+        function_name: str
+
+        # Function call specialisation
+        if isinstance(nodes[0], Tree):
+            return self.visit(nodes[0])
+
+        function_name = nodes[0].value
+        arguments = self.transform_helper(nodes[1])
+
+        arg_types = [arg.type for arg in arguments]
+
+        try:
+            call_instr = self.llvmgen.gen_function_call([mangle_function_name(function_name, arg_types), function_name],
+                                                        arguments)
+
+            if call_instr is None:
+                log_fail(f"Failed to generate call to function {function_name}")
+                return NULL
+
             return call_instr
         except IndexError:
             log_fail("Missing argument in function call")
 
-        return None
+        return NULL
+
+    def function_args(self, tree: Tree):
+        nodes = tree.children
+        arguments = list()
+        for node in nodes:
+            arguments.append(self.transform_helper(node))
+
+        return arguments
 
     def function_decl(self, tree: Tree):
         nodes = tree.children

@@ -3,6 +3,10 @@ use rial:builtin:print;
 use testing:boolean;
 
 public int main() {
+    var a = @"println.i8";
+
+    a("FUNCTION TO VARIABLE ASSIGNMENT BABY");
+
 	println("Hello world!");
 	printInteger(5 < 5+5);
 

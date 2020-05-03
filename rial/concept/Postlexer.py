@@ -1,9 +1,10 @@
 from rial.builtin_type_to_llvm_mapper import map_shortcut_to_type
 from rial.compilation_manager import CompilationManager
+from rial.concept.parser import Token
 
 
 class Postlexer:
-    def identifier(self, token):
+    def identifier(self, token: Token):
         value = token.value
         value = map_shortcut_to_type(value)
 
@@ -29,8 +30,10 @@ class Postlexer:
                     value = "darwin"
                 else:
                     value = triple
+        elif value.startswith("@"):
+            value = value.replace("@\"", "").rstrip("\"")
 
-        token.value = value
+        token = token.update(value=value)
 
         return token
 

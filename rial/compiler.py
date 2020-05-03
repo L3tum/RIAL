@@ -115,6 +115,7 @@ def compiler():
             except Exception as e:
                 log_fail(f"Exception when compiling module {mod.name}")
                 log_fail(e)
+                log_fail(traceback.format_exc())
                 return
 
     object_files: List[str] = list()
@@ -225,7 +226,9 @@ def compile_file(path: str):
             module = CompilationManager.codegen.get_module(module_name, filename,
                                                            str(CompilationManager.config.source_path))
             ParserState.set_module(module)
-            ParserState.usings().extend(CompilationManager.always_imported)
+
+            if not ParserState.module().name.startswith("rial:builtin:always_imported"):
+                ParserState.usings().extend(CompilationManager.always_imported)
 
             # Remove the current module in case it's in the always imported list
             if module_name in ParserState.usings():
@@ -235,8 +238,8 @@ def compile_file(path: str):
                 with open(path, "r") as file:
                     contents = file.read()
 
-            primitive_transformer = PrimitiveASTTransformer()
             desugar_transformer = DesugarTransformer()
+            primitive_transformer = PrimitiveASTTransformer()
             parser = Lark_StandAlone(postlex=Postlexer())
 
             # Parse the file
@@ -256,8 +259,8 @@ def compile_file(path: str):
 
             # Generate primitive IR (things we don't need other modules for)
             with run_with_profiling(filename, ExecutionStep.GEN_IR):
-                ast = primitive_transformer.transform(ast)
                 ast = desugar_transformer.transform(ast)
+                ast = primitive_transformer.transform(ast)
 
             unit = CompilationUnit(ParserState.module(), ParserState.usings(), last_modified, ast)
         else:

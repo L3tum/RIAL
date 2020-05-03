@@ -1,0 +1,5 @@
+external private void @"llvm.donothing"();
+
+public void nop(){
+    @"llvm.donothing"();
+}

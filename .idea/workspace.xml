@@ -19,25 +19,14 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Update">
-      <change afterPath="$PROJECT_DIR$/rial/metadata/RIALFunction.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/metadata/RIALIdentifiedStructType.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/metadata/RIALModule.py" afterDir="false" />
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Improved grammar to improve readability of the AST Visitors">
+      <change afterPath="$PROJECT_DIR$/rial/metadata/RIALValue.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/ASTVisitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ASTVisitor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/Cache.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/Cache.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/LLVMGen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMGen.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/ParserState.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ParserState.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/codegen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/codegen.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/compilation_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compilation_manager.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/compiler.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compiler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/compilation_unit.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/compilation_unit.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/metadata/FunctionDefinition.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/metadata/FunctionDefinition.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/metadata/StructDefinition.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/metadata/StructDefinition.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/profiling.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/profiling.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/util.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing/src/main.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/main.rial" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -87,16 +76,16 @@
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Tom\source\repos\RIAL\fuzzing_in" />
+      <recent name="C:\Users\Tom\source\repos\RIAL\testing\src" />
+      <recent name="C:\Users\Tom\source\repos\RIAL\rial" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\Tom\source\repos\RIAL\rial\builtin\always_imported" />
       <recent name="C:\Users\Tom\source\repos\RIAL\rial\metadata" />
       <recent name="C:\Users\Tom\source\repos\RIAL\rial\linking" />
       <recent name="C:\Users\Tom\source\repos\RIAL\testing\src" />
-    </key>
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="C:\Users\Tom\source\repos\RIAL\fuzzing_in" />
-      <recent name="C:\Users\Tom\source\repos\RIAL\testing\src" />
-      <recent name="C:\Users\Tom\source\repos\RIAL\rial" />
     </key>
   </component>
   <component name="SvnConfiguration">
@@ -199,7 +188,9 @@
       <workItem from="1588146918446" duration="16629000" />
       <workItem from="1588238890206" duration="2022000" />
       <workItem from="1588321512764" duration="100000" />
-      <workItem from="1588321625722" duration="3230000" />
+      <workItem from="1588321625722" duration="9552000" />
+      <workItem from="1588413638585" duration="13615000" />
+      <workItem from="1588497306648" duration="5737000" />
     </task>
     <task id="LOCAL-00001" summary="Update">
       <created>1585486198876</created>
@@ -495,7 +486,28 @@
       <option name="project" value="LOCAL" />
       <updated>1588181716232</updated>
     </task>
-    <option name="localTasksCounter" value="43" />
+    <task id="LOCAL-00043" summary="Update&#10;&#10;Fixed multithreading issues. In particular the GIL caused a lot of lockstep inbetween the various threads which caused a massive slowdown.&#10;Fixed caching. Now structs are also cached and don't throw an exception. Dependencies are also correctly saved and not just the last seen one.&#10;Fixed cache invalidation. Previously it was only checked if the module was about to be compiled, not if it actually was already compiled.&#10;Improved metadata handling. Moved most of the definition metadata into custom subclasses to avoid the parsing overhead and reduce the clutter in the LLVM IR. This also improved the caching situation.&#10;Improved profiling&#10;Refactored a bit to improve readability">
+      <created>1588327509842</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1588327509842</updated>
+    </task>
+    <task id="LOCAL-00044" summary="Allow function declarations and function calls to contain reserved characters if enclosed by @&quot;[name]&quot;&#10;&#10;Closes #45">
+      <created>1588332255362</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1588332255362</updated>
+    </task>
+    <task id="LOCAL-00045" summary="Improved grammar to improve readability of the AST Visitors">
+      <created>1588502077660</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1588502077660</updated>
+    </task>
+    <option name="localTasksCounter" value="46" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -514,9 +526,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Added equality operator&#10;Closes #26" />
-    <MESSAGE value="Added byte and char support&#10;Fixed bug that caused the constructor to not be registered as a function&#10;Theoretically added support for Half&#10;Closes #29" />
-    <MESSAGE value="Removed SingleParserState.py&#10;Added necessary additions as threadlocal storage to ParserState.py&#10;Moved necessary methods to ParserState.py&#10;(Part of an ongoing refactoring process)" />
     <MESSAGE value="Moved function call logic into LLVMGen.py&#10;Added optimization that moves allocas to the top of the function in release mode" />
     <MESSAGE value="Added config file support&#10;Refactored config layout&#10;Refactored main.py to be all about arguments&#10;Closes #10" />
     <MESSAGE value="Fixed a race condition that would confuse LLVM" />
@@ -539,17 +548,20 @@
     <MESSAGE value="Added primitive type casting&#10;Fixed bug in type to LLVM type mapper not handling shortcuts&#10;Removed usage of Literal to support Python3.7&#10;Moved most print-functions into builtin/print.rial" />
     <MESSAGE value="Update&#10;&#10;Moved builtin_types to ParserState.py&#10;Changed builtin and std to now require rial: prefix&#10;Removed cache file hash checking to speed up worst case (and if file modification doesn't match then it most likely changed)&#10;Improved compilation speed when cache is disabled&#10;Improved compatibility with Python versions&#10;&#10;Added ability to work singlethreaded-ish. This was a giant change that completely overhauled the way the compilation units and scheduling was done. Before when a thread encounters a using statement it would block until that using statement was resolved....Now if theres a sufficient number of modules and none of them could completely be resolved you'd get a deadlock. &#10;So now threads pack it all up into compilation_unit.py(s) and start working on other files in a double-list fashion. As a result the in-operation support for resolving uses from function names was removed (it was dumb anyways honestly). There's still a lot to be refactored and improved though, especially in regard to readability.&#10;&#10;Profiler now checks if an event was already recorded and will append the time to the first event" />
     <MESSAGE value="Rewrote threading. It congests less but doesn't work with caching right now. It's also unnecessarily more complex" />
-    <option name="LAST_COMMIT_MESSAGE" value="Rewrote threading. It congests less but doesn't work with caching right now. It's also unnecessarily more complex" />
+    <MESSAGE value="Update&#10;&#10;Fixed multithreading issues. In particular the GIL caused a lot of lockstep inbetween the various threads which caused a massive slowdown.&#10;Fixed caching. Now structs are also cached and don't throw an exception. Dependencies are also correctly saved and not just the last seen one.&#10;Fixed cache invalidation. Previously it was only checked if the module was about to be compiled, not if it actually was already compiled.&#10;Improved metadata handling. Moved most of the definition metadata into custom subclasses to avoid the parsing overhead and reduce the clutter in the LLVM IR. This also improved the caching situation.&#10;Improved profiling&#10;Refactored a bit to improve readability" />
+    <MESSAGE value="Allow function declarations and function calls to contain reserved characters if enclosed by @&quot;[name]&quot;&#10;&#10;Closes #45" />
+    <MESSAGE value="Improved grammar to improve readability of the AST Visitors" />
+    <option name="LAST_COMMIT_MESSAGE" value="Improved grammar to improve readability of the AST Visitors" />
   </component>
   <component name="WindowStateProjectService">
     <state x="906" y="378" key="#Inspections" timestamp="1588322612153">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="906" y="378" key="#Inspections/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588322612153" />
-    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1588154488364">
+    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1588331319127">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588154488364" />
+    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588331319127" />
     <state x="1085" y="416" key="#com.intellij.ide.util.MemberChooser" timestamp="1585056818881">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -583,11 +595,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588321615452" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1588181717301">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1588502079242">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588181717301" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588502079242" />
     <state x="97" y="126" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1588018608203">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -616,18 +628,18 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="374" y="358" width="565" height="560" key="dock-window-3/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584965812228" />
-    <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1587995291338">
+    <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1588513016299">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587995291338" />
+    <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588513016299" />
     <state x="1123" y="472" key="refactoring.ChangeSignatureDialog" timestamp="1586600798541">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="1123" y="472" key="refactoring.ChangeSignatureDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586600798541" />
-    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup" timestamp="1587717774856">
+    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup" timestamp="1588331052919">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="943" y="315" width="672" height="678" key="search.everywhere.popup/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586543449362" />
-    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587717774856" />
+    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588331052919" />
   </component>
 </project>

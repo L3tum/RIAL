@@ -84,7 +84,8 @@ class CodeGen:
         module = RIALModule(name=name)
         module.triple = self.binding.get_default_triple()
         module.data_layout = str(self.target_machine.target_data)
-        module.add_named_metadata('compiler', ('RIALC',))
+        module.add_named_metadata('compiler', ['RIALC', '0.0.1', 'LLVM',
+                                               '.'.join([str(info) for info in self.binding.llvm_version_info])])
 
         di_file = module.add_debug_info("DIFile", {
             "filename": filename,

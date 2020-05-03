@@ -175,3 +175,17 @@ class ParserState:
                 return None
 
         return llvm_type
+
+    @staticmethod
+    def map_type_to_llvm_no_pointer(name: str):
+        llvm_type = map_type_to_llvm(name)
+
+        # Check if builtin type
+        if llvm_type is None:
+            llvm_type = ParserState.find_struct(name)
+
+            if llvm_type is None:
+                log_fail(f"Referenced unknown type {name}")
+                return None
+
+        return llvm_type

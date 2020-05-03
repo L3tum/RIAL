@@ -2,12 +2,14 @@ from typing import Optional, Union, Tuple, List, Dict, Any
 
 from llvmlite import ir
 from llvmlite.ir import IRBuilder, AllocaInstr, Branch, FunctionType, Type, VoidType, PointerType, \
-    Argument, CallInstr, Block
+    Argument, CallInstr, Block, Constant, FormattedConstant
 
 from rial.LLVMBlock import LLVMBlock, create_llvm_block
 from rial.LLVMUIntType import LLVMUIntType
 from rial.ParserState import ParserState
+from rial.builtin_type_to_llvm_mapper import map_llvm_to_type
 from rial.compilation_manager import CompilationManager
+from rial.concept.name_mangler import mangle_function_name
 from rial.metadata.FunctionDefinition import FunctionDefinition
 from rial.metadata.RIALFunction import RIALFunction
 from rial.metadata.RIALIdentifiedStructType import RIALIdentifiedStructType
@@ -44,7 +46,7 @@ class LLVMGen:
                     struct = ParserState.find_struct(variable.type.pointee.name)
 
                     if struct is None:
-                        return None
+                        break
 
                     if not self.check_struct_access_allowed(struct):
                         raise PermissionError(f"Tried accesssing struct {struct.name}")
@@ -52,7 +54,7 @@ class LLVMGen:
                     prop = struct.definition.properties[ident]
 
                     if prop is None:
-                        return None
+                        break
 
                     # Check property access
                     if not self.check_property_access_allowed(struct, prop[1]):
@@ -63,8 +65,16 @@ class LLVMGen:
             else:
                 variable = self.current_block.get_named_value(ident)
 
+                # If variable is none, just do a full search
                 if variable is None:
                     variable = ParserState.module().get_global_safe(ident)
+
+        # If variable is none, just do a full search
+        if variable is None:
+            variable = ParserState.find_function(identifier)
+
+            if variable is None:
+                variable = ParserState.find_function(mangle_function_name(identifier, []))
 
         return variable
 
@@ -206,13 +216,20 @@ class LLVMGen:
     def gen_function_call(self, possible_function_names: List[str],
                           llvm_args: List) -> Optional[CallInstr]:
         func = None
+        # Check if it's actually a local variable
+        for function_name in possible_function_names:
+            var = self.current_block.get_named_value(function_name)
+
+            if var is not None and isinstance(var, ir.PointerType) and isinstance(var.pointee, RIALFunction):
+                func = var.pointee
 
         # Try to find by function name
-        for function_name in possible_function_names:
-            func = ParserState.find_function(function_name)
+        if func is None:
+            for function_name in possible_function_names:
+                func = ParserState.find_function(function_name)
 
-            if func is not None:
-                break
+                if func is not None:
+                    break
 
         if func is None:
             return None
@@ -324,22 +341,42 @@ class LLVMGen:
 
         return False
 
-    def declare_variable(self, identifier: str, variable_type, value, rial_type: str) -> Optional[AllocaInstr]:
+    def declare_variable(self, identifier: str, value) -> Optional[AllocaInstr]:
         variable = self.current_block.get_named_value(identifier)
-
         if variable is not None:
             return None
 
-        if isinstance(variable_type, PointerType) and value is not None and isinstance(value.type, PointerType):
-            variable = value
+        if isinstance(value, CallInstr):
+            func: RIALFunction = value.operands[0]
+            return_type = ParserState.map_type_to_llvm_no_pointer(func.definition.rial_return_type)
+            variable = self.builder.alloca(return_type)
             variable.name = identifier
-        else:
-            variable = self.builder.alloca(variable_type)
-            variable.name = identifier
+            rial_type = f"{func.name}*"
             variable.set_metadata('type',
                                   ParserState.module().add_metadata((rial_type,)))
-            if value is not None:
-                self.builder.store(value, variable)
+        elif isinstance(value, AllocaInstr) or isinstance(value, PointerType):
+            variable = value
+            variable.name = identifier
+        elif isinstance(value, FormattedConstant):
+            variable = self.builder.alloca(value.type.pointee)
+            variable.name = identifier
+            rial_type = f"{map_llvm_to_type(value.type)}"
+            variable.set_metadata('type',
+                                  ParserState.module().add_metadata((rial_type,)))
+            self.builder.store(self.builder.load(value), variable)
+        elif isinstance(value, Constant):
+            variable = self.builder.alloca(value.type)
+            variable.name = identifier
+            rial_type = f"{map_llvm_to_type(value.type)}"
+            variable.set_metadata('type',
+                                  ParserState.module().add_metadata((rial_type,)))
+            self.builder.store(value, variable)
+        else:
+            variable = self.builder.alloca(value.type)
+            variable.name = identifier
+            rial_type = f"{map_llvm_to_type(value.type)}"
+            variable.set_metadata('type', ParserState.module().add_metadata((rial_type,)))
+            self.builder.store(value, variable)
 
         self.current_block.add_named_value(identifier, variable is None and value or variable)
 
@@ -422,6 +459,7 @@ class LLVMGen:
     def create_conditional_jump(self, condition, true_block: LLVMBlock, false_block: LLVMBlock):
         # Check if condition is a variable, we need to load that for LLVM
         condition = self.gen_load_if_necessary(condition)
+
         return self.builder.cbranch(condition, true_block.block, false_block.block)
 
     def create_jump(self, target_block: LLVMBlock):
@@ -473,7 +511,8 @@ class LLVMGen:
 
         # Create base constructor
         function_type = self.create_function_type(ir.VoidType(), [ir.PointerType(struct)], False)
-        func = self.create_function_with_type(f"{name}.constructor", function_type, linkage, "", ["this"],
+        function_name = mangle_function_name("constructor", function_type.args, name)
+        func = self.create_function_with_type(function_name, function_type, linkage, "", ["this"],
                                               FunctionDefinition(name, rial_access_modifier, [("this", name), ],
                                                                  name))
         struct_def.functions.append(func.name)
