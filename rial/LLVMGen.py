@@ -1,15 +1,16 @@
-from typing import Optional, Union, Tuple, List, Dict, Any
+from contextlib import contextmanager
+from typing import Optional, Union, Tuple, List, Any
 
 from llvmlite import ir
 from llvmlite.ir import IRBuilder, AllocaInstr, Branch, FunctionType, Type, VoidType, PointerType, \
-    Argument, CallInstr, Block, Constant, FormattedConstant
+    Argument, CallInstr, Block, Constant, FormattedConstant, BaseStructType
 
 from rial.LLVMBlock import LLVMBlock, create_llvm_block
 from rial.LLVMUIntType import LLVMUIntType
 from rial.ParserState import ParserState
-from rial.builtin_type_to_llvm_mapper import map_llvm_to_type
+from rial.builtin_type_to_llvm_mapper import map_llvm_to_type, null, NULL
 from rial.compilation_manager import CompilationManager
-from rial.concept.name_mangler import mangle_function_name
+from rial.concept.name_mangler import mangle_function_name, mangle_global_name
 from rial.metadata.FunctionDefinition import FunctionDefinition
 from rial.metadata.RIALFunction import RIALFunction
 from rial.metadata.RIALIdentifiedStructType import RIALIdentifiedStructType
@@ -25,7 +26,6 @@ class LLVMGen:
     end_block: Optional[LLVMBlock]
     current_block: Optional[LLVMBlock]
     current_struct: Optional[RIALIdentifiedStructType]
-    global_variables: Dict
 
     def __init__(self):
         self.current_block = None
@@ -34,7 +34,6 @@ class LLVMGen:
         self.current_func = None
         self.builder = None
         self.current_struct = None
-        self.global_variables = dict()
 
     def get_var(self, identifier: str):
         identifiers = identifier.split('.')
@@ -65,9 +64,29 @@ class LLVMGen:
             else:
                 variable = self.current_block.get_named_value(ident)
 
-                # If variable is none, just do a full search
+                # Search for a global variable
                 if variable is None:
-                    variable = ParserState.module().get_global_safe(ident)
+                    glob = ParserState.find_global(ident)
+
+                    if glob is not None:
+                        if glob.module_name != ParserState.module().name:
+                            variable = self.gen_global(glob.name, None, glob.backing_value.type,
+                                                       glob.access_modifier, glob.access_modifier.get_linkage(),
+                                                       glob.backing_value.global_constant)
+                        else:
+                            variable = glob.backing_value
+
+        # Search for a global variable
+        if variable is None:
+            glob = ParserState.find_global(ident)
+
+            if glob is not None:
+                if glob.module_name != ParserState.module().name:
+                    variable = self.gen_global(glob.name, None, glob.backing_value.type,
+                                               glob.access_modifier, glob.access_modifier.get_linkage(),
+                                               glob.backing_value.global_constant)
+                else:
+                    variable = glob.backing_value
 
         # If variable is none, just do a full search
         if variable is None:
@@ -92,11 +111,22 @@ class LLVMGen:
 
     def gen_global(self, name: str, value: ir.Constant, ty: Type, access_modifier: RIALAccessModifier, linkage: str,
                    constant: bool):
+        mangled_name = mangle_global_name(ParserState.module().name, name)
+        rial_variable = ParserState.module().get_rial_variable(mangled_name)
+
+        if rial_variable is not None:
+            return rial_variable.backing_value
+
         glob = ir.GlobalVariable(ParserState.module(), ty, name=name)
         glob.linkage = linkage
-        glob.unnamed_addr = True
         glob.global_constant = constant
-        glob.initializer = value
+
+        if value is not None:
+            glob.initializer = value
+
+        rial_variable = RIALVariable(mangled_name, ParserState.module().name, map_llvm_to_type(ty), glob,
+                                     access_modifier)
+        ParserState.module().global_variables.append(rial_variable)
 
         return glob
 
@@ -245,15 +275,16 @@ class LLVMGen:
 
         args = list()
 
-        # Gen a load if it doesn't expect a pointer
+        # Gen a load if necessary
         for i, arg in enumerate(llvm_args):
-            # If it's a variable and the function doesn't expect a pointer we _need_ to load it
-            if isinstance(arg, AllocaInstr) and (len(func.args) <= i or not isinstance(func.args[i].type, PointerType)):
-                args.append(self.gen_load_if_necessary(arg))
-            elif len(func.args) > i and not isinstance(func.args[i].type, PointerType):
-                args.append(self.gen_load_if_necessary(arg))
-            else:
+            rial_arg = func.definition.rial_args[i][0]
+            llvm_arg = ParserState.map_type_to_llvm(rial_arg)
+
+            if llvm_arg == arg.type:
                 args.append(arg)
+                continue
+
+            args.append(self.builder.load(arg))
 
         # Check type matching
         for i, arg in enumerate(args):
@@ -341,6 +372,46 @@ class LLVMGen:
 
         return False
 
+    def declare_non_constant_global_variable(self, identifier: str, value, access_modifier: RIALAccessModifier,
+                                             linkage: str):
+        """
+        Needs to be called with create_in_global_ctor or otherwise the store/load operations are going to fail.
+        :param identifier:
+        :param value:
+        :param access_modifier:
+        :param linkage:
+        :return:
+        """
+        if ParserState.module().get_global_safe(identifier) is not None:
+            return None
+
+        if self.current_func.name != "global_ctor":
+            return None
+
+        if isinstance(value, CallInstr):
+            func: RIALFunction = value.operands[0]
+            return_type = ParserState.map_type_to_llvm_no_pointer(func.definition.rial_return_type)
+            variable = self.gen_global(identifier, null(return_type), return_type, access_modifier, linkage, False)
+
+            if isinstance(return_type, BaseStructType):
+                value = self.builder.load(value)
+        elif isinstance(value, AllocaInstr) or isinstance(value, PointerType):
+            variable = self.gen_global(identifier, null(value.pointee.type), value.pointee.type, access_modifier,
+                                       linkage, False)
+            value = self.builder.load(value)
+        elif isinstance(value, FormattedConstant):
+            variable = self.gen_global(identifier, null(value.type.pointee), value.type.pointee, access_modifier,
+                                       linkage, False)
+            value = self.builder.load(value)
+        elif isinstance(value, Constant):
+            variable = self.gen_global(identifier, null(value.type), value.type, access_modifier, linkage, False)
+        else:
+            variable = self.gen_global(identifier, null(value.type), value.type, access_modifier, linkage, False)
+
+        self.builder.store(value, variable)
+
+        return variable
+
     def declare_variable(self, identifier: str, value) -> Optional[AllocaInstr]:
         variable = self.current_block.get_named_value(identifier)
         if variable is not None:
@@ -351,9 +422,14 @@ class LLVMGen:
             return_type = ParserState.map_type_to_llvm_no_pointer(func.definition.rial_return_type)
             variable = self.builder.alloca(return_type)
             variable.name = identifier
-            rial_type = f"{func.name}*"
+            rial_type = f"{return_type}*"
             variable.set_metadata('type',
                                   ParserState.module().add_metadata((rial_type,)))
+
+            if isinstance(return_type, BaseStructType):
+                self.builder.store(self.builder.load(value), variable)
+            else:
+                self.builder.store(value, variable)
         elif isinstance(value, AllocaInstr) or isinstance(value, PointerType):
             variable = value
             variable.name = identifier
@@ -513,7 +589,7 @@ class LLVMGen:
         function_type = self.create_function_type(ir.VoidType(), [ir.PointerType(struct)], False)
         function_name = mangle_function_name("constructor", function_type.args, name)
         func = self.create_function_with_type(function_name, function_type, linkage, "", ["this"],
-                                              FunctionDefinition(name, rial_access_modifier, [("this", name), ],
+                                              FunctionDefinition(name, rial_access_modifier, [(name, "this"), ],
                                                                  name))
         struct_def.functions.append(func.name)
         self.create_function_body(func, [name])
@@ -529,7 +605,7 @@ class LLVMGen:
             index = props_def[bod.name][0]
             loaded_var = self.builder.gep(self_value,
                                           [ir.Constant(ir.IntType(32), 0), ir.Constant(ir.IntType(32), index)])
-            self.builder.store(bod.initial_value, loaded_var)
+            self.builder.store(bod.backing_value, loaded_var)
 
         # Store def in metadata
         struct.definition = struct_def
@@ -643,3 +719,49 @@ class LLVMGen:
 
     def create_function_type(self, llvm_return_type: Type, llvm_arg_types: List[Type], var_args: bool):
         return ir.FunctionType(llvm_return_type, tuple(llvm_arg_types), var_arg=var_args)
+
+    @contextmanager
+    def create_in_global_ctor(self):
+        current_block = self.current_block
+        current_func = self.current_func
+        current_struct = self.current_struct
+        conditional_block = self.conditional_block
+        end_block = self.end_block
+        pos = self.builder is not None and self.builder._anchor or 0
+
+        func = ParserState.module().get_global_safe('global_ctor')
+
+        if func is None:
+            func_type = self.create_function_type(ir.VoidType(), [], False)
+            func = self.create_function_with_type('global_ctor', func_type, "internal", "ccc", [],
+                                                  FunctionDefinition('void'))
+            self.create_function_body(func, [])
+            struct_type = ir.LiteralStructType([ir.IntType(32), func_type.as_pointer(), ir.IntType(8).as_pointer()])
+            glob_value = ir.Constant(ir.ArrayType(struct_type, 1), [ir.Constant.literal_struct(
+                [ir.Constant(ir.IntType(32), 65535), func, NULL])])
+            glob_type = ir.ArrayType(struct_type, 1)
+
+            self.gen_global("llvm.global_ctors", glob_value, glob_type, RIALAccessModifier.PRIVATE, "appending", False)
+        else:
+            self.builder.position_before(func.entry_basic_block.terminator)
+            self.current_func = func
+            self.current_block = create_llvm_block(func.entry_basic_block)
+
+        self.current_struct = None
+        self.conditional_block = None
+        self.end_block = None
+
+        yield
+
+        self.finish_current_block()
+        self.finish_current_func()
+
+        self.current_block = current_block
+        self.current_func = current_func
+        self.current_struct = current_struct
+        self.conditional_block = conditional_block
+        self.end_block = end_block
+        self.builder._anchor = pos
+        self.builder._block = self.current_block is not None and self.current_block.block or None
+
+        return

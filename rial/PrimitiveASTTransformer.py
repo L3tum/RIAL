@@ -77,13 +77,7 @@ class PrimitiveASTTransformer(Transformer_InPlaceRecursive):
     def string(self, nodes) -> GlobalVariable:
         value = nodes[0].value.strip("\"")
         name = ".const.string.%s" % good_hash(value)
-        glob = None
-
-        if any(global_variable == name for global_variable in self.llvmgen.global_variables.keys()):
-            glob = self.llvmgen.global_variables.get(name)
-        else:
-            glob = self.llvmgen.gen_string_lit(name, value)
-            self.llvmgen.global_variables[name] = glob
+        glob = self.llvmgen.gen_string_lit(name, value)
 
         # Get pointer to first element
         # TODO: Change to return array and check in method signature for c-type stringiness

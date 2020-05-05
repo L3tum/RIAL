@@ -1,11 +1,16 @@
 use testing:print;
 use rial:builtin:print;
 use testing:boolean;
+use rial:builtin:system;
+
+var glob = GetOSInformation();
 
 public int main() {
     var a = @"println.i8";
 
     a("FUNCTION TO VARIABLE ASSIGNMENT BABY");
+
+    println(glob.identifier);
 
 	println("Hello world!");
 	printInteger(5 < 5+5);

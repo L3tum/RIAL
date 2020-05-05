@@ -6,7 +6,7 @@ internal void printBoolean(bool boolean){
      uwu
      whats dis
     */
-    var info = GetOsInformation();
+    var info = GetOSInformation();
 
     if(info.linux){
         println("Hello Linux!");

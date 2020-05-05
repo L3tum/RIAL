@@ -48,8 +48,9 @@ class StructDeclarationTransformer(Transformer_InPlaceRecursive):
                 if len(variable) > 3:
                     variable_value = variable[3]
 
-                body.append(RIALVariable(variable_name, rial_type, initial_value=variable_value,
-                                         access_modifier=acc_modifier))
+                body.append(
+                    RIALVariable(variable_name, ParserState.module().name, rial_type, backing_value=variable_value,
+                                 access_modifier=acc_modifier))
             elif isinstance(node, Tree) and node.data == "function_decl":
                 function_decls.append(node)
             elif isinstance(node, Token) and node.type == "IDENTIFIER":

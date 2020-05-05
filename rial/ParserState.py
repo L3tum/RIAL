@@ -2,16 +2,17 @@ import threading
 from typing import Optional, List, Tuple, Dict
 
 from llvmlite import ir
-from llvmlite.ir import Function
 
 from rial.builtin_type_to_llvm_mapper import map_type_to_llvm
 from rial.compilation_manager import CompilationManager
+from rial.concept.name_mangler import mangle_global_name
 from rial.log import log_fail
 from rial.metadata.FunctionDefinition import FunctionDefinition
 from rial.metadata.RIALFunction import RIALFunction
 from rial.metadata.RIALIdentifiedStructType import RIALIdentifiedStructType
 from rial.metadata.RIALModule import RIALModule
 from rial.rial_types.RIALAccessModifier import RIALAccessModifier
+from rial.rial_types.RIALVariable import RIALVariable
 
 
 class ParserState:
@@ -51,37 +52,63 @@ class ParserState:
         return cls.threadLocalModule.module
 
     @staticmethod
-    def search_function(name: str) -> Optional[RIALFunction]:
-        # Check if cached
-        if name in ParserState.cached_functions:
-            return ParserState.cached_functions[name]
-
-        # Check if in current module
-        func = ParserState.module().get_global_safe(name)
-
-        if func is None:
-            mods = dict(CompilationManager.modules)
-
-            for key, mod in mods.items():
-                func = mod.get_global_safe(name)
-
-                if func is not None:
-                    break
-
-        if func is not None:
-            ParserState.cached_functions[name] = func
-
-        return func
-
-    @staticmethod
     def search_structs(name: str) -> Optional[RIALIdentifiedStructType]:
         # Does a global search.
         return ParserState.module().context.get_identified_type_if_exists(name)
 
     @staticmethod
+    def find_global(name: str) -> Optional[RIALVariable]:
+        # Search with just its name
+        glob: RIALVariable = ParserState.module().get_rial_variable(name)
+
+        # Search with specifier
+        if glob is None and ':' in name:
+            module_name = ':'.join(name.split(':')[0:-1])
+
+            CompilationManager.request_module(module_name)
+            CompilationManager.wait_for_module_compiled(module_name)
+
+            glob = CompilationManager.modules[CompilationManager.path_from_mod_name(module_name)].get_rial_variable(
+                name)
+
+        # Search with module specifier
+        if glob is None:
+            glob = ParserState.module().get_rial_variable(mangle_global_name(ParserState.module().name, name))
+
+        # Go through usings to find it
+        if glob is None:
+            globs_found: List[Tuple] = list()
+            for using in ParserState.usings():
+                module = CompilationManager.modules[CompilationManager.path_from_mod_name(using)]
+                gl = module.get_rial_variable(name)
+
+                if gl is None:
+                    gl = module.get_rial_variable(mangle_global_name(using, name))
+
+                if gl is not None:
+                    globs_found.append((using, gl))
+
+            if len(globs_found) == 0:
+                return None
+
+            if len(globs_found) > 1:
+                raise KeyError(name)
+
+            glob = globs_found[0][1]
+
+            if glob.access_modifier.PRIVATE:
+                raise PermissionError(name)
+
+            if glob.access_modifier.INTERNAL and glob.module_name.split(':')[0] != ParserState.module().name.split(':')[
+                0]:
+                raise PermissionError(name)
+
+        return glob
+
+    @staticmethod
     def find_function(full_function_name: str) -> Optional[RIALFunction]:
         # Try to find function in current module
-        func = ParserState.module().get_global_safe(full_function_name)
+        func: RIALFunction = ParserState.module().get_global_safe(full_function_name)
 
         # Try to find function in current module with module specifier
         if func is None:
@@ -89,15 +116,17 @@ class ParserState:
 
         # If func isn't in current module
         if func is None:
-            # Try to find function by full name
-            func = ParserState.search_function(full_function_name)
-
             # If couldn't find it, iterate through usings and try to find function
             if func is None:
-                functions_found: List[Tuple[str, Function]] = list()
+                functions_found: List[Tuple[str, RIALFunction]] = list()
 
                 for use in ParserState.usings():
-                    function = ParserState.search_function(f"{use}:{full_function_name}")
+                    module = CompilationManager.modules[CompilationManager.path_from_mod_name(use)]
+                    function = module.get_global_safe(full_function_name)
+
+                    if function is None:
+                        function = module.get_global_safe(f"{use}:{full_function_name}")
+
                     if function is None:
                         continue
                     functions_found.append((use, function,))

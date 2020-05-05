@@ -11,6 +11,10 @@ TRUE = ir.Constant(ir.IntType(1), 1)
 FALSE = ir.Constant(ir.IntType(1), 0)
 
 
+def null(ty):
+    return ir.Constant(ty, None)
+
+
 def is_builtin_type(ty: str):
     return ty in ("Int32", "Int64", "UInt64", "UInt64", "Double64", "Float32", "Boolean", "Byte", "Char", "Half")
 

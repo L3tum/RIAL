@@ -10,7 +10,7 @@ public struct OSInformation{
 
 var test = 500;
 
-public OSInformation GetOsInformation(){
+public OSInformation GetOSInformation(){
     test = 50;
     printDouble((double) test.ToLong());
 

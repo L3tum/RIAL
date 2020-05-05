@@ -137,7 +137,12 @@ class ASTVisitor(Interpreter):
                 variable_value = variable_value.initializer
                 variable_type = variable_value.initializer.type
             else:
-                raise PermissionError("Global variables can only be of constant types right now")
+                with self.llvmgen.create_in_global_ctor():
+                    variable_value = self.visit(nodes[2])
+                    glob = self.llvmgen.declare_non_constant_global_variable(variable_name, variable_value, access_modifier,
+                                                                "private")
+                return glob
+                # raise PermissionError("Global variables can only be of constant types right now")
 
         glob = self.llvmgen.gen_global(variable_name, variable_value, variable_type, access_modifier,
                                        access_modifier.get_linkage(),
