@@ -38,7 +38,7 @@ return_rule : "return" ";"
 shorthand_if : "if" expression "?" expression ":" expression
 
 // Variables
-global_variable_decl : variable_decl ";"
+global_variable_decl : modifier variable_decl ";"
 variable_decl : "var" IDENTIFIER ASSIGN expression
 variable_assignment : var ASSIGN expression
 

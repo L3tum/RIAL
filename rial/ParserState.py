@@ -96,11 +96,12 @@ class ParserState:
 
             glob = globs_found[0][1]
 
-            if glob.access_modifier.PRIVATE:
+            if glob.access_modifier == RIALAccessModifier.PRIVATE:
                 raise PermissionError(name)
 
-            if glob.access_modifier.INTERNAL and glob.module_name.split(':')[0] != ParserState.module().name.split(':')[
-                0]:
+            if glob.access_modifier == RIALAccessModifier.INTERNAL and glob.module_name.split(':')[0] != \
+                    ParserState.module().name.split(':')[
+                        0]:
                 raise PermissionError(name)
 
         return glob

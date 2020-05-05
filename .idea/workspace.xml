@@ -19,19 +19,15 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Inlined an import to avoid errors for an optional target">
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Implemented globals for non-constant values&#10;Refactored function finding which nets a small performance plus&#10;Fixed a bug in default constructor generation mixing up type and name&#10;Closes #37">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/ASTVisitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ASTVisitor.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/LLVMGen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMGen.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/ParserState.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ParserState.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/builtin/system.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin/system.rial" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/name_mangler.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/name_mangler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/metadata/RIALModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/metadata/RIALModule.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/rial_types/RIALVariable.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/rial_types/RIALVariable.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/src/boolean.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/boolean.rial" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/testing/src/main.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/main.rial" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -198,7 +194,7 @@
       <workItem from="1588413638585" duration="13615000" />
       <workItem from="1588497306648" duration="5737000" />
       <workItem from="1588581475090" duration="9813000" />
-      <workItem from="1588664857020" duration="6172000" />
+      <workItem from="1588664857020" duration="8162000" />
     </task>
     <task id="LOCAL-00001" summary="Update">
       <created>1585486198876</created>
@@ -522,7 +518,14 @@
       <option name="project" value="LOCAL" />
       <updated>1588521955131</updated>
     </task>
-    <option name="localTasksCounter" value="47" />
+    <task id="LOCAL-00047" summary="Implemented globals for non-constant values&#10;Refactored function finding which nets a small performance plus&#10;Fixed a bug in default constructor generation mixing up type and name&#10;Closes #37">
+      <created>1588672315032</created>
+      <option name="number" value="00047" />
+      <option name="presentableId" value="LOCAL-00047" />
+      <option name="project" value="LOCAL" />
+      <updated>1588672315032</updated>
+    </task>
+    <option name="localTasksCounter" value="48" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -541,7 +544,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Added config file support&#10;Refactored config layout&#10;Refactored main.py to be all about arguments&#10;Closes #10" />
     <MESSAGE value="Fixed a race condition that would confuse LLVM" />
     <MESSAGE value="Fixed passing variables to functions" />
     <MESSAGE value="Fixed access control for functions" />
@@ -566,7 +568,8 @@
     <MESSAGE value="Allow function declarations and function calls to contain reserved characters if enclosed by @&quot;[name]&quot;&#10;&#10;Closes #45" />
     <MESSAGE value="Improved grammar to improve readability of the AST Visitors" />
     <MESSAGE value="Inlined an import to avoid errors for an optional target" />
-    <option name="LAST_COMMIT_MESSAGE" value="Inlined an import to avoid errors for an optional target" />
+    <MESSAGE value="Implemented globals for non-constant values&#10;Refactored function finding which nets a small performance plus&#10;Fixed a bug in default constructor generation mixing up type and name&#10;Closes #37" />
+    <option name="LAST_COMMIT_MESSAGE" value="Implemented globals for non-constant values&#10;Refactored function finding which nets a small performance plus&#10;Fixed a bug in default constructor generation mixing up type and name&#10;Closes #37" />
   </component>
   <component name="WindowStateProjectService">
     <state x="906" y="378" key="#Inspections" timestamp="1588322612153">
@@ -594,27 +597,27 @@
     </state>
     <state x="905" y="294" key="CommitChangelistDialog2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532721340" />
     <state x="753" y="288" width="1109" height="863" key="CommitChangelistDialog2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586767099729" />
-    <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog" timestamp="1588669001160">
+    <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog" timestamp="1588673334795">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588669001160" />
+    <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588673334795" />
     <state x="1059" y="474" key="FileChooserDialogImpl" timestamp="1584793819636">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="1059" y="474" key="FileChooserDialogImpl/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584793819636" />
-    <state x="1106" y="402" key="RollbackChangesDialog" timestamp="1587976912259">
+    <state x="1106" y="402" key="RollbackChangesDialog" timestamp="1588673324792">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="1106" y="402" key="RollbackChangesDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587976912259" />
+    <state x="1106" y="402" key="RollbackChangesDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588673324792" />
     <state x="781" y="342" key="SettingsEditor" timestamp="1588321615452">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588321615452" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1588521956165">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1588672316461">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588521956165" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588672316461" />
     <state x="97" y="126" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1588018608203">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -643,10 +646,10 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="374" y="358" width="565" height="560" key="dock-window-3/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584965812228" />
-    <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1588668948351">
+    <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1588673815092">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588668948351" />
+    <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588673815092" />
     <state x="1123" y="472" key="refactoring.ChangeSignatureDialog" timestamp="1586600798541">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

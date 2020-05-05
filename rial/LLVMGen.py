@@ -10,7 +10,7 @@ from rial.LLVMUIntType import LLVMUIntType
 from rial.ParserState import ParserState
 from rial.builtin_type_to_llvm_mapper import map_llvm_to_type, null, NULL
 from rial.compilation_manager import CompilationManager
-from rial.concept.name_mangler import mangle_function_name, mangle_global_name
+from rial.concept.name_mangler import mangle_function_name
 from rial.metadata.FunctionDefinition import FunctionDefinition
 from rial.metadata.RIALFunction import RIALFunction
 from rial.metadata.RIALIdentifiedStructType import RIALIdentifiedStructType
@@ -35,65 +35,62 @@ class LLVMGen:
         self.builder = None
         self.current_struct = None
 
-    def get_var(self, identifier: str):
-        identifiers = identifier.split('.')
-        variable = None
+    def _get_by_identifier(self, identifier: str, variable: Optional = None) -> Optional:
+        if not variable is None and isinstance(variable.type, PointerType):
+            if isinstance(variable.type.pointee, RIALIdentifiedStructType):
+                struct = ParserState.find_struct(variable.type.pointee.name)
 
-        for ident in identifiers:
-            if not variable is None and isinstance(variable.type, PointerType):
-                if isinstance(variable.type.pointee, RIALIdentifiedStructType):
-                    struct = ParserState.find_struct(variable.type.pointee.name)
+                if struct is None:
+                    return None
 
-                    if struct is None:
-                        break
+                if not self.check_struct_access_allowed(struct):
+                    raise PermissionError(f"Tried accesssing struct {struct.name}")
 
-                    if not self.check_struct_access_allowed(struct):
-                        raise PermissionError(f"Tried accesssing struct {struct.name}")
+                prop = struct.definition.properties[identifier]
 
-                    prop = struct.definition.properties[ident]
+                if prop is None:
+                    return None
 
-                    if prop is None:
-                        break
+                # Check property access
+                if not self.check_property_access_allowed(struct, prop[1]):
+                    raise PermissionError(f"Tried to access property {prop[1].name} but it was not allowed!")
 
-                    # Check property access
-                    if not self.check_property_access_allowed(struct, prop[1]):
-                        raise PermissionError(f"Tried to access property {prop[1].name} but it was not allowed!")
+                variable = self.builder.gep(variable, [ir.Constant(ir.IntType(32), 0),
+                                                       ir.Constant(ir.IntType(32), prop[0])])
+        else:
+            variable = self.current_block.get_named_value(identifier)
 
-                    variable = self.builder.gep(variable, [ir.Constant(ir.IntType(32), 0),
-                                                           ir.Constant(ir.IntType(32), prop[0])])
-            else:
-                variable = self.current_block.get_named_value(ident)
+            # Search for a global variable
+            if variable is None:
+                glob = ParserState.find_global(identifier)
 
-                # Search for a global variable
-                if variable is None:
-                    glob = ParserState.find_global(ident)
+                if glob is not None:
+                    if glob.module_name != ParserState.module().name:
+                        variable = self.gen_global(glob.name, None, glob.backing_value.type.pointee,
+                                                   glob.access_modifier, "external",
+                                                   glob.backing_value.global_constant)
+                    else:
+                        variable = glob.backing_value
 
-                    if glob is not None:
-                        if glob.module_name != ParserState.module().name:
-                            variable = self.gen_global(glob.name, None, glob.backing_value.type,
-                                                       glob.access_modifier, glob.access_modifier.get_linkage(),
-                                                       glob.backing_value.global_constant)
-                        else:
-                            variable = glob.backing_value
-
-        # Search for a global variable
-        if variable is None:
-            glob = ParserState.find_global(ident)
-
-            if glob is not None:
-                if glob.module_name != ParserState.module().name:
-                    variable = self.gen_global(glob.name, None, glob.backing_value.type,
-                                               glob.access_modifier, glob.access_modifier.get_linkage(),
-                                               glob.backing_value.global_constant)
-                else:
-                    variable = glob.backing_value
-
-        # If variable is none, just do a full search
+        # If variable is none, just do a full function search
         if variable is None:
             variable = ParserState.find_function(identifier)
 
             if variable is None:
                 variable = ParserState.find_function(mangle_function_name(identifier, []))
+
+        return variable
+
+    def get_var(self, identifier: str):
+        identifiers = identifier.split('.')
+        variable = None
+
+        for ident in identifiers:
+            variable = self._get_by_identifier(ident, variable)
+
+        # Search for a global variable
+        if variable is None:
+            variable = self._get_by_identifier(identifier, variable)
 
         return variable
 
@@ -109,10 +106,10 @@ class LLVMGen:
     def gen_double(self, number: float):
         return ir.Constant(ir.DoubleType(), number)
 
-    def gen_global(self, name: str, value: ir.Constant, ty: Type, access_modifier: RIALAccessModifier, linkage: str,
+    def gen_global(self, name: str, value: Optional[ir.Constant], ty: Type, access_modifier: RIALAccessModifier,
+                   linkage: str,
                    constant: bool):
-        mangled_name = mangle_global_name(ParserState.module().name, name)
-        rial_variable = ParserState.module().get_rial_variable(mangled_name)
+        rial_variable = ParserState.module().get_rial_variable(name)
 
         if rial_variable is not None:
             return rial_variable.backing_value
@@ -124,7 +121,7 @@ class LLVMGen:
         if value is not None:
             glob.initializer = value
 
-        rial_variable = RIALVariable(mangled_name, ParserState.module().name, map_llvm_to_type(ty), glob,
+        rial_variable = RIALVariable(name, ParserState.module().name, map_llvm_to_type(ty), glob,
                                      access_modifier)
         ParserState.module().global_variables.append(rial_variable)
 

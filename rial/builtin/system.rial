@@ -8,12 +8,9 @@ public struct OSInformation{
     public CString identifier = #targetOS;
 }
 
-var test = 500;
+public var os_information = GetOSInformation();
 
 public OSInformation GetOSInformation(){
-    test = 50;
-    printDouble((double) test.ToLong());
-
     var info = new OSInformation();
     var os = #targetOS;
 
