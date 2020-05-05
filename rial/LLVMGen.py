@@ -451,7 +451,7 @@ class LLVMGen:
             variable.set_metadata('type', ParserState.module().add_metadata((rial_type,)))
             self.builder.store(value, variable)
 
-        self.current_block.add_named_value(identifier, variable is None and value or variable)
+        self.current_block.add_named_value(identifier, variable)
 
         return variable
 

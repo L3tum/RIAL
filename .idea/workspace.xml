@@ -19,16 +19,19 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Implemented globals for non-constant values&#10;Refactored function finding which nets a small performance plus&#10;Fixed a bug in default constructor generation mixing up type and name&#10;Closes #37">
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Implemented access modifiers for globals&#10;Fixed bugs concerning name mangling for globals&#10;Refactored global finding for easier readability">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/ASTVisitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ASTVisitor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pytest.ini" beforeDir="false" afterPath="$PROJECT_DIR$/pytest.ini" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/LLVMGen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMGen.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/ParserState.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ParserState.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/builtin/system.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin/system.rial" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/builtin/print.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin/print.rial" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/compiler.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compiler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/concept/ordered_set_queue.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/ordered_set_queue.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/testing/src/main.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/main.rial" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_1point5millionprintfs.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_1point5millionprintfs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_basic_arithmetic.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_basic_arithmetic.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_external_function.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_hello_world.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_hello_world.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -194,7 +197,7 @@
       <workItem from="1588413638585" duration="13615000" />
       <workItem from="1588497306648" duration="5737000" />
       <workItem from="1588581475090" duration="9813000" />
-      <workItem from="1588664857020" duration="8162000" />
+      <workItem from="1588664857020" duration="12163000" />
     </task>
     <task id="LOCAL-00001" summary="Update">
       <created>1585486198876</created>
@@ -525,7 +528,14 @@
       <option name="project" value="LOCAL" />
       <updated>1588672315032</updated>
     </task>
-    <option name="localTasksCounter" value="48" />
+    <task id="LOCAL-00048" summary="Implemented access modifiers for globals&#10;Fixed bugs concerning name mangling for globals&#10;Refactored global finding for easier readability">
+      <created>1588674346457</created>
+      <option name="number" value="00048" />
+      <option name="presentableId" value="LOCAL-00048" />
+      <option name="project" value="LOCAL" />
+      <updated>1588674346457</updated>
+    </task>
+    <option name="localTasksCounter" value="49" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -544,7 +554,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Fixed a race condition that would confuse LLVM" />
     <MESSAGE value="Fixed passing variables to functions" />
     <MESSAGE value="Fixed access control for functions" />
     <MESSAGE value="Added option to use LLVM bitcode files instead of object files&#10;Switched to prefer Clang but with GCC fallback&#10;Added config validation&#10;Added struct access control&#10;Fixed config merging use a wrong order&#10;&#10;Overall Clang nets around 0.1 seconds in the testing/ test&#10;However, LLLVM bitcode produces larger binaries than using object files. Not sure why." />
@@ -569,7 +578,8 @@
     <MESSAGE value="Improved grammar to improve readability of the AST Visitors" />
     <MESSAGE value="Inlined an import to avoid errors for an optional target" />
     <MESSAGE value="Implemented globals for non-constant values&#10;Refactored function finding which nets a small performance plus&#10;Fixed a bug in default constructor generation mixing up type and name&#10;Closes #37" />
-    <option name="LAST_COMMIT_MESSAGE" value="Implemented globals for non-constant values&#10;Refactored function finding which nets a small performance plus&#10;Fixed a bug in default constructor generation mixing up type and name&#10;Closes #37" />
+    <MESSAGE value="Implemented access modifiers for globals&#10;Fixed bugs concerning name mangling for globals&#10;Refactored global finding for easier readability" />
+    <option name="LAST_COMMIT_MESSAGE" value="Implemented access modifiers for globals&#10;Fixed bugs concerning name mangling for globals&#10;Refactored global finding for easier readability" />
   </component>
   <component name="WindowStateProjectService">
     <state x="906" y="378" key="#Inspections" timestamp="1588322612153">
@@ -613,11 +623,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588321615452" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1588672316461">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1588674347417">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588672316461" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588674347417" />
     <state x="97" y="126" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1588018608203">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

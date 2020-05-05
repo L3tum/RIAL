@@ -48,6 +48,9 @@ def compiler():
     if not path.exists():
         raise FileNotFoundError(str(path))
 
+    context.global_context.scope._useset.clear()
+    context.global_context.identified_types.clear()
+
     # Collect all always imported paths
     builtin_path = str(CompilationManager.config.rial_path.joinpath("builtin").joinpath("always_imported"))
     for file in [join(builtin_path, f) for f in listdir(builtin_path) if isfile(join(builtin_path, f))]:

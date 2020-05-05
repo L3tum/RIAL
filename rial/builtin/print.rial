@@ -28,6 +28,10 @@ public void println(CString arg){
     printf("%s \n", arg);
 }
 
+public void println(int arg){
+    printf("%i \n", arg);
+}
+
 public void print(CString arg){
     printf(arg);
 }

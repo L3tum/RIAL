@@ -126,4 +126,9 @@ def map_llvm_to_type(llvm_type: Type):
     if isinstance(llvm_type, ir.VoidType):
         return "void"
 
+    if isinstance(llvm_type, ir.PointerType):
+        if isinstance(llvm_type.pointee, ir.IntType):
+            if llvm_type.pointee.width == 8:
+                return "CString"
+
     return llvm_type

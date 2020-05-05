@@ -5,7 +5,7 @@ import unittest
 
 from unittest.mock import patch
 
-from rial.main import parse_arguments, main
+from rial.main import start
 
 
 class TestBasicArithmetic(unittest.TestCase):
@@ -25,12 +25,12 @@ class TestBasicArithmetic(unittest.TestCase):
             os.mkdir(cls.src_path)
 
         with open(cls.main_file, "w") as file:
-            file.write("external void printf(CString format, params CString args);\n")
-            file.write("void main() {\n")
-            file.write('\tprintf("%i \\n\\0", 5 + 5);\n')
-            file.write('\tprintf("%i \\n\\0", 5 - 5);\n')
-            file.write('\tprintf("%i \\n\\0", 5 * 5);\n')
-            file.write('\tprintf("%i \\n\\0", 5 / 5);\n')
+            file.write("use rial:builtin:print;\n")
+            file.write("public void main() {\n")
+            file.write('\tprintln(5 + 5);\n')
+            file.write('\tprintln(5 - 5);\n')
+            file.write('\tprintln(5 * 5);\n')
+            file.write('\tprintln(5 / 5);\n')
             file.write("}\n")
 
     @classmethod
@@ -40,10 +40,9 @@ class TestBasicArithmetic(unittest.TestCase):
     def test_correct_ir(self):
         testargs = ['prog', '--workdir', self.dir_path, '--opt-level', 0, '--print-ir']
         with patch.object(sys, 'argv', testargs):
-            opts = parse_arguments()
-            main()
+            start()
 
-        with open(os.path.join(os.path.join(self.dir_path, "cache"), "main.ll"), "r") as ir:
+        with open(os.path.join(os.path.join(self.dir_path, "output"), "main.ll"), "r") as ir:
             content = ir.read()
 
         self.assertIn('add i32 5, 5', content)

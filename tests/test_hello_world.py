@@ -5,7 +5,7 @@ import unittest
 
 from unittest.mock import patch
 
-from rial.main import parse_arguments, main
+from rial.main import start
 
 
 class TestHelloWorld(unittest.TestCase):
@@ -25,9 +25,9 @@ class TestHelloWorld(unittest.TestCase):
             os.mkdir(cls.src_path)
 
         with open(cls.main_file, "w") as file:
-            file.write("external void printf(CString format, params CString args);\n")
-            file.write("void main() {\n")
-            file.write('\tprintf("Hello World!");\n')
+            file.write("use rial:builtin:print;\n")
+            file.write("public void main() {\n")
+            file.write('\tprintln("Hello World!");\n')
             file.write("}\n")
 
     @classmethod
@@ -35,17 +35,16 @@ class TestHelloWorld(unittest.TestCase):
         shutil.rmtree(cls.dir_path)
 
     def test_correct_ir(self):
-        testargs = ['prog', '--workdir', self.dir_path, '--opt-level', '3', '--print-ir', '--release']
+        testargs = ['prog', '--workdir', self.dir_path, '--print-ir', '--release', '--opt-level', '3', '--strip']
         with patch.object(sys, 'argv', testargs):
-            opts = parse_arguments()
-            main(opts)
+            start()
 
-        with open(os.path.join(os.path.join(self.dir_path, "cache"), "main.ll"), "r") as ir:
+        with open(os.path.join(os.path.join(self.dir_path, "output"), "main.ll"), "r") as ir:
             content = ir.read()
 
-        self.assertIn('call void (i8*, ...) @"printf"', content)
+        self.assertIn('call fastcc void @"rial:builtin:print:println.i8"', content)
         bin_size = os.path.getsize(os.path.join(os.path.join(self.dir_path, "bin"), "TestHelloWorld"))
-        self.assertLessEqual(bin_size, 6016)
+        self.assertLessEqual(bin_size, 5816)
 
 
 if __name__ == '__main__':
