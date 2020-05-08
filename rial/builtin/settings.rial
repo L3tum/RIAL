@@ -1,0 +1,1 @@
+public var nop_function = nop;

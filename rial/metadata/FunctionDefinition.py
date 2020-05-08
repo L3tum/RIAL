@@ -6,6 +6,9 @@ from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 class FunctionDefinition:
     rial_return_type: str
     access_modifier: RIALAccessModifier
+    """
+    Tuple of type -> name
+    """
     rial_args: List[Tuple[str, str]]
     struct: str
 

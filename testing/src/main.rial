@@ -4,6 +4,10 @@ use testing:boolean;
 use rial:builtin:system;
 
 public int main() {
+    @"rial:builtin:settings:nop_function" = nop;
+
+    @"rial:builtin:settings:nop_function"();
+
     var a = @"println.i8";
 
     a("FUNCTION TO VARIABLE ASSIGNMENT BABY");

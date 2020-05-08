@@ -109,11 +109,17 @@ class ASTVisitor(Interpreter):
         variable = self.var(nodes[0])
         value = self.transform_helper(nodes[2])
 
-        if isinstance(value, RIALFunction):
-            value = ir.PointerType(value)
-
         # TODO: Check if types are matching based on both LLVM value and inferred and metadata RIAL type
         return self.llvmgen.assign_to_variable(variable, value)
+
+    def global_variable_assignment(self, tree: Tree):
+        nodes = tree.children[0].children
+
+        with self.llvmgen.create_in_global_ctor():
+            variable = self.var(nodes[0])
+            variable_value = self.visit(nodes[2])
+            glob = self.llvmgen.assign_non_constant_global_variable(variable, variable_value)
+        return glob
 
     def variable_decl(self, tree: Tree):
         nodes = tree.children
@@ -139,6 +145,7 @@ class ASTVisitor(Interpreter):
             else:
                 with self.llvmgen.create_in_global_ctor():
                     variable_value = self.visit(nodes[2])
+
                     glob = self.llvmgen.declare_non_constant_global_variable(variable_name, variable_value,
                                                                              access_modifier,
                                                                              "common")
@@ -546,10 +553,12 @@ class ASTVisitor(Interpreter):
                 log_fail(f"Failed to generate call to function {function_name}")
                 return NULL
 
-            rial_func: RIALFunction = call_instr.operands[0]
+            rial_func = call_instr.operands[0]
 
-            return self.llvmgen.declare_nameless_variable_from_rial_type(rial_func.definition.rial_return_type,
-                                                                         call_instr)
+            if isinstance(rial_func, RIALFunction):
+                return self.llvmgen.declare_nameless_variable_from_rial_type(rial_func.definition.rial_return_type,
+                                                                             call_instr)
+            return call_instr
         except IndexError:
             log_fail(f"Missing argument in function call to function {function_name}")
 
@@ -577,10 +586,12 @@ class ASTVisitor(Interpreter):
                 log_fail(f"Failed to generate call to function {function_name}")
                 return NULL
 
-            rial_func: RIALFunction = call_instr.operands[0]
+            rial_func = call_instr.operands[0]
 
-            return self.llvmgen.declare_nameless_variable_from_rial_type(rial_func.definition.rial_return_type,
-                                                                         call_instr)
+            if isinstance(rial_func, RIALFunction):
+                return self.llvmgen.declare_nameless_variable_from_rial_type(rial_func.definition.rial_return_type,
+                                                                             call_instr)
+            return call_instr
         except IndexError:
             log_fail("Missing argument in function call")
 

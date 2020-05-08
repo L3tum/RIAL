@@ -52,6 +52,13 @@ class ParserState:
         return cls.threadLocalModule.module
 
     @staticmethod
+    def add_dependency_and_wait(module_name: str):
+        ParserState.usings().append(module_name)
+        ParserState.module().dependencies.append(module_name)
+        CompilationManager.request_module(module_name)
+        CompilationManager.wait_for_module_compiled(module_name)
+
+    @staticmethod
     def search_structs(name: str) -> Optional[RIALIdentifiedStructType]:
         # Does a global search.
         return ParserState.module().context.get_identified_type_if_exists(name)

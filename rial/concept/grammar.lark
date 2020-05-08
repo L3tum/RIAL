@@ -1,4 +1,4 @@
-?start : [(struct_decl|global_variable_decl|attributed_func_decl|function_decl|using|attributed_compiler_directive)*]
+?start : [(struct_decl|global_variable_decl|global_variable_assignment|attributed_func_decl|function_decl|using|attributed_compiler_directive)*]
 ?statement : conditional_block
            | conditional_elif_block
            | switch_block
@@ -39,6 +39,7 @@ shorthand_if : "if" expression "?" expression ":" expression
 
 // Variables
 global_variable_decl : modifier variable_decl ";"
+global_variable_assignment : variable_assignment ";"
 variable_decl : "var" IDENTIFIER ASSIGN expression
 variable_assignment : var ASSIGN expression
 

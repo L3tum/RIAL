@@ -3,7 +3,7 @@ from typing import Optional, Union, Tuple, List, Any
 
 from llvmlite import ir
 from llvmlite.ir import IRBuilder, AllocaInstr, Branch, FunctionType, Type, VoidType, PointerType, \
-    Argument, CallInstr, Block, Constant, FormattedConstant
+    Argument, CallInstr, Block, Constant, FormattedConstant, GlobalVariable
 
 from rial.LLVMBlock import LLVMBlock, create_llvm_block
 from rial.LLVMUIntType import LLVMUIntType
@@ -66,6 +66,7 @@ class LLVMGen:
 
                 if glob is not None:
                     if glob.module_name != ParserState.module().name:
+                        # TODO: Check if global access is allowed
                         variable = self.gen_global(glob.name, None, glob.backing_value.type.pointee,
                                                    glob.access_modifier, "external",
                                                    glob.backing_value.global_constant)
@@ -79,6 +80,14 @@ class LLVMGen:
             if variable is None:
                 variable = ParserState.find_function(mangle_function_name(identifier, []))
 
+            # Check if in same module
+            if variable is not None:
+                if variable.module.name != ParserState.module().name:
+                    variable = self.create_function_with_type(variable.name, variable.function_type, variable.linkage,
+                                                              variable.calling_convention,
+                                                              [arg[1] for arg in variable.definition.rial_args],
+                                                              variable.definition)
+
         return variable
 
     def get_var(self, identifier: str):
@@ -91,6 +100,15 @@ class LLVMGen:
         # Search for the full name
         if variable is None:
             variable = self._get_by_identifier(identifier, variable)
+
+        # Search with module specifier
+        if ':' in identifier:
+            parts = identifier.split(':')
+            module_name = ':'.join(parts[0:-1])
+            name = parts[-1]
+            ParserState.add_dependency_and_wait(module_name)
+
+            return self.get_var(name)
 
         return variable
 
@@ -247,8 +265,8 @@ class LLVMGen:
         for function_name in possible_function_names:
             var = self.current_block.get_named_value(function_name)
 
-            if var is not None and isinstance(var, ir.PointerType) and isinstance(var.pointee, RIALFunction):
-                func = var.pointee
+            if var is not None:
+                func = var
 
         # Try to find by function name
         if func is None:
@@ -260,6 +278,13 @@ class LLVMGen:
 
         if func is None:
             return None
+
+        if isinstance(func, ir.PointerType) and isinstance(func.pointee, RIALFunction):
+            func = func.pointee
+        elif isinstance(func, GlobalVariable):
+            loaded_func = self.builder.load(func)
+            call = self.builder.call(loaded_func, llvm_args)
+            return call
 
         # Check if call is allowed
         if not self.check_function_call_allowed(func):
@@ -383,6 +408,19 @@ class LLVMGen:
 
         return returned_value
 
+    def assign_non_constant_global_variable(self, glob: GlobalVariable, value):
+        if self.current_func.name != "global_ctor":
+            raise PermissionError()
+
+        if isinstance(value, AllocaInstr):
+            value = self.builder.load(value)
+        elif isinstance(value, PointerType):
+            value = self.builder.load(value.pointee)
+        elif isinstance(value, FormattedConstant):
+            value = self.builder.load(value)
+
+        self.builder.store(value, glob)
+
     def declare_non_constant_global_variable(self, identifier: str, value, access_modifier: RIALAccessModifier,
                                              linkage: str):
         """
@@ -402,21 +440,18 @@ class LLVMGen:
         if isinstance(value, AllocaInstr):
             variable = self.gen_global(identifier, null(value.type.pointee), value.type.pointee, access_modifier,
                                        linkage, False)
-            value = self.builder.load(value)
         elif isinstance(value, PointerType):
             variable = self.gen_global(identifier, null(value.pointee.type), value.pointee.type, access_modifier,
                                        linkage, False)
-            value = self.builder.load(value)
         elif isinstance(value, FormattedConstant) or isinstance(value, AllocaInstr):
             variable = self.gen_global(identifier, null(value.type.pointee), value.type.pointee, access_modifier,
                                        linkage, False)
-            value = self.builder.load(value)
         elif isinstance(value, Constant):
             variable = self.gen_global(identifier, null(value.type), value.type, access_modifier, linkage, False)
         else:
             variable = self.gen_global(identifier, null(value.type), value.type, access_modifier, linkage, False)
 
-        self.builder.store(value, variable)
+        self.assign_non_constant_global_variable(variable, value)
 
         return variable
 
@@ -461,6 +496,13 @@ class LLVMGen:
 
         if variable is None:
             return None
+
+        if isinstance(value, AllocaInstr):
+            value = self.builder.load(value)
+        elif isinstance(value, PointerType):
+            value = self.builder.load(value.pointee)
+        elif isinstance(value, FormattedConstant):
+            value = self.builder.load(value)
 
         self.builder.store(value, variable)
 
