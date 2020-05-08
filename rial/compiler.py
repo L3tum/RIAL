@@ -19,7 +19,6 @@ from rial.PrimitiveASTTransformer import PrimitiveASTTransformer
 from rial.StructDeclarationTransformer import StructDeclarationTransformer
 from rial.compilation_manager import CompilationManager
 from rial.concept.Postlexer import Postlexer
-from rial.concept.compilation_unit import CompilationUnit
 from rial.concept.parser import Lark_StandAlone
 from rial.linking.linker import Linker
 from rial.log import log_fail
@@ -214,70 +213,58 @@ def check_cache(path: str) -> bool:
 def compile_file(path: str):
     global exceptions
     try:
+        last_modified = os.path.getmtime(path)
         filename = CompilationManager.filename_from_path(path)
-        unit = CompilationManager.get_compile_unit_if_exists(path)
-        ParserState.reset_usings()
 
-        if unit is None:
-            last_modified = os.path.getmtime(path)
+        if check_cache(path):
+            CompilationManager.finish_file(path)
+            CompilationManager.files_to_compile.task_done()
+            return
 
-            if check_cache(path):
+        module_name = CompilationManager.mod_name_from_path(filename)
+        module = CompilationManager.codegen.get_module(module_name, filename,
+                                                       str(CompilationManager.config.source_path))
+        ParserState.set_module(module)
+
+        if not ParserState.module().name.startswith("rial:builtin:always_imported"):
+            ParserState.module().dependencies.extend(CompilationManager.always_imported)
+
+        # Remove the current module in case it's in the always imported list
+        if module_name in ParserState.module().dependencies:
+            ParserState.module().dependencies.remove(module_name)
+
+        with run_with_profiling(filename, ExecutionStep.READ_FILE):
+            with open(path, "r") as file:
+                contents = file.read()
+
+        desugar_transformer = DesugarTransformer()
+        primitive_transformer = PrimitiveASTTransformer()
+        parser = Lark_StandAlone(postlex=Postlexer())
+
+        # Parse the file
+        with run_with_profiling(filename, ExecutionStep.PARSE_FILE):
+            try:
+                ast = parser.parse(contents)
+            except Exception as e:
+                log_fail(f"Exception when parsing {filename}")
+                log_fail(e)
+                exceptions = True
                 CompilationManager.finish_file(path)
                 CompilationManager.files_to_compile.task_done()
                 return
 
-            module_name = CompilationManager.mod_name_from_path(filename)
-            module = CompilationManager.codegen.get_module(module_name, filename,
-                                                           str(CompilationManager.config.source_path))
-            ParserState.set_module(module)
+        if CompilationManager.config.raw_opts.print_tokens:
+            print(ast.pretty())
 
-            if not ParserState.module().name.startswith("rial:builtin:always_imported"):
-                ParserState.usings().extend(CompilationManager.always_imported)
-
-            # Remove the current module in case it's in the always imported list
-            if module_name in ParserState.usings():
-                ParserState.usings().remove(module_name)
-
-            with run_with_profiling(filename, ExecutionStep.READ_FILE):
-                with open(path, "r") as file:
-                    contents = file.read()
-
-            desugar_transformer = DesugarTransformer()
-            primitive_transformer = PrimitiveASTTransformer()
-            parser = Lark_StandAlone(postlex=Postlexer())
-
-            # Parse the file
-            with run_with_profiling(filename, ExecutionStep.PARSE_FILE):
-                try:
-                    ast = parser.parse(contents)
-                except Exception as e:
-                    log_fail(f"Exception when parsing {filename}")
-                    log_fail(e)
-                    exceptions = True
-                    CompilationManager.finish_file(path)
-                    CompilationManager.files_to_compile.task_done()
-                    return
-
-            if CompilationManager.config.raw_opts.print_tokens:
-                print(ast.pretty())
-
-            # Generate primitive IR (things we don't need other modules for)
-            with run_with_profiling(filename, ExecutionStep.GEN_IR):
-                ast = desugar_transformer.transform(ast)
-                ast = primitive_transformer.transform(ast)
-
-            unit = CompilationUnit(ParserState.module(), ParserState.usings(), last_modified, ast)
-        else:
-            last_modified = unit.last_modified
-            ParserState.usings().extend(unit.usings)
-            ParserState.set_module(unit.module)
-
-            ast = unit.ast
+        # Generate primitive IR (things we don't need other modules for)
+        with run_with_profiling(filename, ExecutionStep.GEN_IR):
+            ast = desugar_transformer.transform(ast)
+            ast = primitive_transformer.transform(ast)
 
         # Check if all dependencies are compiled
         wait_on_modules = list()
         with run_with_profiling(filename, ExecutionStep.WAIT_DEPENDENCIES):
-            for using in unit.usings:
+            for using in ParserState.module().dependencies:
                 if not CompilationManager.check_module_already_compiled(using):
                     CompilationManager.request_module(using)
                     wait_on_modules.append(using)

@@ -36,7 +36,7 @@ class LLVMGen:
         self.current_struct = None
 
     def _get_by_identifier(self, identifier: str, variable: Optional = None) -> Optional:
-        if not variable is None and isinstance(variable.type, PointerType):
+        if not variable is None and hasattr(variable, 'type') and isinstance(variable.type, PointerType):
             if isinstance(variable.type.pointee, RIALIdentifiedStructType):
                 struct = ParserState.find_struct(variable.type.pointee.name)
 
@@ -58,18 +58,25 @@ class LLVMGen:
                 variable = self.builder.gep(variable, [ir.Constant(ir.IntType(32), 0),
                                                        ir.Constant(ir.IntType(32), prop[0])])
         else:
+            # Search local variables
             variable = self.current_block.get_named_value(identifier)
 
             # Search for a global variable
             if variable is None:
                 glob = ParserState.find_global(identifier)
 
+                # Check if in same module
                 if glob is not None:
                     if glob.module_name != ParserState.module().name:
-                        # TODO: Check if global access is allowed
-                        variable = self.gen_global(glob.name, None, glob.backing_value.type.pointee,
-                                                   glob.access_modifier, "external",
-                                                   glob.backing_value.global_constant)
+                        glob_current_module = ParserState.module().get_global_safe(glob.name)
+
+                        if glob_current_module is not None:
+                            variable = glob_current_module
+                        else:
+                            # TODO: Check if global access is allowed
+                            variable = self.gen_global(glob.name, None, glob.backing_value.type.pointee,
+                                                       glob.access_modifier, "external",
+                                                       glob.backing_value.global_constant)
                     else:
                         variable = glob.backing_value
 
@@ -83,14 +90,20 @@ class LLVMGen:
             # Check if in same module
             if variable is not None:
                 if variable.module.name != ParserState.module().name:
-                    variable = self.create_function_with_type(variable.name, variable.function_type, variable.linkage,
-                                                              variable.calling_convention,
-                                                              [arg[1] for arg in variable.definition.rial_args],
-                                                              variable.definition)
+                    variable_current_module = ParserState.module().get_global_safe(variable.name)
+
+                    if variable_current_module is not None:
+                        variable = variable_current_module
+                    else:
+                        variable = self.create_function_with_type(variable.name, variable.function_type,
+                                                                  variable.linkage,
+                                                                  variable.calling_convention,
+                                                                  [arg[1] for arg in variable.definition.rial_args],
+                                                                  variable.definition)
 
         return variable
 
-    def get_var(self, identifier: str):
+    def get_exact_definition(self, identifier: str):
         identifiers = identifier.split('.')
         variable = None
 
@@ -101,14 +114,20 @@ class LLVMGen:
         if variable is None:
             variable = self._get_by_identifier(identifier, variable)
 
-        # Search with module specifier
-        if ':' in identifier:
-            parts = identifier.split(':')
-            module_name = ':'.join(parts[0:-1])
-            name = parts[-1]
-            ParserState.add_dependency_and_wait(module_name)
+        return variable
 
-            return self.get_var(name)
+    def get_definition(self, identifier: str):
+        variable = self.get_exact_definition(identifier)
+
+        # Search with module specifier
+        if variable is None:
+            if ':' in identifier:
+                parts = identifier.split(':')
+                module_name = ':'.join(parts[0:-1])
+                name = parts[-1]
+                ParserState.add_dependency_and_wait(module_name)
+
+                return self.get_definition(name)
 
         return variable
 
@@ -156,7 +175,7 @@ class LLVMGen:
         return glob
 
     def gen_load_if_necessary(self, value):
-        if isinstance(value, AllocaInstr) or isinstance(value, Argument) or (
+        if isinstance(value, AllocaInstr) or isinstance(value, Argument) or isinstance(value, FormattedConstant) or (
                 hasattr(value, 'type') and isinstance(value.type, PointerType)):
             return self.builder.load(value)
         return value
@@ -263,7 +282,7 @@ class LLVMGen:
         func = None
         # Check if it's actually a local variable
         for function_name in possible_function_names:
-            var = self.current_block.get_named_value(function_name)
+            var = self.get_exact_definition(function_name)
 
             if var is not None:
                 func = var
@@ -341,15 +360,7 @@ class LLVMGen:
         return self.builder.call(func, args)
 
     def gen_no_op(self):
-        # Redeclare llvm.donothing if it isn't declared in current module
-        try:
-            ParserState.module().get_global('llvm.donothing')
-        except KeyError:
-            func_type = self.create_function_type(ir.VoidType(), [], False)
-            self.create_function_with_type('llvm.donothing', func_type, "external", "", [],
-                                           FunctionDefinition("void", RIALAccessModifier.PUBLIC, []))
-
-        self.gen_function_call(["llvm.donothing"], [])
+        self.gen_function_call(["rial:builtin:settings:nop_function"], [])
 
     def check_function_call_allowed(self, func: RIALFunction):
         # Public is always okay
@@ -490,7 +501,7 @@ class LLVMGen:
 
     def assign_to_variable(self, identifier: Union[str, Any], value):
         if isinstance(identifier, str):
-            variable = self.get_var(identifier)
+            variable = self.get_definition(identifier)
         else:
             variable = identifier
 
@@ -740,11 +751,11 @@ class LLVMGen:
                     pos += 1
                     # Insert nop if block is empty
                     if len(instr_block[1].instructions) == 0:
-                        self.builder.position_at_end(instr_block[1])
+                        self.builder.position_before(instr_block[1].terminator)
                         self.gen_no_op()
         self.current_func = None
 
-    def create_return_statement(self, statement):
+    def create_return_statement(self, statement=VoidType()):
         if isinstance(statement, VoidType):
             return self.builder.ret_void()
 

@@ -19,7 +19,6 @@ class ParserState:
     cached_functions: Dict[str, RIALFunction]
     cached_struct_modules: Dict[str, RIALModule]
     implemented_functions: List[str]
-    threadLocalUsings: threading.local
     threadLocalModule: threading.local
     builtin_types: Dict[str, Dict[str, RIALFunction]]
 
@@ -29,23 +28,14 @@ class ParserState:
     @staticmethod
     def init():
         ParserState.implemented_functions = list()
-        ParserState.threadLocalUsings = threading.local()
         ParserState.threadLocalModule = threading.local()
         ParserState.cached_functions = dict()
         ParserState.cached_struct_modules = dict()
         ParserState.builtin_types = dict()
 
     @staticmethod
-    def reset_usings():
-        ParserState.threadLocalUsings.usings = list()
-
-    @staticmethod
     def set_module(module: RIALModule):
         ParserState.threadLocalModule.module = module
-
-    @classmethod
-    def usings(cls) -> List[str]:
-        return cls.threadLocalUsings.usings
 
     @classmethod
     def module(cls) -> RIALModule:
@@ -53,7 +43,6 @@ class ParserState:
 
     @staticmethod
     def add_dependency_and_wait(module_name: str):
-        ParserState.usings().append(module_name)
         ParserState.module().dependencies.append(module_name)
         CompilationManager.request_module(module_name)
         CompilationManager.wait_for_module_compiled(module_name)
@@ -68,16 +57,6 @@ class ParserState:
         # Search with just its name
         glob: RIALVariable = ParserState.module().get_rial_variable(name)
 
-        # Search with specifier
-        if glob is None and ':' in name:
-            module_name = ':'.join(name.split(':')[0:-1])
-
-            CompilationManager.request_module(module_name)
-            CompilationManager.wait_for_module_compiled(module_name)
-
-            glob = CompilationManager.modules[CompilationManager.path_from_mod_name(module_name)].get_rial_variable(
-                name)
-
         # Search with module specifier
         if glob is None:
             glob = ParserState.module().get_rial_variable(mangle_global_name(ParserState.module().name, name))
@@ -85,7 +64,7 @@ class ParserState:
         # Go through usings to find it
         if glob is None:
             globs_found: List[Tuple] = list()
-            for using in ParserState.usings():
+            for using in ParserState.module().dependencies:
                 module = CompilationManager.modules[CompilationManager.path_from_mod_name(using)]
                 gl = module.get_rial_variable(name)
 
@@ -128,7 +107,7 @@ class ParserState:
             if func is None:
                 functions_found: List[Tuple[str, RIALFunction]] = list()
 
-                for use in ParserState.usings():
+                for use in ParserState.module().dependencies:
                     module = CompilationManager.modules[CompilationManager.path_from_mod_name(use)]
                     function = module.get_global_safe(full_function_name)
 
@@ -181,7 +160,7 @@ class ParserState:
         # Iterate through usings
         if struct is None:
             structs_found: List[Tuple] = list()
-            for using in ParserState.usings():
+            for using in ParserState.module().dependencies:
                 s = ParserState.search_structs(f"{using}:{struct_name}")
 
                 if s is not None:

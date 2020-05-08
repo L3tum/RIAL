@@ -78,7 +78,7 @@ class ASTVisitor(Interpreter):
             identifier = nodes[0].value
             token = nodes[0]
 
-        va = self.llvmgen.get_var(identifier)
+        va = self.llvmgen.get_definition(identifier)
 
         if va is None:
             log_fail(f"{ParserState.module().name}[{token.line}:{token.column}] Error 0001")
@@ -507,7 +507,7 @@ class ASTVisitor(Interpreter):
 
         implicit_parameter_name = '.'.join(full_name.split('.')[0:-1])
         function_name = full_name.split('.')[-1]
-        implicit_parameter = self.llvmgen.get_var(implicit_parameter_name)
+        implicit_parameter = self.llvmgen.get_definition(implicit_parameter_name)
 
         if implicit_parameter is None:
             log_fail(f"Could not find implicit parameter {implicit_parameter_name} in function call {full_name}")

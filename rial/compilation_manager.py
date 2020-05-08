@@ -1,9 +1,8 @@
 from pathlib import Path
 from threading import Lock, Event
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from rial.codegen import CodeGen
-from rial.concept.compilation_unit import CompilationUnit
 from rial.concept.ordered_set_queue import OrderedSetQueue
 from rial.configuration import Configuration
 from rial.metadata.RIALModule import RIALModule
@@ -18,7 +17,6 @@ class CompilationManager:
     config: Configuration
     codegen: CodeGen
     always_imported: List[str]
-    compilation_units: Dict[str, CompilationUnit]
 
     def __init__(self):
         raise PermissionError()
@@ -33,17 +31,6 @@ class CompilationManager:
         CompilationManager.modules = dict()
         CompilationManager.codegen = CodeGen(config.raw_opts.opt_level)
         CompilationManager.always_imported = list()
-        CompilationManager.compilation_units = dict()
-
-    @staticmethod
-    def get_compile_unit_if_exists(path: str) -> Optional[CompilationUnit]:
-        if path in CompilationManager.compilation_units:
-            return CompilationManager.compilation_units[path]
-        return None
-
-    @staticmethod
-    def set_compile_unit(path: str, unit: CompilationUnit):
-        CompilationManager.compilation_units[path] = unit
 
     @staticmethod
     def finish_file(path: str):
