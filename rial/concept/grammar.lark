@@ -123,7 +123,6 @@ PARAMS: "params"
 THIS : "this"
 PREPRO_FLAG : "#"
 
-// Taken from common definition, copied to assign -10 priority
 IDENTIFIER.-10 : /(?!(^(var|return|use|external|params|public|internal|private)$))#?(_|[a-zA-Z])(_|[a-zA-Z0-9])*/
                | "@\"" /[^"]+/ "\""
 

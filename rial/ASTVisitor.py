@@ -546,7 +546,10 @@ class ASTVisitor(Interpreter):
                 log_fail(f"Failed to generate call to function {function_name}")
                 return NULL
 
-            return call_instr
+            rial_func: RIALFunction = call_instr.operands[0]
+
+            return self.llvmgen.declare_nameless_variable_from_rial_type(rial_func.definition.rial_return_type,
+                                                                         call_instr)
         except IndexError:
             log_fail(f"Missing argument in function call to function {function_name}")
 
@@ -574,7 +577,10 @@ class ASTVisitor(Interpreter):
                 log_fail(f"Failed to generate call to function {function_name}")
                 return NULL
 
-            return call_instr
+            rial_func: RIALFunction = call_instr.operands[0]
+
+            return self.llvmgen.declare_nameless_variable_from_rial_type(rial_func.definition.rial_return_type,
+                                                                         call_instr)
         except IndexError:
             log_fail("Missing argument in function call")
 
