@@ -56,29 +56,28 @@ class CodeGen:
         self.binding.check_jit_execution()
 
     def _optimize_module(self, module: ModuleRef):
-        if self.opt_level > 0:
-            pm_manager = self.binding.create_pass_manager_builder()
-            pm_manager.loop_vectorize = self.size_level != 2
-            pm_manager.slp_vectorize = self.size_level != 2
-            pm_manager.size_level = self.size_level
-            pm_manager.opt_level = self.opt_level
-            pm_manager.inlining_threshold = 9999
-            pm_module = self.binding.create_module_pass_manager()
-            pm_function = self.binding.create_function_pass_manager(module)
-            pm_manager.populate(pm_function)
-            pm_manager.populate(pm_module)
+        pm_manager = self.binding.create_pass_manager_builder()
+        pm_manager.loop_vectorize = self.size_level != 2
+        pm_manager.slp_vectorize = self.size_level != 2
+        pm_manager.size_level = self.size_level
+        pm_manager.opt_level = self.opt_level
+        pm_manager.inlining_threshold = self.size_level == 2 and 9 or self.size_level == 1 and 99 or 999
+        pm_module = self.binding.create_module_pass_manager()
+        pm_function = self.binding.create_function_pass_manager(module)
+        pm_manager.populate(pm_function)
+        pm_manager.populate(pm_module)
 
-            pm_function.initialize()
-            for func in module.functions:
-                if not func.is_declaration:
-                    pm_function.run(func)
-            pm_function.finalize()
-            pm_function.close()
+        pm_function.initialize()
+        for func in module.functions:
+            if not func.is_declaration:
+                pm_function.run(func)
+        pm_function.finalize()
+        pm_function.close()
 
-            pm_module.run(module)
+        pm_module.run(module)
 
-            pm_module.close()
-            pm_manager.close()
+        pm_module.close()
+        pm_manager.close()
 
     def get_module(self, name: str, filename: str, directory: str) -> RIALModule:
         module = RIALModule(name=name)

@@ -1,16 +1,9 @@
 use rial:builtin:print;
-use rial:builtin:system;
 
 internal void printBoolean(bool boolean){
     /*
      uwu
      whats dis
     */
-    var info = GetOSInformation();
-
-    if(info.linux){
-        println("Hello Linux!");
-    }
-
     println(if boolean ? "true" : "false");
 }

@@ -1,4 +1,5 @@
 import threading
+from pathlib import Path
 from typing import Optional, List, Tuple, Dict
 
 from llvmlite import ir
@@ -43,9 +44,13 @@ class ParserState:
 
     @staticmethod
     def add_dependency_and_wait(module_name: str):
-        ParserState.module().dependencies.append(module_name)
-        CompilationManager.request_module(module_name)
-        CompilationManager.wait_for_module_compiled(module_name)
+        if Path(CompilationManager.path_from_mod_name(module_name)).exists():
+            ParserState.module().dependencies.append(module_name)
+            CompilationManager.request_module(module_name)
+            CompilationManager.wait_for_module_compiled(module_name)
+            return True
+
+        return False
 
     @staticmethod
     def search_structs(name: str) -> Optional[RIALIdentifiedStructType]:

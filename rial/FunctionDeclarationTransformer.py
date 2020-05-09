@@ -17,6 +17,7 @@ from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 class FunctionDeclarationTransformer(TransformerInterpreter):
     mangling: bool
     llvmgen: LLVMGen
+    default_cc = "fastcc"
 
     def __init__(self):
         super().__init__()
@@ -98,7 +99,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
         nodes = tree.children
         access_modifier: RIALAccessModifier = nodes[0].access_modifier
         linkage = access_modifier.get_linkage()
-        calling_convention = "fastcc"
+        calling_convention = self.default_cc
         return_type = nodes[1].value
         name = nodes[2].value
 
@@ -190,7 +191,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
         access_modifier: RIALAccessModifier = nodes[0].access_modifier
         linkage = access_modifier.get_linkage()
         main_function = False
-        calling_convention = "fastcc"
+        calling_convention = self.default_cc
         return_type = nodes[1].value
         name = nodes[2].value
 

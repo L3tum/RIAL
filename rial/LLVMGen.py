@@ -124,10 +124,14 @@ class LLVMGen:
             if ':' in identifier:
                 parts = identifier.split(':')
                 module_name = ':'.join(parts[0:-1])
-                name = parts[-1]
-                ParserState.add_dependency_and_wait(module_name)
 
-                return self.get_definition(name)
+                if CompilationManager.check_module_already_compiled(module_name):
+                    return None
+
+                if ParserState.add_dependency_and_wait(module_name):
+                    return self.get_definition(identifier)
+
+                return None
 
         return variable
 
@@ -282,7 +286,7 @@ class LLVMGen:
         func = None
         # Check if it's actually a local variable
         for function_name in possible_function_names:
-            var = self.get_exact_definition(function_name)
+            var = self.get_definition(function_name)
 
             if var is not None:
                 func = var

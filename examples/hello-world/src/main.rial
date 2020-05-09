@@ -1,5 +1,5 @@
-external void printf(CString format, params CString args);
+use rial:builtin:print;
 
 public void main(){
-    printf("Hello World!");
+    println("Hello World!");
 }

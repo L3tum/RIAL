@@ -3,7 +3,7 @@ use rial:builtin:print;
 use testing:boolean;
 use rial:builtin:system;
 
-public int main() {
+public void main() {
     @"rial:builtin:settings:nop_function" = nop;
 
     @"rial:builtin:settings:nop_function"();
@@ -83,6 +83,4 @@ public int main() {
 	        break;
 	    }
 	}
-
-	return 0;
 }
