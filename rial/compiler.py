@@ -1,10 +1,12 @@
 import concurrent.futures
 import os
+import threading
 import traceback
 from os import listdir
 from os.path import isfile, join
 from pathlib import Path
 from queue import Empty
+from time import sleep
 from typing import List, Dict
 
 from llvmlite.binding import ModuleRef
@@ -13,6 +15,8 @@ from llvmlite.ir import context
 from rial.ASTVisitor import ASTVisitor
 from rial.Cache import Cache
 from rial.DesugarTransformer import DesugarTransformer
+from rial.FunctionDeclarationTransformer import FunctionDeclarationTransformer
+from rial.GlobalDeclarationTransformer import GlobalDeclarationTransformer
 from rial.ParserState import ParserState
 from rial.PrimitiveASTTransformer import PrimitiveASTTransformer
 from rial.StructDeclarationTransformer import StructDeclarationTransformer
@@ -96,6 +100,7 @@ def compiler():
     if CompilationManager.config.raw_opts.profile_gil:
         import gil_load
         gil_load.stop()
+        print(f"Main Thread ID: {threading.current_thread().ident}")
         print(gil_load.format(gil_load.get()))
 
     if exceptions:
@@ -263,29 +268,24 @@ def compile_file(path: str):
             ast = desugar_transformer.transform(ast)
             ast = primitive_transformer.transform(ast)
 
-        # Check if all dependencies are compiled
-        wait_on_modules = list()
-        with run_with_profiling(filename, ExecutionStep.WAIT_DEPENDENCIES):
-            for using in ParserState.module().dependencies:
-                if not CompilationManager.check_module_already_compiled(using):
-                    CompilationManager.request_module(using)
-                    wait_on_modules.append(using)
-
-            for using in wait_on_modules:
-                CompilationManager.wait_for_module_compiled(using)
-
         struct_declaration_transformer = StructDeclarationTransformer()
+        function_declaration_transformer = FunctionDeclarationTransformer()
+        global_declaration_transformer = GlobalDeclarationTransformer()
         transformer = ASTVisitor()
 
         with run_with_profiling(filename, ExecutionStep.GEN_IR):
             ast = struct_declaration_transformer.transform(ast)
 
             if ast is not None:
-                ast = struct_declaration_transformer.fdt.visit(ast)
+                ast = function_declaration_transformer.visit(ast)
+
+            if ast is not None:
+                ast = global_declaration_transformer.visit(ast)
 
             # Declarations are all already collected so we can move on.
             CompilationManager.modules[str(path)] = ParserState.module()
             CompilationManager.finish_file(path)
+            sleep(0.01)
 
             if ast is not None:
                 transformer.visit(ast)

@@ -19,32 +19,11 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Fixed an issue causing the common startup script start.rial to self-reference">
-      <change afterPath="$PROJECT_DIR$/rial/stages/StageManager.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/stages/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/stages/post_ir_generation/PostIRGenerationInterface.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/stages/post_ir_generation/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/stages/post_ir_generation/infinite_loop_detector.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/stages/post_parsing/PostParsingInterface.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/stages/post_parsing/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/stages/post_parsing/infinite_loop_detector.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/RIAL.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/RIAL.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Implemented likely/unlikely for conditions&#10;Closes #52&#10;&#10;TODO: Switch and while&#10;&#10;Also added first draft of stages for checking algorithms">
+      <change afterPath="$PROJECT_DIR$/rial/GlobalDeclarationTransformer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/ASTVisitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ASTVisitor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/DesugarTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/DesugarTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/LLVMGen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMGen.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/ParserState.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ParserState.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/codegen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/codegen.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/compiler.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compiler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/references.md" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/references.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/metadata/RIALModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/metadata/RIALModule.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/profiling.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/profiling.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/src/main.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/main.rial" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -55,8 +34,8 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Python Unit Test" />
-        <option value="Python Script" />
         <option value="Setup Script" />
+        <option value="Python Script" />
       </list>
     </option>
   </component>
@@ -219,14 +198,7 @@
       <workItem from="1589031389445" duration="4996000" />
       <workItem from="1589196410589" duration="2318000" />
       <workItem from="1589284866572" duration="6844000" />
-      <workItem from="1589369611125" duration="4355000" />
-    </task>
-    <task id="LOCAL-00005" summary="Improved name mangling&#10;Improved file and module handling&#10;Added ability to specify modules in function names and resolve them via that method&#10;Moved postlex stuff into a separate Postlexer.py&#10;Added outer main method supplied by RIAL&#10;Added support for nested directories&#10;Improved global Compilation Manager&#10;Added functions list to structs to collect and keep track of their functions">
-      <created>1586767114831</created>
-      <option name="number" value="00005" />
-      <option name="presentableId" value="LOCAL-00005" />
-      <option name="project" value="LOCAL" />
-      <updated>1586767114831</updated>
+      <workItem from="1589369611125" duration="9625000" />
     </task>
     <task id="LOCAL-00006" summary="Added bool -&gt; Boolean to shortcut mapper">
       <created>1586767287231</created>
@@ -564,7 +536,14 @@
       <option name="project" value="LOCAL" />
       <updated>1589032380333</updated>
     </task>
-    <option name="localTasksCounter" value="54" />
+    <task id="LOCAL-00054" summary="Implemented likely/unlikely for conditions&#10;Closes #52&#10;&#10;TODO: Switch and while&#10;&#10;Also added first draft of stages for checking algorithms">
+      <created>1589374011490</created>
+      <option name="number" value="00054" />
+      <option name="presentableId" value="LOCAL-00054" />
+      <option name="project" value="LOCAL" />
+      <updated>1589374011490</updated>
+    </task>
+    <option name="localTasksCounter" value="55" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -593,7 +572,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Implemented basic result cache&#10;Implemented dependency and hash tracking in module metadata&#10;Moved old cache directory to output&#10;Removed duplication checker for now as it was a naive implementation that doesn't bode well with the cache (e.g. functions used in other modules are already declared in there so checking for duplicates would involve some extensive logic)&#10;&#10;Changed old base64 encoded names into md5 hashed ones" />
     <MESSAGE value="Added Last Modified Time checking to Cache&#10;Improved and refactored caching structure and system&#10;Added option 'disable_cache' to disable using the cached files&#10;Closes #35" />
     <MESSAGE value="Update&#10;&#10;Fixed lots of bugs&#10;Refactored some code to be more readable&#10;Improved exception handling&#10;Improved profiling" />
     <MESSAGE value="Improved worst case scenario when looking up functions and structs" />
@@ -618,7 +596,8 @@
     <MESSAGE value="Added global variable assignment&#10;Improved type handling in variables" />
     <MESSAGE value="Update&#10;Added support for globally assigning values to global variable&#10;Refactored definition finding to use the same method for functions and variables&#10;Removed separate usings and compilation_unit.py. Usings is done via RIALModule.dependencies while compilation units aren't used at all anymore.&#10;Removed duplicated code" />
     <MESSAGE value="Fixed an issue causing the common startup script start.rial to self-reference" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed an issue causing the common startup script start.rial to self-reference" />
+    <MESSAGE value="Implemented likely/unlikely for conditions&#10;Closes #52&#10;&#10;TODO: Switch and while&#10;&#10;Also added first draft of stages for checking algorithms" />
+    <option name="LAST_COMMIT_MESSAGE" value="Implemented likely/unlikely for conditions&#10;Closes #52&#10;&#10;TODO: Switch and while&#10;&#10;Also added first draft of stages for checking algorithms" />
   </component>
   <component name="WindowStateProjectService">
     <state x="906" y="378" key="#Inspections" timestamp="1588322612153">
@@ -654,19 +633,19 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="1059" y="474" key="FileChooserDialogImpl/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584793819636" />
-    <state x="1106" y="402" key="RollbackChangesDialog" timestamp="1589033400322">
+    <state x="1106" y="402" key="RollbackChangesDialog" timestamp="1589375108539">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="1106" y="402" key="RollbackChangesDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1589033400322" />
+    <state x="1106" y="402" key="RollbackChangesDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1589375108539" />
     <state x="781" y="342" key="SettingsEditor" timestamp="1588321615452">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588321615452" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1589032381344">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1589374016110">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1589032381344" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1589374016110" />
     <state x="97" y="126" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1589031829329">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

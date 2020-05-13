@@ -133,33 +133,6 @@ class ASTVisitor(Interpreter):
 
         return self.llvmgen.declare_variable(identifier, value)
 
-    def global_variable_decl(self, tree: Tree):
-        nodes = tree.children[1].children
-        access_modifier: RIALAccessModifier = tree.children[0].access_modifier
-        variable_name = mangle_global_name(ParserState.module().name, nodes[0].value)
-        variable_value = nodes[2]
-        variable_type = hasattr(variable_value, 'type') and variable_value.type or None
-
-        if not isinstance(variable_value, ir.Constant) or isinstance(variable_value, FormattedConstant):
-            if isinstance(variable_value, GlobalVariable) and variable_value.global_constant:
-                variable_value = variable_value.initializer
-                variable_type = variable_value.initializer.type
-            else:
-                with self.llvmgen.create_in_global_ctor():
-                    variable_value = self.visit(nodes[2])
-
-                    glob = self.llvmgen.declare_non_constant_global_variable(variable_name, variable_value,
-                                                                             access_modifier,
-                                                                             "common")
-                return glob
-                # raise PermissionError("Global variables can only be of constant types right now")
-
-        glob = self.llvmgen.gen_global(variable_name, variable_value, variable_type, access_modifier,
-                                       access_modifier.get_linkage(),
-                                       False)
-
-        return glob
-
     def cast(self, tree: Tree):
         nodes = tree.children
         ty = ParserState.map_type_to_llvm(nodes[0])
