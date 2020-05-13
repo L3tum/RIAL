@@ -16,12 +16,14 @@
 
 
 // Control flow structures
-conditional_block : "if" "(" expression ")" "{" [statement*] "}"
-                  | "if" "(" expression ")" "{" [statement*] "}" "else" "{" [statement*] "}"
-
-// Transformed by DesugarTransformer
-conditional_elif_block : "if" "(" expression ")" "{" [statement*] "}" ("elif" "(" expression ")" "{" [statement*] "}")+
-                       | "if" "(" expression ")" "{" [statement*] "}" ("elif" "(" expression ")" "{" [statement*] "}")+ "else" "{" [statement*] "}"
+// Transformed into list of [ expression, likely_unlikely_modifier, conditional_body, conditional_else_block? ]
+conditional_block : "if" "(" expression ")" likely_unlikely_modifier "{" conditional_body "}" conditional_elif_block* conditional_else_block?
+conditional_body : statement*
+conditional_elif_block : "elif" "(" expression ")" likely_unlikely_modifier "{" conditional_body "}"
+conditional_else_block : "else" likely_unlikely_modifier "{" conditional_body "}"
+likely_unlikely_modifier : ["[" (LIKELY|UNLIKELY) "]"]
+LIKELY : "likely"
+UNLIKELY : "unlikely"
 
 switch_block : "switch" "(" expression ")" "{" (switch_case|default_case)+ "}"
 switch_case : "case" expression ":" ("{" [statement*] "}")?

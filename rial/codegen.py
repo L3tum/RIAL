@@ -81,6 +81,7 @@ class CodeGen:
 
     def get_module(self, name: str, filename: str, directory: str) -> RIALModule:
         module = RIALModule(name=name)
+        module.filename = filename
         module.triple = self.binding.get_default_triple()
         module.data_layout = str(self.target_machine.target_data)
         module.add_named_metadata('compiler', ['RIALC', '0.0.1', 'LLVM',

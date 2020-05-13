@@ -1,3 +1,5 @@
+from typing import Optional
+
 from llvmlite import ir
 from llvmlite.ir import PointerType, GlobalVariable, FormattedConstant
 
@@ -7,7 +9,7 @@ from rial.builtin_type_to_llvm_mapper import map_llvm_to_type, NULL
 from rial.concept.metadata_token import MetadataToken
 from rial.concept.name_mangler import mangle_function_name, mangle_global_name
 from rial.concept.parser import Interpreter, Tree, Token, Discard
-from rial.log import log_fail
+from rial.log import log_fail, log_warn
 from rial.metadata.RIALFunction import RIALFunction
 from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 from rial.type_casting import get_casting_function
@@ -299,9 +301,30 @@ class ASTVisitor(Interpreter):
         nodes = tree.children
 
         name = self.llvmgen.current_block.block.name
+        condition = nodes[0]
+        likely_unlikely_modifier: Token = nodes[1]
+        body = nodes[2]
+        else_conditional: Optional[Tree] = len(nodes) > 3 and nodes[3] or None
+        else_likely_unlikely_modifier = Token('STANDARD_WEIGHT', 50)
+
+        if else_conditional is not None:
+            if else_conditional.data == "conditional_else_block":
+                else_likely_unlikely_modifier = else_conditional.children[0]
+                else_conditional.children.pop(0)
+            else:
+                # Else-If
+                # If the IF Condition is likely, then the else if is automatically unlikely
+                # If the IF Condition is unlikely, then the else if is automatically likely
+                # This is done because the last ELSE is the opposite of the first IF and thus the ELSE IFs are automatically gone through to get there.
+                # The original ELSE IF weight is used in the following conditional blocks (that were inserted in this generated ELSE block).
+                if likely_unlikely_modifier.type == "LIKELY":
+                    else_likely_unlikely_modifier = Token("UNLIKELY", 10)
+                else:
+                    else_likely_unlikely_modifier = Token("LIKELY", 100)
+
         else_block = None
 
-        if len(nodes) == 2:
+        if else_conditional is None:
             (conditional_block, body_block, end_block) = \
                 self.llvmgen.create_conditional_block(name, self.llvmgen.current_block)
         else:
@@ -309,23 +332,34 @@ class ASTVisitor(Interpreter):
                 self.llvmgen.create_conditional_block_with_else(name,
                                                                 self.llvmgen.current_block)
 
+        if likely_unlikely_modifier.type == else_likely_unlikely_modifier.type and likely_unlikely_modifier.type != "STANDARD_WEIGHT":
+            log_warn(
+                f"{ParserState.module().filename}[{likely_unlikely_modifier.line}:{likely_unlikely_modifier.column}]WARNING 002")
+            log_warn(f"Specifying the same weight on both conditionals cancels them out.")
+            log_warn(f"Both can be safely removed.")
+
         # Create condition
         self.llvmgen.create_jump(conditional_block)
         self.llvmgen.enter_block(conditional_block)
-        cond = self.transform_helper(nodes[0])
-        self.llvmgen.create_conditional_jump(cond, body_block, else_block is not None and else_block or end_block)
+        cond = self.transform_helper(condition)
+
+        self.llvmgen.create_conditional_jump(cond, body_block, else_block is not None and else_block or end_block,
+                                             likely_unlikely_modifier.value, else_likely_unlikely_modifier.value)
 
         # Create body
         self.llvmgen.enter_block(body_block)
-        self.transform_helper(nodes[1])
+
+        for node in body.children:
+            self.transform_helper(node)
 
         # Jump out of body
         self.llvmgen.create_jump_if_not_exists(end_block)
 
         # Create else if necessary
-        if len(nodes) > 2:
+        if len(nodes) > 3:
             self.llvmgen.enter_block(else_block)
-            self.transform_helper(nodes[2])
+            for node in else_conditional.children:
+                self.transform_helper(node)
             self.llvmgen.create_jump_if_not_exists(end_block)
 
         # Leave conditional block

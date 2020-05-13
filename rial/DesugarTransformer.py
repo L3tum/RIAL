@@ -6,22 +6,29 @@ from rial.rial_types.RIALFunctionDeclarationModifier import RIALFunctionDeclarat
 
 
 class DesugarTransformer(Transformer_InPlaceRecursive):
-    def conditional_elif_block(self, nodes: List):
+    def conditional_block(self, nodes: List):
         tree = Tree('conditional_block', [])
         root_tree = tree
 
-        i = 0
-        while i < len(nodes):
-            # Check if more nodes left and current tree is "full"
-            if len(nodes) > i + 1 and len(tree.children) >= 2:
-                new_tree = Tree('conditional_block', [nodes[i]])
+        for node in nodes:
+            if isinstance(node, Tree) and node.data == "conditional_elif_block":
+                new_tree = Tree('conditional_block', [])
+                new_tree.children.extend(node.children)
                 tree.children.append(new_tree)
                 tree = new_tree
             else:
-                tree.children.append(nodes[i])
-            i += 1
+                tree.children.append(node)
 
         return root_tree
+
+    def likely_unlikely_modifier(self, nodes: List):
+        if len(nodes) == 0:
+            return Token('STANDARD_WEIGHT', 50)
+        if nodes[0].type == "LIKELY":
+            return nodes[0].update(value=100)
+        elif nodes[0].type == "UNLIKELY":
+            return nodes[0].update(value=10)
+        raise KeyError()
 
     def variable_arithmetic(self, nodes: List):
         tree = Tree('variable_assignment', [])

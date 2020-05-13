@@ -13,7 +13,6 @@ from llvmlite.ir import context
 from rial.ASTVisitor import ASTVisitor
 from rial.Cache import Cache
 from rial.DesugarTransformer import DesugarTransformer
-from rial.FunctionDeclarationTransformer import FunctionDeclarationTransformer
 from rial.ParserState import ParserState
 from rial.PrimitiveASTTransformer import PrimitiveASTTransformer
 from rial.StructDeclarationTransformer import StructDeclarationTransformer
@@ -24,6 +23,7 @@ from rial.linking.linker import Linker
 from rial.log import log_fail
 from rial.platform_support.Platform import Platform
 from rial.profiling import run_with_profiling, ExecutionStep
+from rial.stages.StageManager import execute_stage, Stage
 
 global exceptions
 
@@ -103,6 +103,8 @@ def compiler():
 
     if not CompilationManager.config.raw_opts.disable_cache:
         Cache.save_cache()
+
+    execute_stage(Stage.POST_IR_GEN)
 
     modules: Dict[str, ModuleRef] = dict()
 
@@ -272,7 +274,6 @@ def compile_file(path: str):
             for using in wait_on_modules:
                 CompilationManager.wait_for_module_compiled(using)
 
-        function_declaration_transformer = FunctionDeclarationTransformer()
         struct_declaration_transformer = StructDeclarationTransformer()
         transformer = ASTVisitor()
 
@@ -280,7 +281,7 @@ def compile_file(path: str):
             ast = struct_declaration_transformer.transform(ast)
 
             if ast is not None:
-                ast = function_declaration_transformer.visit(ast)
+                ast = struct_declaration_transformer.fdt.visit(ast)
 
             # Declarations are all already collected so we can move on.
             CompilationManager.modules[str(path)] = ParserState.module()

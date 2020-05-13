@@ -12,6 +12,7 @@ class RIALModule(Module):
     builtin_type_methods: Dict[str, List[str]]
     structs: List[RIALIdentifiedStructType]
     global_variables: List[RIALVariable]
+    filename: str
 
     def __init__(self, name='', context=context.global_context):
         super().__init__(name, context)
@@ -19,6 +20,7 @@ class RIALModule(Module):
         self.builtin_type_methods = dict()
         self.structs = list()
         self.global_variables = list()
+        self.filename = ""
 
     def get_global_safe(self: Module, name: str) -> Optional[RIALFunction]:
         try:

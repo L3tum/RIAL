@@ -6,7 +6,6 @@ from llvmlite.ir import GlobalVariable
 from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
 from rial.builtin_type_to_llvm_mapper import NULL, TRUE, FALSE
-from rial.compilation_manager import CompilationManager
 from rial.concept.parser import Transformer_InPlaceRecursive, Token, Discard
 from rial.log import log_warn, log_warn_short
 from rial.util import good_hash
@@ -21,8 +20,7 @@ class PrimitiveASTTransformer(Transformer_InPlaceRecursive):
 
     def using(self, nodes):
         mod_name = ':'.join([node.value for node in nodes])
-        ParserState.module().dependencies.append(mod_name)
-        CompilationManager.request_module(mod_name)
+        ParserState.add_dependency_and_wait(mod_name)
         raise Discard()
 
     def null(self, nodes):

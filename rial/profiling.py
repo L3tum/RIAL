@@ -19,6 +19,7 @@ class ExecutionStep(Enum):
     WRITE_OBJ = "Write out the object file"
     LINK_EXE = "Link all object files together into an exe"
     WAIT_DEPENDENCIES = "Wait for all dependencies to be compiled"
+    HOOKED_STAGE = "Step in execution that is hooked into the 'normal' execution via the stage manager."
 
     def __repr__(self):
         return self.name

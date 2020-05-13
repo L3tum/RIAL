@@ -18,7 +18,7 @@ public void main() {
 	println(5+5);
 	printInteger(5 < 5+5);
 
-	if(5 < 10){
+	if(5 < 10) {
 	    println(null);
 	} else {
 	    println("Hi");
@@ -61,11 +61,11 @@ public void main() {
 	    println("HI");
 	}
 
-	if(5 < 5){
+	if(5 < 5) [unlikely] {
 	    printBoolean(false);
-	} elif(5 > 5){
+	} elif(5 > 5) [unlikely] {
 	    printBoolean(false);
-	} else{
+	} else [likely] {
 	    printBoolean(true);
 	}
 

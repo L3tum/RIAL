@@ -3,7 +3,7 @@ from typing import Optional, Union, Tuple, List, Any
 
 from llvmlite import ir
 from llvmlite.ir import IRBuilder, AllocaInstr, Branch, FunctionType, Type, VoidType, PointerType, \
-    Argument, CallInstr, Block, Constant, FormattedConstant, GlobalVariable
+    Argument, CallInstr, Block, Constant, FormattedConstant, GlobalVariable, ConditionalBranch
 
 from rial.LLVMBlock import LLVMBlock, create_llvm_block
 from rial.LLVMUIntType import LLVMUIntType
@@ -584,11 +584,16 @@ class LLVMGen:
 
         return None
 
-    def create_conditional_jump(self, condition, true_block: LLVMBlock, false_block: LLVMBlock):
+    def create_conditional_jump(self, condition, true_block: LLVMBlock, false_block: LLVMBlock,
+                                true_branch_weight: int = 50, false_branch_weight: int = 50) -> ConditionalBranch:
         # Check if condition is a variable, we need to load that for LLVM
         condition = self.gen_load_if_necessary(condition)
 
-        return self.builder.cbranch(condition, true_block.block, false_block.block)
+        cbranch = self.builder.cbranch(condition, true_block.block, false_block.block)
+
+        cbranch.set_weights([true_branch_weight, false_branch_weight])
+
+        return cbranch
 
     def create_jump(self, target_block: LLVMBlock):
         return self.builder.branch(target_block.block)
