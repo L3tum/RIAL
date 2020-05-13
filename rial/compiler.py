@@ -15,7 +15,6 @@ from llvmlite.ir import context
 from rial.ASTVisitor import ASTVisitor
 from rial.Cache import Cache
 from rial.DesugarTransformer import DesugarTransformer
-from rial.FunctionDeclarationTransformer import FunctionDeclarationTransformer
 from rial.GlobalDeclarationTransformer import GlobalDeclarationTransformer
 from rial.ParserState import ParserState
 from rial.PrimitiveASTTransformer import PrimitiveASTTransformer
@@ -269,15 +268,11 @@ def compile_file(path: str):
             ast = primitive_transformer.transform(ast)
 
         struct_declaration_transformer = StructDeclarationTransformer()
-        function_declaration_transformer = FunctionDeclarationTransformer()
         global_declaration_transformer = GlobalDeclarationTransformer()
         transformer = ASTVisitor()
 
         with run_with_profiling(filename, ExecutionStep.GEN_IR):
-            ast = struct_declaration_transformer.transform(ast)
-
-            if ast is not None:
-                ast = function_declaration_transformer.visit(ast)
+            ast = struct_declaration_transformer.visit(ast)
 
             if ast is not None:
                 ast = global_declaration_transformer.visit(ast)
@@ -285,7 +280,6 @@ def compile_file(path: str):
             # Declarations are all already collected so we can move on.
             CompilationManager.modules[str(path)] = ParserState.module()
             CompilationManager.finish_file(path)
-            sleep(0.01)
 
             if ast is not None:
                 transformer.visit(ast)
