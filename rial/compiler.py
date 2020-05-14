@@ -6,7 +6,6 @@ from os import listdir
 from os.path import isfile, join
 from pathlib import Path
 from queue import Empty
-from time import sleep
 from typing import List, Dict
 
 from llvmlite.binding import ModuleRef
@@ -15,6 +14,7 @@ from llvmlite.ir import context
 from rial.ASTVisitor import ASTVisitor
 from rial.Cache import Cache
 from rial.DesugarTransformer import DesugarTransformer
+from rial.FunctionDeclarationTransformer import FunctionDeclarationTransformer
 from rial.GlobalDeclarationTransformer import GlobalDeclarationTransformer
 from rial.ParserState import ParserState
 from rial.PrimitiveASTTransformer import PrimitiveASTTransformer
@@ -268,11 +268,15 @@ def compile_file(path: str):
             ast = primitive_transformer.transform(ast)
 
         struct_declaration_transformer = StructDeclarationTransformer()
+        function_declaration_transformer = FunctionDeclarationTransformer()
         global_declaration_transformer = GlobalDeclarationTransformer()
         transformer = ASTVisitor()
 
         with run_with_profiling(filename, ExecutionStep.GEN_IR):
             ast = struct_declaration_transformer.visit(ast)
+
+            if ast is not None:
+                ast = function_declaration_transformer.visit(ast)
 
             if ast is not None:
                 ast = global_declaration_transformer.visit(ast)
