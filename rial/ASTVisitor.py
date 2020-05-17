@@ -1,17 +1,16 @@
 from typing import Optional
 
 from llvmlite import ir
-from llvmlite.ir import PointerType, GlobalVariable, FormattedConstant
+from llvmlite.ir import PointerType, BaseStructType
 
 from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
 from rial.builtin_type_to_llvm_mapper import map_llvm_to_type, NULL
 from rial.concept.metadata_token import MetadataToken
-from rial.concept.name_mangler import mangle_function_name, mangle_global_name
+from rial.concept.name_mangler import mangle_function_name
 from rial.concept.parser import Interpreter, Tree, Token, Discard
 from rial.log import log_fail, log_warn
 from rial.metadata.RIALFunction import RIALFunction
-from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 from rial.type_casting import get_casting_function
 
 
@@ -135,8 +134,17 @@ class ASTVisitor(Interpreter):
 
     def cast(self, tree: Tree):
         nodes = tree.children
-        ty = ParserState.map_type_to_llvm(nodes[0])
+        ty = ParserState.map_type_to_llvm_no_pointer(nodes[0])
         value = self.llvmgen.gen_load_if_necessary(self.transform_helper(nodes[1]))
+
+        if isinstance(ty, BaseStructType):
+            if isinstance(value, ir.Constant) and isinstance(value.type, ir.IntType):
+                if not self.llvmgen.currently_unsafe:
+                    raise PermissionError("Cannot cast integer to pointer in a safe context")
+                return self.llvmgen.builder.inttoptr(value, ir.PointerType(ty))
+            elif isinstance(value, BaseStructType):
+                return self.llvmgen.builder.bitcast(value, ty)
+
         cast_function = get_casting_function(value.type, ty)
 
         if hasattr(self.llvmgen.builder, cast_function):
@@ -451,6 +459,14 @@ class ASTVisitor(Interpreter):
 
         return None, block
 
+    def unsafe_block(self, tree: Tree):
+        nodes = tree.children
+        self.llvmgen.currently_unsafe = True
+        i = 1
+        while i < len(nodes):
+            self.visit(nodes[i])
+            i += 1
+
     def struct_decl(self, tree: Tree):
         nodes = tree.children
         node = nodes[0]
@@ -619,12 +635,17 @@ class ASTVisitor(Interpreter):
         body_start = node.metadata['body_start']
         function_name = node.metadata['full_name']
         rial_arg_types = node.metadata['rial_arg_types']
-        func = next((func for func in ParserState.module().functions if func.name == function_name), None)
+        func: RIALFunction = next((func for func in ParserState.module().functions if func.name == function_name), None)
 
         if func is None:
             raise KeyError("Expected a function but didn't find it!")
 
         self.llvmgen.create_function_body(func, rial_arg_types)
+        old_unsafe = self.llvmgen.currently_unsafe
+
+        # Only set unsafely if the current context is safe.
+        if not old_unsafe:
+            self.llvmgen.currently_unsafe = func.definition.unsafe
 
         i = body_start
         while i < len(nodes):
@@ -633,5 +654,6 @@ class ASTVisitor(Interpreter):
 
         self.llvmgen.finish_current_block()
         self.llvmgen.finish_current_func()
+        self.llvmgen.currently_unsafe = old_unsafe
 
         return None

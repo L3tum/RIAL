@@ -50,6 +50,7 @@ def compiler():
     if not path.exists():
         raise FileNotFoundError(str(path))
 
+    # Clear global data that can sometimes remain (especially during test execution).
     context.global_context.scope._useset.clear()
     context.global_context.identified_types.clear()
 

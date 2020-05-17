@@ -11,13 +11,15 @@ class FunctionDefinition:
     """
     rial_args: List[Tuple[str, str]]
     struct: str
+    unsafe: bool
 
     def __init__(self, rial_return_type: str = "", access_modifier: RIALAccessModifier = RIALAccessModifier.PRIVATE,
-                 rial_args: List[Tuple[str, str]] = None, struct=""):
+                 rial_args: List[Tuple[str, str]] = None, struct="", unsafe: bool = False):
         self.rial_return_type = rial_return_type
         self.access_modifier = access_modifier
         self.rial_args = rial_args
         self.struct = struct
+        self.unsafe = unsafe
 
         if self.rial_args is None:
             self.rial_args = list()

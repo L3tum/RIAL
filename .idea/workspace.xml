@@ -20,10 +20,24 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Remodeled Declaration Transformers by combining the StructDeclarationTransformer.py and FunctionDeclarationTransformer.py into one, since the top-down nature of TranformerInterpreter ensures the correct execution hierarchy.">
-      <change afterPath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/issues/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/ASTVisitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ASTVisitor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/DesugarTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/DesugarTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/LLVMGen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMGen.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/ParserState.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ParserState.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/builtin/always_imported/nop.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin/always_imported/nop.rial" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/builtin/ffi/print.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin/ffi/print.rial" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/builtin/print.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin/print.rial" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/builtin/system.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin/system.rial" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/compiler.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compiler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/metadata/FunctionDefinition.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/metadata/FunctionDefinition.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/rial_types/RIALFunctionDeclarationModifier.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/rial_types/RIALFunctionDeclarationModifier.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -200,6 +214,9 @@
       <workItem from="1589284866572" duration="6844000" />
       <workItem from="1589369611125" duration="11821000" />
       <workItem from="1589449653693" duration="372000" />
+      <workItem from="1589543172503" duration="5158000" />
+      <workItem from="1589659069274" duration="1190000" />
+      <workItem from="1589714023208" duration="5075000" />
     </task>
     <task id="LOCAL-00008" summary="Improves function finding when it's a class function&#10;Closes #4">
       <created>1586768215620</created>
@@ -638,19 +655,19 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="1106" y="402" key="RollbackChangesDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1589375108539" />
-    <state x="781" y="342" key="SettingsEditor" timestamp="1588321615452">
+    <state x="781" y="342" key="SettingsEditor" timestamp="1589717111642">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588321615452" />
+    <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1589717111642" />
     <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1589409492143">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1589409492143" />
-    <state x="97" y="126" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1589031829329">
+    <state x="97" y="126" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1589717472507">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="97" y="126" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1589031829329" />
+    <state x="97" y="126" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1589717472507" />
     <state x="976" y="524" key="com.intellij.ide.util.TipDialog" timestamp="1586262835590">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

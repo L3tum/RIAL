@@ -3,7 +3,7 @@ from typing import Optional, Union, Tuple, List, Any
 
 from llvmlite import ir
 from llvmlite.ir import IRBuilder, AllocaInstr, Branch, FunctionType, Type, VoidType, PointerType, \
-    Argument, CallInstr, Block, Constant, FormattedConstant, GlobalVariable, ConditionalBranch
+    Argument, CallInstr, Block, Constant, FormattedConstant, GlobalVariable, ConditionalBranch, CastInstr
 
 from rial.LLVMBlock import LLVMBlock, create_llvm_block
 from rial.LLVMUIntType import LLVMUIntType
@@ -26,6 +26,7 @@ class LLVMGen:
     end_block: Optional[LLVMBlock]
     current_block: Optional[LLVMBlock]
     current_struct: Optional[RIALIdentifiedStructType]
+    currently_unsafe: bool
 
     def __init__(self):
         self.current_block = None
@@ -34,6 +35,7 @@ class LLVMGen:
         self.current_func = None
         self.builder = None
         self.current_struct = None
+        self.currently_unsafe = False
 
     def _get_by_identifier(self, identifier: str, variable: Optional = None) -> Optional:
         if not variable is None and hasattr(variable, 'type') and isinstance(variable.type, PointerType):
@@ -367,6 +369,9 @@ class LLVMGen:
         self.gen_function_call(["rial:builtin:settings:nop_function"], [])
 
     def check_function_call_allowed(self, func: RIALFunction):
+        # Unsafe in safe context is big no-no
+        if func.definition.unsafe and not self.currently_unsafe:
+            return False
         # Public is always okay
         if func.definition.access_modifier == RIALAccessModifier.PUBLIC:
             return True
@@ -478,6 +483,13 @@ class LLVMGen:
         if isinstance(value, AllocaInstr) or isinstance(value, PointerType):
             variable = value
             variable.name = identifier
+        elif isinstance(value, CastInstr) and value.opname == "inttoptr":
+            variable = self.builder.alloca(value.type.pointee)
+            variable.name = identifier
+            rial_type = f"{map_llvm_to_type(value.type)}"
+            variable.set_metadata('type',
+                                  ParserState.module().add_metadata((rial_type,)))
+            self.builder.store(self.builder.load(value), variable)
         elif isinstance(value, FormattedConstant):
             variable = self.builder.alloca(value.type.pointee)
             variable.name = identifier
@@ -514,10 +526,8 @@ class LLVMGen:
 
         if isinstance(value, AllocaInstr):
             value = self.builder.load(value)
-        elif isinstance(value, PointerType):
+        elif isinstance(value, PointerType) and not isinstance(variable, PointerType):
             value = self.builder.load(value.pointee)
-        elif isinstance(value, FormattedConstant):
-            value = self.builder.load(value)
 
         self.builder.store(value, variable)
 

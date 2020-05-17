@@ -49,6 +49,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
     def external_function_decl(self, tree: Tree):
         nodes = tree.children
         access_modifier: RIALAccessModifier = nodes[0].access_modifier
+        unsafe: bool = nodes[0].unsafe
         linkage = "external"
         calling_convention = "ccc"
         return_type = nodes[1].value
@@ -80,6 +81,9 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
                 args.append((arg_type, arg_name))
                 i += 1
 
+        if not unsafe and not self.llvmgen.currently_unsafe:
+            raise PermissionError("Can only declare external functions in unsafe blocks or as unsafe functions.")
+
         # Map RIAL args to llvm arg types
         llvm_args = [ParserState.map_type_to_llvm(arg[0]) for arg in args if not arg[1].endswith("...")]
 
@@ -91,13 +95,15 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
         func = self.llvmgen.create_function_with_type(name, func_type, linkage,
                                                       calling_convention,
                                                       list(map(lambda arg: arg[1], args)),
-                                                      FunctionDefinition(return_type, access_modifier, args, ""))
+                                                      FunctionDefinition(return_type, access_modifier, args, "",
+                                                                         unsafe))
 
         raise Discard()
 
     def extension_function_decl(self, tree: Tree):
         nodes = tree.children
         access_modifier: RIALAccessModifier = nodes[0].access_modifier
+        unsafe: bool = nodes[0].unsafe
         linkage = access_modifier.get_linkage()
         calling_convention = self.default_cc
         return_type = nodes[1].value
@@ -147,7 +153,8 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
                                                       calling_convention,
                                                       list(map(lambda arg: arg[1], args)),
                                                       FunctionDefinition(return_type, access_modifier, args,
-                                                                         self.llvmgen.current_struct is not None and self.llvmgen.current_struct.name or ""))
+                                                                         self.llvmgen.current_struct is not None and self.llvmgen.current_struct.name or "",
+                                                                         unsafe))
 
         if is_builtin_type(this_arg):
             if this_arg not in ParserState.builtin_types:
@@ -189,6 +196,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
             return self.visit(nodes[0])
 
         access_modifier: RIALAccessModifier = nodes[0].access_modifier
+        unsafe: bool = nodes[0].unsafe
         linkage = access_modifier.get_linkage()
         main_function = False
         calling_convention = self.default_cc
@@ -264,7 +272,8 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
                                                       calling_convention,
                                                       list(map(lambda arg: arg[1], args)),
                                                       FunctionDefinition(return_type, access_modifier, args,
-                                                                         self.llvmgen.current_struct is not None and self.llvmgen.current_struct.name or ""))
+                                                                         self.llvmgen.current_struct is not None and self.llvmgen.current_struct.name or "",
+                                                                         unsafe))
 
         if self.llvmgen.current_struct is not None:
             self.llvmgen.current_struct.definition.functions.append(func.name)

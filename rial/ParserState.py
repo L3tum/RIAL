@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Optional, List, Tuple, Dict
 
 from llvmlite import ir
+from llvmlite.ir import BaseStructType
 
 from rial.builtin_type_to_llvm_mapper import map_type_to_llvm
 from rial.compilation_manager import CompilationManager
@@ -71,7 +72,11 @@ class ParserState:
         if glob is None:
             globs_found: List[Tuple] = list()
             for using in ParserState.module().dependencies:
-                module = CompilationManager.modules[CompilationManager.path_from_mod_name(using)]
+                path = CompilationManager.path_from_mod_name(using)
+                if path not in CompilationManager.modules:
+                    continue
+                module = CompilationManager.modules[path]
+
                 gl = module.get_rial_variable(name)
 
                 if gl is None:
@@ -114,7 +119,11 @@ class ParserState:
                 functions_found: List[Tuple[str, RIALFunction]] = list()
 
                 for use in ParserState.module().dependencies:
-                    module = CompilationManager.modules[CompilationManager.path_from_mod_name(use)]
+                    path = CompilationManager.path_from_mod_name(use)
+                    if path not in CompilationManager.modules:
+                        continue
+                    module = CompilationManager.modules[path]
+
                     function = module.get_global_safe(full_function_name)
 
                     if function is None:
@@ -184,17 +193,11 @@ class ParserState:
 
     @staticmethod
     def map_type_to_llvm(name: str):
-        llvm_type = map_type_to_llvm(name)
+        llvm_type = ParserState.map_type_to_llvm_no_pointer(name)
 
-        # Check if builtin type
-        if llvm_type is None:
-            struct = ParserState.find_struct(name)
-
-            if struct is not None:
-                llvm_type = ir.PointerType(struct)
-            else:
-                log_fail(f"Referenced unknown type {name}")
-                return None
+        # Create pointer for struct
+        if llvm_type is not None and isinstance(llvm_type, BaseStructType):
+            llvm_type = ir.PointerType(llvm_type)
 
         return llvm_type
 

@@ -45,10 +45,10 @@ class PrimitiveASTTransformer(Transformer_InPlaceRecursive):
             return self.llvmgen.gen_double(float(value.strip("d")))
 
         if value.startswith("0x"):
-            return self.llvmgen.gen_integer(int(value), 32)
+            return self.llvmgen.gen_integer(int(value, 16), 32)
 
         if value.startswith("0b"):
-            return self.llvmgen.gen_integer(int(value), 32)
+            return self.llvmgen.gen_integer(int(value, 2), 32)
 
         if value.endswith("l"):
             log_warn(

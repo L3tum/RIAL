@@ -1,10 +1,11 @@
-?start : [(struct_decl|global_variable_decl|global_variable_assignment|attributed_func_decl|function_decl|using|attributed_compiler_directive)*]
+?start : [(unsafe_top_level_block|struct_decl|global_variable_decl|global_variable_assignment|attributed_func_decl|function_decl|using|attributed_compiler_directive)*]
 ?statement : conditional_block
            | conditional_elif_block
            | switch_block
            | for_loop
            | while_loop
            | loop_loop
+           | unsafe_block
            | function_call
            | expression ";"
            | variable_decl ";"
@@ -59,24 +60,30 @@ struct_decl : modifier "struct" IDENTIFIER [":" IDENTIFIER ("," IDENTIFIER)*] "{
 struct_property_declaration : modifier IDENTIFIER IDENTIFIER ["=" expression]
 
 // Functions
-function_call : IDENTIFIER "(" function_args ")"
+?function_call : IDENTIFIER "(" function_args ")"
                | constructor_call
                | nested_function_call
 constructor_call : "new" IDENTIFIER "(" function_args ")"
 nested_function_call : IDENTIFIER ("." IDENTIFIER)+ "(" function_args ")"
 function_args : [expression ("," expression)*]
 
-function_decl : modifier IDENTIFIER IDENTIFIER "(" [IDENTIFIER IDENTIFIER ("," IDENTIFIER IDENTIFIER)*] ")" "{" [statement*] "}"
+?function_decl : modifier IDENTIFIER IDENTIFIER "(" [IDENTIFIER IDENTIFIER ("," IDENTIFIER IDENTIFIER)*] ")" "{" [statement*] "}"
               | external_function_decl
               | extension_function_decl
 extension_function_decl : modifier IDENTIFIER IDENTIFIER "(" "this" IDENTIFIER IDENTIFIER ("," IDENTIFIER IDENTIFIER)* ")" "{" [statement*] "}"
 external_function_decl : ("external" modifier|modifier "external") IDENTIFIER IDENTIFIER "(" [PARAMS? IDENTIFIER IDENTIFIER ("," IDENTIFIER IDENTIFIER | "," PARAMS IDENTIFIER IDENTIFIER)*] ")" ";"
-modifier : (ACCESS_MODIFIER)*
+
+// Modifiers
+modifier : (ACCESS_MODIFIER|UNSAFE)*
 
 // Attributes
 ?attribute : "[" function_call "]"
 attributed_func_decl : attribute+ function_decl
 attributed_compiler_directive : PREPRO_FLAG attribute
+
+// Unsafe
+unsafe_block : UNSAFE "{" statement* "}"
+unsafe_top_level_block : UNSAFE "{" (attributed_func_decl|function_decl|global_variable_decl|global_variable_assignment)* "}"
 
 // Base expression
 ?expression : function_call
@@ -104,6 +111,7 @@ math : expression (PLUS|MINUS|MUL|DIV) expression
 
 using : "use" IDENTIFIER (":" IDENTIFIER)* ";"
 ACCESS_MODIFIER.2 : "private" | "public" | "internal"
+UNSAFE.2 : "unsafe"
 
 DIV.-4 : "/"
 MUL.-4 : "*"
@@ -116,7 +124,7 @@ SMALLER_EQUAL.-7 : "<="
 EQUAL.-7 : "=="
 ASSIGN.-8 : "="
 
-NUMBER.-3 : (PLUS|MINUS)? (FLOAT_SC|FLOAT|INT|HEX_INT|BIN_INT) ("uL"|"U"|"Ul"|"UL"|"ul"|"l"|"u"|"L"|"b"|"B")?
+NUMBER.-3 : (PLUS|MINUS)? (HEX_INT|BIN_INT|FLOAT_SC|FLOAT|INT) ("uL"|"U"|"Ul"|"UL"|"ul"|"l"|"u"|"L"|"b"|"B")?
 FLOAT_SC.-1 : (FLOAT|INT) "e" ("-"|"+")? INT
 FLOAT.-2 : (INT+ "." INT+|INT+ "."|"." INT+) ("f"|"d"|"h")?
 BIN_INT : "0b" ("0"|"1"|"_")+

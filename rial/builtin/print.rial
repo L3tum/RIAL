@@ -1,37 +1,55 @@
 use rial:builtin:ffi:print;
 
 public void printInteger(int arg){
-    printf("%i\n", arg);
+    unsafe {
+        printf("%i\n", arg);
+    }
 }
 
 public void printInteger(bool arg){
-    printf("%i\n", arg);
+    unsafe {
+        printf("%i\n", arg);
+    }
 }
 
 public void printInteger(long arg){
-    printf("%i\n", arg);
+    unsafe {
+        printf("%i\n", arg);
+    }
 }
 
 public void printInteger(ulong arg){
-    printf("%i\n", arg);
+    unsafe {
+        printf("%i\n", arg);
+    }
 }
 
 public void printFloat(float arg){
-    printf("%f\n", arg);
+    unsafe {
+        printf("%f\n", arg);
+    }
 }
 
 public void printDouble(double arg){
-    printf("%f\n", arg);
+    unsafe {
+        printf("%f\n", arg);
+    }
 }
 
 public void println(CString arg){
-    printf("%s \n", arg);
+    unsafe {
+        printf("%s\n", arg);
+    }
 }
 
 public void println(int arg){
-    printf("%i \n", arg);
+    unsafe {
+        printf("%i\n", arg);
+    }
 }
 
 public void print(CString arg){
-    printf(arg);
+    unsafe {
+        printf(arg);
+    }
 }

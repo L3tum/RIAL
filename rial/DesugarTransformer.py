@@ -1,6 +1,7 @@
 from typing import List
 
 from rial.concept.parser import Tree, Transformer_InPlaceRecursive, Token
+from rial.log import log_warn_short
 from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 from rial.rial_types.RIALFunctionDeclarationModifier import RIALFunctionDeclarationModifier
 
@@ -49,9 +50,29 @@ class DesugarTransformer(Transformer_InPlaceRecursive):
 
     def modifier(self, nodes: List):
         access_modifier = RIALAccessModifier.INTERNAL
+        unsafe = False
 
         for node in nodes:
+            node: Token
             if node.type == "ACCESS_MODIFIER":
                 access_modifier = RIALAccessModifier[node.value.upper()]
+            elif node.type == "UNSAFE":
+                if unsafe:
+                    log_warn_short(f"Multiple unsafe declarations for function at {node.line}")
+                unsafe = True
 
-        return RIALFunctionDeclarationModifier(access_modifier=access_modifier)
+        return RIALFunctionDeclarationModifier(access_modifier=access_modifier, unsafe=unsafe)
+
+    def unsafe_top_level_block(self, nodes: List):
+        """
+        Depends on the modifier parsing function above. If this is somehow executed before that,
+        then this function will not break, but will no work either.
+        :param nodes:
+        :return:
+        """
+        for node in nodes:
+            if isinstance(node, Tree):
+                if isinstance(node.children[0], RIALFunctionDeclarationModifier):
+                    node.children[0].unsafe = True
+
+        return Tree('unsafe_top_level_block', nodes)

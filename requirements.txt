@@ -12,3 +12,5 @@ hurry~=1.1
 pythonfuzz~=1.0.3
 yappi~=1.2.5
 gil_load~=0.4.0
+numba~=0.49.1
+setuptools~=46.1.3
