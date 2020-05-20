@@ -23,6 +23,7 @@ DEFAULT_OPTIONS = {
         'print_asm': False,
         'print_ir': False,
         'disable_cache': False,
+        'disable_opt': False,
         'use_object_files': True,
         'opt_level': '0',
         'print_link_command': False,
@@ -120,10 +121,11 @@ def parse_prelim_arguments():
                         help="Use object files rather than LLVM bitcode files for linking", default=None)
     parser.add_argument('--disable-cache', action='store_true',
                         help="Disable cache", default=None)
+    parser.add_argument('--disable-opt', action='store_true',
+                        help="Completely disables any kind of optimization", default=None)
     parser.add_argument('--profile', help="Profiles the compiler", action="store_true", default=None)
     parser.add_argument('--profile-gil', help="Profiles the GIL", action="store_true", default=None)
     parser.add_argument('--print-options', help="Prints the passed options", action="store_true", default=False)
-    parser.add_argument('--compile-units', help="Number of compile units to use", type=int, default=None)
 
     return parser.parse_known_args()
 

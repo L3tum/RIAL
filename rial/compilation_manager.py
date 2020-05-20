@@ -29,7 +29,7 @@ class CompilationManager:
         CompilationManager.compiled_lock = Lock()
         CompilationManager.config = config
         CompilationManager.modules = dict()
-        CompilationManager.codegen = CodeGen(config.raw_opts.opt_level)
+        CompilationManager.codegen = CodeGen(config.raw_opts.opt_level, config.raw_opts.disable_opt)
         CompilationManager.always_imported = list()
 
     @staticmethod

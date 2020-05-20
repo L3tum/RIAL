@@ -85,8 +85,12 @@ attributed_compiler_directive : PREPRO_FLAG attribute
 unsafe_block : UNSAFE "{" statement* "}"
 unsafe_top_level_block : UNSAFE "{" (attributed_func_decl|function_decl|global_variable_decl|global_variable_assignment)* "}"
 
+// Sizeof
+sizeof : "sizeof" "(" IDENTIFIER ")"
+
 // Base expression
-?expression : function_call
+?expression : sizeof
+            | function_call
             | math
             | expression SMALLER expression -> smaller_than
             | expression BIGGER expression -> bigger_than
@@ -134,7 +138,7 @@ PARAMS: "params"
 THIS : "this"
 PREPRO_FLAG : "#"
 
-IDENTIFIER.-10 : /(?!(^(var|return|use|external|params|public|internal|private)$))#?(_|[a-zA-Z])(_|[a-zA-Z0-9])*/
+IDENTIFIER.-10 : /(?!(^(var|return|use|external|params|public|internal|private|sizeof)$))#?(_|[a-zA-Z])(_|[a-zA-Z0-9])*/
                | "@\"" /[^"]+/ "\""
 
 COMMENT : "//" /[^\n]*/ "\n"

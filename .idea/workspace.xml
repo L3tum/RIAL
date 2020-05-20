@@ -19,25 +19,18 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Remodeled Declaration Transformers by combining the StructDeclarationTransformer.py and FunctionDeclarationTransformer.py into one, since the top-down nature of TranformerInterpreter ensures the correct execution hierarchy.">
-      <change afterPath="$PROJECT_DIR$/tests/issues/__init__.py" afterDir="false" />
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Added unsafe contexts, functions and top level blocks&#10;Updated builtin to use the new constructs&#10;&#10;External functions are now unsafe&#10;Added integer to variable conversion, which is also unsafe.&#10;&#10;Fixed bug causing variable assignments trying to load Strings as integers&#10;Fixed bug causing hex and binary integers to be converted as base-10&#10;Fixed a few unnecessary indirections in function declarations and calls&#10;&#10;Closes #22">
+      <change afterPath="$PROJECT_DIR$/rial/concept/only_allowed_in_unsafe.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/ASTVisitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ASTVisitor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/DesugarTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/DesugarTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/LLVMGen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMGen.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/ParserState.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ParserState.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/builtin/always_imported/nop.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin/always_imported/nop.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/builtin/ffi/print.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin/ffi/print.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/builtin/print.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin/print.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/builtin/system.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin/system.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/compiler.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compiler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/codegen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/codegen.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/compilation_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compilation_manager.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/concept/config_schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/config_schema.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/metadata/FunctionDefinition.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/metadata/FunctionDefinition.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/rial_types/RIALFunctionDeclarationModifier.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/rial_types/RIALFunctionDeclarationModifier.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing/src/print.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/print.rial" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -216,14 +209,9 @@
       <workItem from="1589449653693" duration="372000" />
       <workItem from="1589543172503" duration="5158000" />
       <workItem from="1589659069274" duration="1190000" />
-      <workItem from="1589714023208" duration="5075000" />
-    </task>
-    <task id="LOCAL-00008" summary="Improves function finding when it's a class function&#10;Closes #4">
-      <created>1586768215620</created>
-      <option name="number" value="00008" />
-      <option name="presentableId" value="LOCAL-00008" />
-      <option name="project" value="LOCAL" />
-      <updated>1586768215620</updated>
+      <workItem from="1589714023208" duration="7421000" />
+      <workItem from="1589812197675" duration="2026000" />
+      <workItem from="1589971996520" duration="4014000" />
     </task>
     <task id="LOCAL-00009" summary="Improved function finding when it's a class function">
       <created>1586768252416</created>
@@ -561,7 +549,14 @@
       <option name="project" value="LOCAL" />
       <updated>1589409491112</updated>
     </task>
-    <option name="localTasksCounter" value="57" />
+    <task id="LOCAL-00057" summary="Added unsafe contexts, functions and top level blocks&#10;Updated builtin to use the new constructs&#10;&#10;External functions are now unsafe&#10;Added integer to variable conversion, which is also unsafe.&#10;&#10;Fixed bug causing variable assignments trying to load Strings as integers&#10;Fixed bug causing hex and binary integers to be converted as base-10&#10;Fixed a few unnecessary indirections in function declarations and calls&#10;&#10;Closes #22">
+      <created>1589720181913</created>
+      <option name="number" value="00057" />
+      <option name="presentableId" value="LOCAL-00057" />
+      <option name="project" value="LOCAL" />
+      <updated>1589720181913</updated>
+    </task>
+    <option name="localTasksCounter" value="58" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -590,7 +585,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Improved worst case scenario when looking up functions and structs" />
     <MESSAGE value="Add parser support for global variables&#10;Fix two bugs in CLI args missing --profile and variable declarations not having types inferred" />
     <MESSAGE value="Added support for elif constructs&#10;Closes #40" />
     <MESSAGE value="Added support for switch/case statement&#10;With default statement&#10;And multiple cases per block" />
@@ -615,7 +609,8 @@
     <MESSAGE value="Implemented likely/unlikely for conditions&#10;Closes #52&#10;&#10;TODO: Switch and while&#10;&#10;Also added first draft of stages for checking algorithms" />
     <MESSAGE value="Fixed a bug that would sometimes occur when a particular thread resumes that depends on global variables from another module, since those global declarations were only handled in the ASTVisitor.py and thus were not waited on" />
     <MESSAGE value="Remodeled Declaration Transformers by combining the StructDeclarationTransformer.py and FunctionDeclarationTransformer.py into one, since the top-down nature of TranformerInterpreter ensures the correct execution hierarchy." />
-    <option name="LAST_COMMIT_MESSAGE" value="Remodeled Declaration Transformers by combining the StructDeclarationTransformer.py and FunctionDeclarationTransformer.py into one, since the top-down nature of TranformerInterpreter ensures the correct execution hierarchy." />
+    <MESSAGE value="Added unsafe contexts, functions and top level blocks&#10;Updated builtin to use the new constructs&#10;&#10;External functions are now unsafe&#10;Added integer to variable conversion, which is also unsafe.&#10;&#10;Fixed bug causing variable assignments trying to load Strings as integers&#10;Fixed bug causing hex and binary integers to be converted as base-10&#10;Fixed a few unnecessary indirections in function declarations and calls&#10;&#10;Closes #22" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added unsafe contexts, functions and top level blocks&#10;Updated builtin to use the new constructs&#10;&#10;External functions are now unsafe&#10;Added integer to variable conversion, which is also unsafe.&#10;&#10;Fixed bug causing variable assignments trying to load Strings as integers&#10;Fixed bug causing hex and binary integers to be converted as base-10&#10;Fixed a few unnecessary indirections in function declarations and calls&#10;&#10;Closes #22" />
   </component>
   <component name="WindowStateProjectService">
     <state x="906" y="378" key="#Inspections" timestamp="1588322612153">
@@ -659,11 +654,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1589717111642" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1589409492143">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1589720183078">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1589409492143" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1589720183078" />
     <state x="97" y="126" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1589717472507">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

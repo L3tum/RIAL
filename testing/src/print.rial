@@ -11,6 +11,7 @@ internal struct Test : Attribute {
 
 private void printTestWrapperWrapper(Test test){
     test.printTest();
+    println(sizeof(Test));
 }
 
 internal void printTestWrapper(){

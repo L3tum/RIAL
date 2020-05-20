@@ -6,6 +6,7 @@ from llvmlite.ir import PointerType, BaseStructType
 from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
 from rial.builtin_type_to_llvm_mapper import map_llvm_to_type, NULL
+from rial.compilation_manager import CompilationManager
 from rial.concept.metadata_token import MetadataToken
 from rial.concept.name_mangler import mangle_function_name
 from rial.concept.parser import Interpreter, Tree, Token, Discard
@@ -61,6 +62,31 @@ class ASTVisitor(Interpreter):
         right = self.transform_helper(nodes[2])
 
         return self.llvmgen.gen_comparison('==', left, right)
+
+    def sizeof(self, tree: Tree):
+        nodes = tree.children
+        name = nodes[0].value
+        ty = ParserState.map_type_to_llvm_no_pointer(name)
+
+        if isinstance(ty, ir.IntType):
+            return ir.Constant(ir.IntType(32), ty.width)
+        if isinstance(ty, ir.FloatType):
+            return ir.Constant(ir.IntType(32), 32)
+        if isinstance(ty, ir.DoubleType):
+            return ir.Constant(ir.IntType(32), 64)
+        if isinstance(ty, BaseStructType):
+            return ir.Constant(ir.IntType(32), ty.get_abi_size(CompilationManager.codegen.target_machine.target_data))
+
+        # This is worst case as it cannot be optimized away.
+        # TODO: Check if we know the type of the variable
+        var = ty
+        base = self.llvmgen.builder.ptrtoint(self.llvmgen.builder.gep(var, [ir.Constant(ir.IntType(32), 0)]),
+                                             ir.IntType(32))
+        val = self.llvmgen.builder.ptrtoint(self.llvmgen.builder.gep(var, [ir.Constant(ir.IntType(32), 1)]),
+                                            ir.IntType(32))
+        size = self.llvmgen.builder.sub(val, base)
+
+        return size
 
     def var(self, tree: Tree):
         if isinstance(tree, Tree):

@@ -37,8 +37,11 @@
     "workdir": {
       "type": "string"
     },
-    "compile_units": {
-      "type": "integer"
+    "disable_cache": {
+      "type": "boolean"
+    },
+    "disable_opt": {
+      "type": "boolean"
     }
   }
 }

@@ -54,7 +54,7 @@ class PrimitiveASTTransformer(Transformer_InPlaceRecursive):
             log_warn(
                 f"{ParserState.module().name}[{nodes[0].line}:{nodes[0].column}] WARNING 0001")
             log_warn_short(
-                "Some fonts display a lowercase 'l' as a one. Please consider using an uppercase 'L' instead.")
+                "Some fonts display a lowercase 'l' similar to the number '1'(one). Please consider using an uppercase 'L' instead.")
             log_warn_short(value)
 
         if value_lowered.endswith("b"):
