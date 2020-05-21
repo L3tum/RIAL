@@ -104,7 +104,63 @@ class ParserState:
         return glob
 
     @staticmethod
-    def find_function(full_function_name: str) -> Optional[RIALFunction]:
+    def find_function(full_function_name: str, rial_arg_types: List[str] = None) -> Optional[RIALFunction]:
+        # Check by canonical name if we got args to check
+        if rial_arg_types is not None:
+            func = ParserState.module().get_function(full_function_name)
+
+            # If couldn't find it, iterate through usings and try to find function
+            if func is None:
+                functions_found: List[Tuple[str, RIALFunction]] = list()
+
+                for use in ParserState.module().dependencies:
+                    path = CompilationManager.path_from_mod_name(use)
+                    if path not in CompilationManager.modules:
+                        continue
+                    module = CompilationManager.modules[path]
+
+                    function = module.get_function(full_function_name)
+
+                    if function is None:
+                        continue
+                    functions_found.append((use, function,))
+
+                # Check each function if the arguments match the passed arguments
+                if len(functions_found) > 1:
+                    for tup in functions_found:
+                        function = tup[1]
+                        matches = True
+
+                        for i, arg in enumerate(function.definition.rial_args):
+                            if arg[0] != rial_arg_types[i]:
+                                matches = False
+                                break
+                        if matches:
+                            func = function
+                            break
+
+                # Check for number of functions found
+                elif len(functions_found) == 1:
+                    func = functions_found[0][1]
+
+            if func is not None:
+                # Function is in current module and only a declaration, safe to assume that it's a redeclared function
+                # from another module or originally declared in this module anyways
+                if func.module.name != ParserState.module().name and not func.is_declaration:
+                    # Function cannot be accessed if:
+                    #   - Function is not public and
+                    #   - Function is internal but not in same TLM (top level module) or
+                    #   - Function is private but not in same module
+                    func_def: FunctionDefinition = func.definition
+                    if func_def.access_modifier != RIALAccessModifier.PUBLIC and \
+                            ((func_def.access_modifier == RIALAccessModifier.INTERNAL and
+                              func.module.name.split(':')[0] != ParserState.module().name.split(':')[0]) or
+                             (func_def.access_modifier == RIALAccessModifier.PRIVATE and
+                              func.module.name != ParserState.module().name)):
+                        log_fail(
+                            f"Cannot access method {full_function_name} in module {func.module.name}!")
+                        return None
+
         # Try to find function in current module
         func: RIALFunction = ParserState.module().get_global_safe(full_function_name)
 
@@ -195,8 +251,8 @@ class ParserState:
     def map_type_to_llvm(name: str):
         llvm_type = ParserState.map_type_to_llvm_no_pointer(name)
 
-        # Create pointer for struct
-        if llvm_type is not None and isinstance(llvm_type, BaseStructType):
+        # Create pointer for struct and array
+        if llvm_type is not None and (isinstance(llvm_type, BaseStructType) or isinstance(llvm_type, ir.ArrayType)):
             llvm_type = ir.PointerType(llvm_type)
 
         return llvm_type

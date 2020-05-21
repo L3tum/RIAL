@@ -2,7 +2,7 @@ import re
 from typing import Optional
 
 from llvmlite import ir
-from llvmlite.ir import Type, BaseStructType
+from llvmlite.ir import Type, BaseStructType, Constant
 
 from rial.LLVMUIntType import LLVMUIntType
 from rial.compilation_manager import CompilationManager
@@ -111,6 +111,9 @@ def map_type_to_llvm(rial_type: str) -> Optional[Type]:
     if rial_type == "Half":
         return ir.HalfType()
 
+    if rial_type.endswith("[]"):
+        return ir.ArrayType(map_type_to_llvm(''.join(rial_type[0:-2])), 0)
+
     # Variable integer
     match = re.match(r"^i([0-9]+)$", rial_type)
 
@@ -147,3 +150,35 @@ def map_llvm_to_type(llvm_type: Type):
                 return "CString"
 
     return llvm_type
+
+
+def convert_number_to_constant(value: str) -> Constant:
+    value.replace("_", "")
+    value_lowered = value.lower()
+
+    if "." in value or "e" in value:
+        if value.endswith("f"):
+            return ir.FloatType()(float(value.strip("f")))
+        if value.endswith("h"):
+            return ir.HalfType()(float(value.strip("h")))
+        return ir.DoubleType()(float(value.strip("d")))
+
+    if value.startswith("0x"):
+        return Int32(int(value, 16))
+
+    if value.startswith("0b"):
+        return Int32(int(value, 2))
+
+    if value_lowered.endswith("b"):
+        return LLVMUIntType(8)(int(value_lowered.strip("b")))
+
+    if value_lowered.endswith("ul"):
+        return LLVMUIntType(64)(int(value_lowered.strip("ul")))
+
+    if value_lowered.endswith("u"):
+        return LLVMUIntType(32)(int(value_lowered.strip("u")))
+
+    if value_lowered.endswith("l"):
+        return ir.IntType(64)(int(value_lowered.strip("l")))
+
+    return Int32(int(value))

@@ -5,8 +5,10 @@ from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
 from rial.concept.TransformerInterpreter import TransformerInterpreter
 from rial.concept.metadata_token import MetadataToken
+from rial.concept.name_mangler import mangle_function_name
 from rial.concept.parser import Tree, Token, Discard
 from rial.log import log_fail
+from rial.rial_types.RIALFunctionDeclarationModifier import RIALFunctionDeclarationModifier
 from rial.rial_types.RIALVariable import RIALVariable
 
 
@@ -70,6 +72,26 @@ class StructDeclarationTransformer(TransformerInterpreter):
             else:
                 log_fail(f"Derived from undeclared type {base}")
 
+        base_constructor = Tree('function_decl',
+                                [
+                                    RIALFunctionDeclarationModifier(access_modifier),
+                                    Token('IDENTIFIER', "void"),
+                                    Token('IDENTIFIER', "constructor"),
+                                    *[Tree('function_call', [
+                                        Token('IDENTIFIER', mangle_function_name("constructor", [base], base.name)),
+                                        Tree('function_args',
+                                             [Tree('cast', [Token('IDENTIFIER', base.name),
+                                                            Tree('var', [Token('IDENTIFIER', "this")])])])])
+                                      for base in base_llvm_structs],
+                                    *[Tree('variable_assignment',
+                                           [Tree('var', [Token('IDENTIFIER', f"this.{bod.name}")]),
+                                            Token('ASSIGN', '='),
+                                            bod.backing_value]) for bod in body],
+                                    Tree('return', [Token('IDENTIFIER', "void")])
+                                ]
+                                )
+        function_decls.insert(0, base_constructor)
+
         llvm_struct = self.llvmgen.create_identified_struct(full_name,
                                                             access_modifier.get_linkage(),
                                                             access_modifier,
@@ -80,12 +102,13 @@ class StructDeclarationTransformer(TransformerInterpreter):
 
         # Create functions
         for function_decl in function_decls:
-            try:
-                metadata_node = self.fdt.visit(function_decl)
+            metadata_node = self.fdt.visit(function_decl)
+            if metadata_node is not None:
                 declared_functions.append(metadata_node)
-            except Discard:
+            try:
+                nodes.remove(function_decl)
+            except ValueError:
                 pass
-            nodes.remove(function_decl)
 
         self.llvmgen.finish_struct()
 

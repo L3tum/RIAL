@@ -19,14 +19,22 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Added sizeof operator&#10;Added option to completely disable every optimization">
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Added &quot;primitive&quot; arrays&#10;Added better sizeof support&#10;Improved grammar">
+      <change afterPath="$PROJECT_DIR$/testing_clang/test.c" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/ASTVisitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ASTVisitor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/LLVMBlock.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMBlock.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/LLVMGen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMGen.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/ParserState.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ParserState.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/metadata/RIALFunction.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/metadata/RIALFunction.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/metadata/RIALModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/metadata/RIALModule.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/testing/src/boolean.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/boolean.rial" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing/src/print.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/print.rial" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -77,16 +85,17 @@
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
   <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="C:\Users\Tom\source\repos\RIAL\fuzzing_in" />
-      <recent name="C:\Users\Tom\source\repos\RIAL\testing\src" />
-      <recent name="C:\Users\Tom\source\repos\RIAL\rial" />
-    </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Tom\source\repos\RIAL\testing_clang" />
       <recent name="C:\Users\Tom\source\repos\RIAL\rial\builtin\always_imported" />
       <recent name="C:\Users\Tom\source\repos\RIAL\rial\metadata" />
       <recent name="C:\Users\Tom\source\repos\RIAL\rial\linking" />
       <recent name="C:\Users\Tom\source\repos\RIAL\testing\src" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Tom\source\repos\RIAL\fuzzing_in" />
+      <recent name="C:\Users\Tom\source\repos\RIAL\testing\src" />
+      <recent name="C:\Users\Tom\source\repos\RIAL\rial" />
     </key>
   </component>
   <component name="SvnConfiguration">
@@ -208,14 +217,7 @@
       <workItem from="1589714023208" duration="7421000" />
       <workItem from="1589812197675" duration="2026000" />
       <workItem from="1589971996520" duration="9687000" />
-      <workItem from="1590059896162" duration="1864000" />
-    </task>
-    <task id="LOCAL-00010" summary="Improved ParserState.py to now be truely static&#10;Added destructor calling&#10;Closes #3">
-      <created>1586874682045</created>
-      <option name="number" value="00010" />
-      <option name="presentableId" value="LOCAL-00010" />
-      <option name="project" value="LOCAL" />
-      <updated>1586874682045</updated>
+      <workItem from="1590059896162" duration="14874000" />
     </task>
     <task id="LOCAL-00011" summary="Added comment support&#10;Added more linker flags&#10;Closes #10">
       <created>1586975050366</created>
@@ -553,7 +555,14 @@
       <option name="project" value="LOCAL" />
       <updated>1589976126196</updated>
     </task>
-    <option name="localTasksCounter" value="59" />
+    <task id="LOCAL-00059" summary="Added &quot;primitive&quot; arrays&#10;Added better sizeof support&#10;Improved grammar">
+      <created>1590061882963</created>
+      <option name="number" value="00059" />
+      <option name="presentableId" value="LOCAL-00059" />
+      <option name="project" value="LOCAL" />
+      <updated>1590061882963</updated>
+    </task>
+    <option name="localTasksCounter" value="60" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -582,7 +591,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Added support for elif constructs&#10;Closes #40" />
     <MESSAGE value="Added support for switch/case statement&#10;With default statement&#10;And multiple cases per block" />
     <MESSAGE value="Moved platform to platform_support since it apparently conflicts with Python's platform" />
     <MESSAGE value="Implemented access checking&#10;&#10;Moved function metadata to module to fix bugs&#10;Closes #38" />
@@ -607,7 +615,8 @@
     <MESSAGE value="Remodeled Declaration Transformers by combining the StructDeclarationTransformer.py and FunctionDeclarationTransformer.py into one, since the top-down nature of TranformerInterpreter ensures the correct execution hierarchy." />
     <MESSAGE value="Added unsafe contexts, functions and top level blocks&#10;Updated builtin to use the new constructs&#10;&#10;External functions are now unsafe&#10;Added integer to variable conversion, which is also unsafe.&#10;&#10;Fixed bug causing variable assignments trying to load Strings as integers&#10;Fixed bug causing hex and binary integers to be converted as base-10&#10;Fixed a few unnecessary indirections in function declarations and calls&#10;&#10;Closes #22" />
     <MESSAGE value="Added sizeof operator&#10;Added option to completely disable every optimization" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added sizeof operator&#10;Added option to completely disable every optimization" />
+    <MESSAGE value="Added &quot;primitive&quot; arrays&#10;Added better sizeof support&#10;Improved grammar" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added &quot;primitive&quot; arrays&#10;Added better sizeof support&#10;Improved grammar" />
   </component>
   <component name="WindowStateProjectService">
     <state x="906" y="378" key="#Inspections" timestamp="1588322612153">
@@ -651,11 +660,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1589717111642" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1589976127284">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1590061884128">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1589976127284" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1590061884128" />
     <state x="97" y="126" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1589717472507">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

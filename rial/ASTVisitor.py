@@ -5,7 +5,7 @@ from llvmlite.ir import PointerType, BaseStructType, AllocaInstr
 
 from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
-from rial.builtin_type_to_llvm_mapper import map_llvm_to_type, NULL, get_size, Int32
+from rial.builtin_type_to_llvm_mapper import map_llvm_to_type, NULL, get_size, Int32, convert_number_to_constant
 from rial.concept.metadata_token import MetadataToken
 from rial.concept.name_mangler import mangle_function_name
 from rial.concept.parser import Interpreter, Tree, Token, Discard
@@ -26,6 +26,11 @@ class ASTVisitor(Interpreter):
             node = self.visit(node)
 
         return node
+
+    def number(self, tree: Tree):
+        nodes = tree.children
+        value: str = nodes[0].value
+        return convert_number_to_constant(value)
 
     def smaller_than(self, tree: Tree):
         nodes = tree.children
@@ -94,7 +99,11 @@ class ASTVisitor(Interpreter):
     def array_constructor(self, tree: Tree):
         nodes = tree.children
         name = nodes[0].value
-        number = self.transform_helper(nodes[1])
+
+        if isinstance(nodes[1], Tree):
+            number = self.llvmgen.gen_load_if_necessary(self.transform_helper(nodes[1]))
+        else:
+            number = convert_number_to_constant(nodes[1].value)
 
         if isinstance(number, ir.Constant):
             number = number.constant
@@ -117,7 +126,11 @@ class ASTVisitor(Interpreter):
     def array_access(self, tree: Tree):
         nodes = tree.children
         variable = self.transform_helper(nodes[0])
-        index = self.llvmgen.gen_load_if_necessary(self.transform_helper(nodes[1]))
+
+        if isinstance(nodes[1], Tree):
+            index = self.transform_helper(nodes[1])
+        else:
+            index = convert_number_to_constant(nodes[1].value)
 
         return self.llvmgen.builder.gep(variable, [Int32(0), index])
 
@@ -188,16 +201,18 @@ class ASTVisitor(Interpreter):
     def cast(self, tree: Tree):
         nodes = tree.children
         ty = ParserState.map_type_to_llvm_no_pointer(nodes[0])
-        value = self.llvmgen.gen_load_if_necessary(self.transform_helper(nodes[1]))
+        value = self.transform_helper(nodes[1])
 
         if isinstance(ty, BaseStructType):
-            if isinstance(value, ir.Constant) and isinstance(value.type, ir.IntType):
+            val = self.llvmgen.gen_load_if_necessary(value)
+            if isinstance(val, ir.Constant) and isinstance(val.type, ir.IntType):
                 if not self.llvmgen.currently_unsafe:
                     raise PermissionError("Cannot cast integer to pointer in a safe context")
-                return self.llvmgen.builder.inttoptr(value, ir.PointerType(ty))
-            elif isinstance(value, BaseStructType):
-                return self.llvmgen.builder.bitcast(value, ty)
+                return self.llvmgen.builder.inttoptr(val, ir.PointerType(ty))
+            else:
+                return self.llvmgen.builder.bitcast(value, ty.as_pointer())
 
+        value = self.llvmgen.gen_load_if_necessary(value)
         cast_function = get_casting_function(value.type, ty)
 
         if hasattr(self.llvmgen.builder, cast_function):

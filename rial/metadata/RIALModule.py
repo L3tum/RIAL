@@ -12,6 +12,7 @@ class RIALModule(Module):
     builtin_type_methods: Dict[str, List[str]]
     structs: List[RIALIdentifiedStructType]
     global_variables: List[RIALVariable]
+    rial_functions: List[RIALFunction]
     filename: str
 
     def __init__(self, name='', context=context.global_context):
@@ -20,6 +21,7 @@ class RIALModule(Module):
         self.builtin_type_methods = dict()
         self.structs = list()
         self.global_variables = list()
+        self.rial_functions = list()
         self.filename = ""
 
     def get_global_safe(self: Module, name: str) -> Optional[RIALFunction]:
@@ -27,6 +29,9 @@ class RIALModule(Module):
             return self.get_global(name)
         except KeyError:
             return None
+
+    def get_function(self, name: str) -> Optional[RIALFunction]:
+        return next((func for func in self.rial_functions if func.canonical_name == name), None)
 
     def add_builtin_method(self, ty: str, method: str):
         if not ty in self.builtin_type_methods:

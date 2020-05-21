@@ -93,8 +93,8 @@ sizeof : "sizeof" "(" expression ")"
        | array_constructor
        | array_access
 array_assignment : array_access ASSIGN expression
-array_constructor : "new" IDENTIFIER "[" (number|var) "]"
-array_access : var "[" (number|var) "]"
+array_constructor : "new" IDENTIFIER "[" (INT|BIN_INT|HEX_INT|var) "]"
+array_access : var "[" (INT|BIN_INT|HEX_INT|var) "]"
 
 // Base expression
 ?expression : sizeof
@@ -148,8 +148,7 @@ PARAMS: "params"
 THIS : "this"
 PREPRO_FLAG : "#"
 
-IDENTIFIER.-10 : /(?!(^(var|return|use|external|params|public|internal|private|sizeof)$))#?(_|[a-zA-Z])(_|[a-zA-Z0-9])*/
-               | "@\"" /[^"]+/ "\""
+IDENTIFIER.-10 : /(_|[a-zA-Z])(_|[a-zA-Z0-9])*/ "[" "]" | "@\"" /[^"]+/ "\"" | /(?!(^(var|return|use|external|params|public|internal|private|sizeof)$))#?(_|[a-zA-Z])(_|[a-zA-Z0-9])*/
 
 COMMENT : "//" /[^\n]*/ "\n"
 ML_COMMENT : "/*" /[^*]*/ "*/"

@@ -10,6 +10,7 @@ internal struct Test : Attribute {
 }
 
 private void printTestWrapperWrapper(Test test){
+    var s = (Attribute)test;
     test.printTest();
     println(sizeof(Test));
 }

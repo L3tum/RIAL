@@ -97,7 +97,7 @@ class LLVMGen:
                     if variable_current_module is not None:
                         variable = variable_current_module
                     else:
-                        variable = self.create_function_with_type(variable.name, variable.function_type,
+                        variable = self.create_function_with_type(variable.name, variable.name, variable.function_type,
                                                                   variable.linkage,
                                                                   variable.calling_convention,
                                                                   [arg[1] for arg in variable.definition.rial_args],
@@ -301,6 +301,16 @@ class LLVMGen:
                 if func is not None:
                     break
 
+        # Try to find by function name but enable canonical name
+        if func is None:
+            rial_arg_types = [map_llvm_to_type(arg.type) for arg in llvm_args]
+
+            for function_name in possible_function_names:
+                func = ParserState.find_function(function_name, rial_arg_types)
+
+                if func is not None:
+                    break
+
         if func is None:
             return None
 
@@ -317,7 +327,8 @@ class LLVMGen:
 
         # Check if function is declared in current module
         if ParserState.module().get_global_safe(func.name) is None:
-            func = self.create_function_with_type(func.name, func.function_type, func.linkage, func.calling_convention,
+            func = self.create_function_with_type(func.name, func.canonical_name, func.function_type, func.linkage,
+                                                  func.calling_convention,
                                                   [arg.name for arg in func.args], func.definition)
 
         args = list()
@@ -652,32 +663,8 @@ class LLVMGen:
 
         struct_def.properties = props_def
 
-        # Create base constructor
-        function_type = self.create_function_type(ir.VoidType(), [ir.PointerType(struct)], False)
-        function_name = mangle_function_name("constructor", function_type.args, name)
-        func = self.create_function_with_type(function_name, function_type, linkage, "", ["this"],
-                                              FunctionDefinition(name, rial_access_modifier, [(name, "this"), ],
-                                                                 name))
-        struct_def.functions.append(func.name)
-        self.create_function_body(func, [name])
-        self_value = func.args[0]
-
-        # Call derived constructors
-        for deriv in base_llvm_structs:
-            constructor_name = f"{deriv.name}.constructor"
-            self.gen_function_call([constructor_name], [self.builder.bitcast(self_value, ir.PointerType(deriv)), ])
-
-        # Set initial values
-        for bod in body:
-            index = props_def[bod.name][0]
-            loaded_var = self.builder.gep(self_value,
-                                          [ir.Constant(ir.IntType(32), 0), ir.Constant(ir.IntType(32), index)])
-            self.builder.store(bod.backing_value, loaded_var)
-
         # Store def in metadata
         struct.definition = struct_def
-
-        self.builder.ret_void()
 
         return struct
 
@@ -686,13 +673,14 @@ class LLVMGen:
         self.current_func = None
         self.current_block = None
 
-    def create_function_with_type(self, name: str, ty: FunctionType,
+    def create_function_with_type(self, name: str, canonical_name: str, ty: FunctionType,
                                   linkage: str,
                                   calling_convention: str,
                                   arg_names: List[str],
                                   function_def: FunctionDefinition) -> RIALFunction:
         """
         Creates an IR Function with the specified arguments. NOTHING MORE.
+        :param canonical_name:
         :param function_def:
         :param name:
         :param ty:
@@ -703,7 +691,7 @@ class LLVMGen:
         """
 
         # Create function with specified linkage (internal -> module only)
-        func = RIALFunction(ParserState.module(), ty, name=name)
+        func = RIALFunction(ParserState.module(), ty, name=name, canonical_name=canonical_name)
         func.linkage = linkage
         func.calling_convention = calling_convention
         func.definition = function_def
@@ -711,6 +699,8 @@ class LLVMGen:
         # Set argument names
         for i, arg in enumerate(func.args):
             arg.name = arg_names[i]
+
+        ParserState.module().rial_functions.append(func)
 
         return func
 
@@ -800,7 +790,7 @@ class LLVMGen:
 
         if func is None:
             func_type = self.create_function_type(ir.VoidType(), [], False)
-            func = self.create_function_with_type('global_ctor', func_type, "internal", "ccc", [],
+            func = self.create_function_with_type('global_ctor', 'global_ctor', func_type, "internal", "ccc", [],
                                                   FunctionDefinition('void'))
             self.create_function_body(func, [])
             struct_type = ir.LiteralStructType([ir.IntType(32), func_type.as_pointer(), ir.IntType(8).as_pointer()])

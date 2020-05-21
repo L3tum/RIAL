@@ -16,5 +16,9 @@ private void test(){
     print("Size of one element: ");
     println(sizeof(stuff[0]));
     print("Length of array: ");
-    println(sizeof(stuff) / sizeof(stuff[0]));
+    //println(length(stuff));
+}
+
+private int length(int[] arr){
+    return sizeof(arr) / sizeof(arr[0]);
 }

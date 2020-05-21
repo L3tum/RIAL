@@ -92,7 +92,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
         func_type = self.llvmgen.create_function_type(llvm_return_type, llvm_args, var_args)
 
         # Create the actual function in IR
-        func = self.llvmgen.create_function_with_type(name, func_type, linkage,
+        func = self.llvmgen.create_function_with_type(name, name, func_type, linkage,
                                                       calling_convention,
                                                       list(map(lambda arg: arg[1], args)),
                                                       FunctionDefinition(return_type, access_modifier, args, "",
@@ -149,7 +149,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
         func_type = self.llvmgen.create_function_type(llvm_return_type, llvm_args, False)
 
         # Create the actual function in IR
-        func = self.llvmgen.create_function_with_type(full_function_name, func_type, linkage,
+        func = self.llvmgen.create_function_with_type(full_function_name, name, func_type, linkage,
                                                       calling_convention,
                                                       list(map(lambda arg: arg[1], args)),
                                                       FunctionDefinition(return_type, access_modifier, args,
@@ -238,7 +238,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
                                                           self.llvmgen.current_struct.name)
             else:
                 full_function_name = mangle_function_name(name, llvm_args)
-            full_function_name = f"{ParserState.module().name}:{full_function_name}"
+                full_function_name = f"{ParserState.module().name}:{full_function_name}"
 
         # Check if main method
         if full_function_name.endswith("main:main") and full_function_name.count(':') == 2:
@@ -268,7 +268,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
         func_type = self.llvmgen.create_function_type(llvm_return_type, llvm_args, False)
 
         # Create the actual function in IR
-        func = self.llvmgen.create_function_with_type(full_function_name, func_type, linkage,
+        func = self.llvmgen.create_function_with_type(full_function_name, name, func_type, linkage,
                                                       calling_convention,
                                                       list(map(lambda arg: arg[1], args)),
                                                       FunctionDefinition(return_type, access_modifier, args,
