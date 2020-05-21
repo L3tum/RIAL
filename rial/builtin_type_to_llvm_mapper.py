@@ -2,13 +2,28 @@ import re
 from typing import Optional
 
 from llvmlite import ir
-from llvmlite.ir import Type
+from llvmlite.ir import Type, BaseStructType
 
 from rial.LLVMUIntType import LLVMUIntType
+from rial.compilation_manager import CompilationManager
 
 NULL = ir.Constant(ir.IntType(8), 0).inttoptr(ir.PointerType(ir.IntType(8)))
 TRUE = ir.Constant(ir.IntType(1), 1)
 FALSE = ir.Constant(ir.IntType(1), 0)
+Int32 = ir.IntType(32)
+Long = ir.IntType(64)
+
+
+def get_size(ty: Type) -> Optional[int]:
+    if isinstance(ty, ir.IntType):
+        return int(ty.width / 8)
+    if isinstance(ty, ir.FloatType):
+        return int(32 / 8)
+    if isinstance(ty, ir.DoubleType):
+        return int(64 / 8)
+    if isinstance(ty, BaseStructType):
+        return ty.get_abi_size(CompilationManager.codegen.target_machine.target_data)
+    return None
 
 
 def null(ty):

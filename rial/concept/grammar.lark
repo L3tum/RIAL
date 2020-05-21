@@ -86,10 +86,19 @@ unsafe_block : UNSAFE "{" statement* "}"
 unsafe_top_level_block : UNSAFE "{" (attributed_func_decl|function_decl|global_variable_decl|global_variable_assignment)* "}"
 
 // Sizeof
-sizeof : "sizeof" "(" IDENTIFIER ")"
+sizeof : "sizeof" "(" expression ")"
+
+// Arrays
+?array : array_assignment
+       | array_constructor
+       | array_access
+array_assignment : array_access ASSIGN expression
+array_constructor : "new" IDENTIFIER "[" (number|var) "]"
+array_access : var "[" (number|var) "]"
 
 // Base expression
 ?expression : sizeof
+            | array
             | function_call
             | math
             | expression SMALLER expression -> smaller_than
@@ -101,7 +110,7 @@ sizeof : "sizeof" "(" IDENTIFIER ")"
             | "true" -> true
             | "false" -> false
             | "null" -> null
-            | NUMBER -> number
+            | number
             | var
             | variable_assignment
             | variable_arithmetic
@@ -111,6 +120,7 @@ sizeof : "sizeof" "(" IDENTIFIER ")"
 
 var : IDENTIFIER ("." IDENTIFIER)*
 math : expression (PLUS|MINUS|MUL|DIV) expression
+number: NUMBER
 
 
 using : "use" IDENTIFIER (":" IDENTIFIER)* ";"

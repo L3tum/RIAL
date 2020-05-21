@@ -19,18 +19,14 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Added unsafe contexts, functions and top level blocks&#10;Updated builtin to use the new constructs&#10;&#10;External functions are now unsafe&#10;Added integer to variable conversion, which is also unsafe.&#10;&#10;Fixed bug causing variable assignments trying to load Strings as integers&#10;Fixed bug causing hex and binary integers to be converted as base-10&#10;Fixed a few unnecessary indirections in function declarations and calls&#10;&#10;Closes #22">
-      <change afterPath="$PROJECT_DIR$/rial/concept/only_allowed_in_unsafe.py" afterDir="false" />
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Added sizeof operator&#10;Added option to completely disable every optimization">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/ASTVisitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ASTVisitor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/codegen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/codegen.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/compilation_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compilation_manager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/config_schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/config_schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/LLVMBlock.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMBlock.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/src/print.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/print.rial" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing/src/boolean.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/boolean.rial" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -211,14 +207,8 @@
       <workItem from="1589659069274" duration="1190000" />
       <workItem from="1589714023208" duration="7421000" />
       <workItem from="1589812197675" duration="2026000" />
-      <workItem from="1589971996520" duration="4014000" />
-    </task>
-    <task id="LOCAL-00009" summary="Improved function finding when it's a class function">
-      <created>1586768252416</created>
-      <option name="number" value="00009" />
-      <option name="presentableId" value="LOCAL-00009" />
-      <option name="project" value="LOCAL" />
-      <updated>1586768252416</updated>
+      <workItem from="1589971996520" duration="9687000" />
+      <workItem from="1590059896162" duration="1864000" />
     </task>
     <task id="LOCAL-00010" summary="Improved ParserState.py to now be truely static&#10;Added destructor calling&#10;Closes #3">
       <created>1586874682045</created>
@@ -556,7 +546,14 @@
       <option name="project" value="LOCAL" />
       <updated>1589720181913</updated>
     </task>
-    <option name="localTasksCounter" value="58" />
+    <task id="LOCAL-00058" summary="Added sizeof operator&#10;Added option to completely disable every optimization">
+      <created>1589976126196</created>
+      <option name="number" value="00058" />
+      <option name="presentableId" value="LOCAL-00058" />
+      <option name="project" value="LOCAL" />
+      <updated>1589976126196</updated>
+    </task>
+    <option name="localTasksCounter" value="59" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -585,7 +582,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Add parser support for global variables&#10;Fix two bugs in CLI args missing --profile and variable declarations not having types inferred" />
     <MESSAGE value="Added support for elif constructs&#10;Closes #40" />
     <MESSAGE value="Added support for switch/case statement&#10;With default statement&#10;And multiple cases per block" />
     <MESSAGE value="Moved platform to platform_support since it apparently conflicts with Python's platform" />
@@ -610,7 +606,8 @@
     <MESSAGE value="Fixed a bug that would sometimes occur when a particular thread resumes that depends on global variables from another module, since those global declarations were only handled in the ASTVisitor.py and thus were not waited on" />
     <MESSAGE value="Remodeled Declaration Transformers by combining the StructDeclarationTransformer.py and FunctionDeclarationTransformer.py into one, since the top-down nature of TranformerInterpreter ensures the correct execution hierarchy." />
     <MESSAGE value="Added unsafe contexts, functions and top level blocks&#10;Updated builtin to use the new constructs&#10;&#10;External functions are now unsafe&#10;Added integer to variable conversion, which is also unsafe.&#10;&#10;Fixed bug causing variable assignments trying to load Strings as integers&#10;Fixed bug causing hex and binary integers to be converted as base-10&#10;Fixed a few unnecessary indirections in function declarations and calls&#10;&#10;Closes #22" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added unsafe contexts, functions and top level blocks&#10;Updated builtin to use the new constructs&#10;&#10;External functions are now unsafe&#10;Added integer to variable conversion, which is also unsafe.&#10;&#10;Fixed bug causing variable assignments trying to load Strings as integers&#10;Fixed bug causing hex and binary integers to be converted as base-10&#10;Fixed a few unnecessary indirections in function declarations and calls&#10;&#10;Closes #22" />
+    <MESSAGE value="Added sizeof operator&#10;Added option to completely disable every optimization" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added sizeof operator&#10;Added option to completely disable every optimization" />
   </component>
   <component name="WindowStateProjectService">
     <state x="906" y="378" key="#Inspections" timestamp="1588322612153">
@@ -654,11 +651,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1589717111642" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1589720183078">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1589976127284">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1589720183078" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1589976127284" />
     <state x="97" y="126" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1589717472507">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

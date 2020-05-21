@@ -25,6 +25,18 @@ class LLVMBlock:
             else:
                 return None
 
+    def get_block_of_named_value(self, name: str) -> Optional:
+        current = self
+        while True:
+            if name in current.named_values:
+                return current
+            if current.sibling is not None:
+                current = current.sibling
+            elif current.parent is not None:
+                current = current.parent
+            else:
+                return None
+
     def add_named_value(self, name: str, value: Value):
         self.named_values[name] = value
 

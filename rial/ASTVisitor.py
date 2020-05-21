@@ -1,12 +1,11 @@
 from typing import Optional
 
 from llvmlite import ir
-from llvmlite.ir import PointerType, BaseStructType
+from llvmlite.ir import PointerType, BaseStructType, AllocaInstr
 
 from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
-from rial.builtin_type_to_llvm_mapper import map_llvm_to_type, NULL
-from rial.compilation_manager import CompilationManager
+from rial.builtin_type_to_llvm_mapper import map_llvm_to_type, NULL, get_size, Int32
 from rial.concept.metadata_token import MetadataToken
 from rial.concept.name_mangler import mangle_function_name
 from rial.concept.parser import Interpreter, Tree, Token, Discard
@@ -65,28 +64,62 @@ class ASTVisitor(Interpreter):
 
     def sizeof(self, tree: Tree):
         nodes = tree.children
-        name = nodes[0].value
-        ty = ParserState.map_type_to_llvm_no_pointer(name)
+        variable = self.transform_helper(nodes[0])
 
-        if isinstance(ty, ir.IntType):
-            return ir.Constant(ir.IntType(32), ty.width)
-        if isinstance(ty, ir.FloatType):
-            return ir.Constant(ir.IntType(32), 32)
-        if isinstance(ty, ir.DoubleType):
-            return ir.Constant(ir.IntType(32), 64)
-        if isinstance(ty, BaseStructType):
-            return ir.Constant(ir.IntType(32), ty.get_abi_size(CompilationManager.codegen.target_machine.target_data))
+        # If it's not a variable, extract the name manually and figure out the type
+        if variable is None:
+            name = nodes[0].children[0].value
+            ty = ParserState.map_type_to_llvm_no_pointer(name)
+
+            return Int32(get_size(ty))
+
+        if isinstance(variable, AllocaInstr) and isinstance(variable.type.pointee, ir.Type):
+            if isinstance(variable.type.pointee, ir.ArrayType):
+                size = get_size(variable.type.pointee.element)
+                size = variable.type.pointee.count * size
+
+                return Int32(size)
+            else:
+                return Int32(get_size(variable.type))
 
         # This is worst case as it cannot be optimized away.
-        # TODO: Check if we know the type of the variable
-        var = ty
-        base = self.llvmgen.builder.ptrtoint(self.llvmgen.builder.gep(var, [ir.Constant(ir.IntType(32), 0)]),
+        base = self.llvmgen.builder.ptrtoint(self.llvmgen.builder.gep(variable, [ir.Constant(ir.IntType(32), 0)]),
                                              ir.IntType(32))
-        val = self.llvmgen.builder.ptrtoint(self.llvmgen.builder.gep(var, [ir.Constant(ir.IntType(32), 1)]),
+        val = self.llvmgen.builder.ptrtoint(self.llvmgen.builder.gep(variable, [ir.Constant(ir.IntType(32), 1)]),
                                             ir.IntType(32))
         size = self.llvmgen.builder.sub(val, base)
 
         return size
+
+    def array_constructor(self, tree: Tree):
+        nodes = tree.children
+        name = nodes[0].value
+        number = self.transform_helper(nodes[1])
+
+        if isinstance(number, ir.Constant):
+            number = number.constant
+
+        ty = ParserState.map_type_to_llvm_no_pointer(name)
+        arr_type = ir.ArrayType(ty, number)
+
+        return self.llvmgen.builder.alloca(arr_type)
+
+    def array_assignment(self, tree: Tree):
+        nodes = tree.children
+        variable = self.transform_helper(nodes[0].children[0])
+        index = nodes[0].children[1]
+        val = self.transform_helper(nodes[2])
+        entry = self.llvmgen.builder.gep(variable, [Int32(0), index])
+        self.llvmgen.builder.store(val, entry)
+
+        return variable
+
+    def array_access(self, tree: Tree):
+        nodes = tree.children
+        variable = self.transform_helper(nodes[0])
+        index = self.llvmgen.gen_load_if_necessary(self.transform_helper(nodes[1]))
+
+        return self.llvmgen.builder.gep(variable, [Int32(0), index])
 
     def var(self, tree: Tree):
         if isinstance(tree, Tree):
@@ -105,13 +138,7 @@ class ASTVisitor(Interpreter):
             identifier = nodes[0].value
             token = nodes[0]
 
-        va = self.llvmgen.get_definition(identifier)
-
-        if va is None:
-            log_fail(f"{ParserState.module().name}[{token.line}:{token.column}] Error 0001")
-            log_fail(f"Could not find identifier {identifier}")
-
-        return va
+        return self.llvmgen.get_definition(identifier)
 
     def math(self, tree: Tree):
         nodes = tree.children

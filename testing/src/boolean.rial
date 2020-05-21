@@ -6,4 +6,15 @@ internal void printBoolean(bool boolean){
      whats dis
     */
     println(if boolean ? "true" : "false");
+    test();
+}
+
+private void test(){
+    var stuff = new int[32];
+    print("Size of whole array: ");
+    println(sizeof(stuff));
+    print("Size of one element: ");
+    println(sizeof(stuff[0]));
+    print("Length of array: ");
+    println(sizeof(stuff) / sizeof(stuff[0]));
 }
