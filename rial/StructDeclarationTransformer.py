@@ -5,7 +5,6 @@ from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
 from rial.concept.TransformerInterpreter import TransformerInterpreter
 from rial.concept.metadata_token import MetadataToken
-from rial.concept.name_mangler import mangle_function_name
 from rial.concept.parser import Tree, Token, Discard
 from rial.log import log_fail
 from rial.rial_types.RIALFunctionDeclarationModifier import RIALFunctionDeclarationModifier
@@ -74,20 +73,28 @@ class StructDeclarationTransformer(TransformerInterpreter):
 
         base_constructor = Tree('function_decl',
                                 [
-                                    RIALFunctionDeclarationModifier(access_modifier),
-                                    Token('IDENTIFIER', "void"),
-                                    Token('IDENTIFIER', "constructor"),
-                                    *[Tree('function_call', [
-                                        Token('IDENTIFIER', mangle_function_name("constructor", [base], base.name)),
-                                        Tree('function_args',
-                                             [Tree('cast', [Token('IDENTIFIER', base.name),
-                                                            Tree('var', [Token('IDENTIFIER', "this")])])])])
-                                      for base in base_llvm_structs],
+                                    RIALFunctionDeclarationModifier(access_modifier),  # Modifier
+                                    Token('IDENTIFIER', "void"),  # Return Type
+                                    Token('IDENTIFIER', "constructor"),  # Function name
+                                    *[Tree('variable_decl', [
+                                        Token('IDENTIFIER',
+                                              f"{i}_cast"),
+                                        Token('ASSIGN', "="),
+                                        Tree('cast', [Token('IDENTIFIER', base.name),
+                                                      Tree('var', [Token('IDENTIFIER', "this")])])])
+                                      for i, base in enumerate(base_llvm_structs)],  # Base class constructor casts
+                                    *[Tree('nested_function_call', [
+                                        Token('IDENTIFIER',
+                                              f"{i}_cast"),
+                                        Token('IDENTIFIER', "constructor"),
+                                        Tree('function_args', [])])
+                                      for i, base in enumerate(base_llvm_structs)],  # Base class constructor calls
                                     *[Tree('variable_assignment',
                                            [Tree('var', [Token('IDENTIFIER', f"this.{bod.name}")]),
                                             Token('ASSIGN', '='),
-                                            bod.backing_value]) for bod in body],
+                                            bod.backing_value]) for bod in body],  # Variables (Properties)
                                     Tree('return', [Token('IDENTIFIER', "void")])
+                                    # Needed for the body to always be generated in case there's no variables
                                 ]
                                 )
         function_decls.insert(0, base_constructor)

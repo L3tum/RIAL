@@ -30,8 +30,8 @@ class RIALModule(Module):
         except KeyError:
             return None
 
-    def get_function(self, name: str) -> Optional[RIALFunction]:
-        return next((func for func in self.rial_functions if func.canonical_name == name), None)
+    def get_function(self, name: str) -> List[RIALFunction]:
+        return [func for func in self.rial_functions if func.canonical_name == name]
 
     def add_builtin_method(self, ty: str, method: str):
         if not ty in self.builtin_type_methods:

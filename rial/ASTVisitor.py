@@ -1,13 +1,12 @@
 from typing import Optional
 
 from llvmlite import ir
-from llvmlite.ir import PointerType, BaseStructType, AllocaInstr
+from llvmlite.ir import BaseStructType, AllocaInstr
 
 from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
 from rial.builtin_type_to_llvm_mapper import map_llvm_to_type, NULL, get_size, Int32, convert_number_to_constant
 from rial.concept.metadata_token import MetadataToken
-from rial.concept.name_mangler import mangle_function_name
 from rial.concept.parser import Interpreter, Tree, Token, Discard
 from rial.log import log_fail, log_warn
 from rial.metadata.RIALFunction import RIALFunction
@@ -151,7 +150,7 @@ class ASTVisitor(Interpreter):
             identifier = nodes[0].value
             token = nodes[0]
 
-        return self.llvmgen.get_definition(identifier)
+        return self.llvmgen.get_def(identifier)
 
     def math(self, tree: Tree):
         nodes = tree.children
@@ -565,14 +564,16 @@ class ASTVisitor(Interpreter):
         arguments = list()
 
         instantiated = self.llvmgen.builder.alloca(struct)
+        self.llvmgen.current_block.add_named_value(instantiated.name, instantiated)
         arguments.append(instantiated)
 
         arguments.extend(self.transform_helper(nodes[1]))
 
-        constructor_name = mangle_function_name("constructor", [arg.type for arg in arguments], name)
+        constructor_name = f"{instantiated.name}.constructor"
+        rial_arg_types = [map_llvm_to_type(arg.type) for arg in arguments]
 
         try:
-            call_instr = self.llvmgen.gen_function_call([constructor_name], arguments)
+            call_instr = self.llvmgen.gen_function_call(constructor_name, arguments, rial_arg_types)
 
             if call_instr is None:
                 log_fail(f"Failed to generate call to function {constructor_name}")
@@ -593,12 +594,15 @@ class ASTVisitor(Interpreter):
             if not isinstance(nodes[i], Token):
                 break
 
-            full_name += f".{nodes[i].value}"
+            if full_name != "":
+                full_name += "."
+
+            full_name += f"{nodes[i].value}"
             i += 1
 
         implicit_parameter_name = '.'.join(full_name.split('.')[0:-1])
         function_name = full_name.split('.')[-1]
-        implicit_parameter = self.llvmgen.get_definition(implicit_parameter_name)
+        implicit_parameter = self.llvmgen.get_def(implicit_parameter_name)
 
         if implicit_parameter is None:
             log_fail(f"Could not find implicit parameter {implicit_parameter_name} in function call {full_name}")
@@ -607,38 +611,10 @@ class ASTVisitor(Interpreter):
         arguments.append(implicit_parameter)
         arguments.extend(self.transform_helper(nodes[i]))
 
-        arg_types = [arg.type for arg in arguments]
-        mangled_names = list()
-
-        # Generate mangled names for implicit parameter and derived
-        if implicit_parameter is not None:
-            if isinstance(implicit_parameter.type, PointerType):
-                ty = implicit_parameter.type.pointee
-            else:
-                ty = implicit_parameter.type
-
-            ty = map_llvm_to_type(ty)
-
-            # Check if it's a builtin type
-            if isinstance(ty, str) and ty in ParserState.builtin_types:
-                mangled_names.append(mangle_function_name(function_name, [arg.type for arg in arguments], ty))
-            else:
-                mangled_names.append(mangle_function_name(function_name, [arg.type for arg in arguments], ty.name))
-
-                struct = ParserState.find_struct(ty.name)
-
-                # Also mangle base structs to see if it's a derived function
-                for base_struct in struct.definition.base_structs:
-                    arg_tys = arg_types
-                    arg_tys.pop(0)
-                    arg_tys.insert(0, base_struct)
-                    mangled_names.append(
-                        mangle_function_name(function_name, arg_types, base_struct))
-        else:
-            mangled_names.append(mangle_function_name(function_name, arg_types))
+        rial_arg_types = [map_llvm_to_type(arg.type) for arg in arguments]
 
         try:
-            call_instr = self.llvmgen.gen_function_call([*mangled_names, function_name], arguments)
+            call_instr = self.llvmgen.gen_function_call(full_name, arguments, rial_arg_types)
 
             if call_instr is None:
                 log_fail(f"Failed to generate call to function {function_name}")
@@ -667,11 +643,10 @@ class ASTVisitor(Interpreter):
         function_name = nodes[0].value
         arguments = self.transform_helper(nodes[1])
 
-        arg_types = [arg.type for arg in arguments]
+        rial_arg_types = [map_llvm_to_type(arg.type) for arg in arguments]
 
         try:
-            call_instr = self.llvmgen.gen_function_call([mangle_function_name(function_name, arg_types), function_name],
-                                                        arguments)
+            call_instr = self.llvmgen.gen_function_call(function_name, arguments, rial_arg_types)
 
             if call_instr is None:
                 log_fail(f"Failed to generate call to function {function_name}")

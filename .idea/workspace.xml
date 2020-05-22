@@ -19,22 +19,16 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Added &quot;primitive&quot; arrays&#10;Added better sizeof support&#10;Improved grammar">
-      <change afterPath="$PROJECT_DIR$/testing_clang/test.c" afterDir="false" />
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Added canonical name to functions and to function finding&#10;Refactored creation of base constructor to construct an AST instead for compatibility&#10;Refactored number conversion into helper method">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/ASTVisitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ASTVisitor.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/LLVMGen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/LLVMGen.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/ParserState.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ParserState.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/metadata/RIALFunction.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/metadata/RIALFunction.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/concept/name_mangler.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/name_mangler.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/metadata/RIALModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/metadata/RIALModule.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/src/boolean.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/boolean.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/src/print.rial" beforeDir="false" afterPath="$PROJECT_DIR$/testing/src/print.rial" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/metadata/StructDefinition.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/metadata/StructDefinition.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -217,14 +211,8 @@
       <workItem from="1589714023208" duration="7421000" />
       <workItem from="1589812197675" duration="2026000" />
       <workItem from="1589971996520" duration="9687000" />
-      <workItem from="1590059896162" duration="14874000" />
-    </task>
-    <task id="LOCAL-00011" summary="Added comment support&#10;Added more linker flags&#10;Closes #10">
-      <created>1586975050366</created>
-      <option name="number" value="00011" />
-      <option name="presentableId" value="LOCAL-00011" />
-      <option name="project" value="LOCAL" />
-      <updated>1586975050366</updated>
+      <workItem from="1590059896162" duration="15550000" />
+      <workItem from="1590134023443" duration="9683000" />
     </task>
     <task id="LOCAL-00012" summary="Added float and double support&#10;Added underscore in numbers support&#10;Added binary and hex integer support&#10;Closes #17">
       <created>1587122683913</created>
@@ -562,7 +550,14 @@
       <option name="project" value="LOCAL" />
       <updated>1590061882963</updated>
     </task>
-    <option name="localTasksCounter" value="60" />
+    <task id="LOCAL-00060" summary="Added canonical name to functions and to function finding&#10;Refactored creation of base constructor to construct an AST instead for compatibility&#10;Refactored number conversion into helper method">
+      <created>1590091248774</created>
+      <option name="number" value="00060" />
+      <option name="presentableId" value="LOCAL-00060" />
+      <option name="project" value="LOCAL" />
+      <updated>1590091248774</updated>
+    </task>
+    <option name="localTasksCounter" value="61" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -591,7 +586,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Added support for switch/case statement&#10;With default statement&#10;And multiple cases per block" />
     <MESSAGE value="Moved platform to platform_support since it apparently conflicts with Python's platform" />
     <MESSAGE value="Implemented access checking&#10;&#10;Moved function metadata to module to fix bugs&#10;Closes #38" />
     <MESSAGE value="Preliminary support for inheritance" />
@@ -616,7 +610,8 @@
     <MESSAGE value="Added unsafe contexts, functions and top level blocks&#10;Updated builtin to use the new constructs&#10;&#10;External functions are now unsafe&#10;Added integer to variable conversion, which is also unsafe.&#10;&#10;Fixed bug causing variable assignments trying to load Strings as integers&#10;Fixed bug causing hex and binary integers to be converted as base-10&#10;Fixed a few unnecessary indirections in function declarations and calls&#10;&#10;Closes #22" />
     <MESSAGE value="Added sizeof operator&#10;Added option to completely disable every optimization" />
     <MESSAGE value="Added &quot;primitive&quot; arrays&#10;Added better sizeof support&#10;Improved grammar" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added &quot;primitive&quot; arrays&#10;Added better sizeof support&#10;Improved grammar" />
+    <MESSAGE value="Added canonical name to functions and to function finding&#10;Refactored creation of base constructor to construct an AST instead for compatibility&#10;Refactored number conversion into helper method" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added canonical name to functions and to function finding&#10;Refactored creation of base constructor to construct an AST instead for compatibility&#10;Refactored number conversion into helper method" />
   </component>
   <component name="WindowStateProjectService">
     <state x="906" y="378" key="#Inspections" timestamp="1588322612153">
@@ -660,11 +655,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1589717111642" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1590061884128">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1590091250243">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1590061884128" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1590091250243" />
     <state x="97" y="126" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1589717472507">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -693,18 +688,18 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="374" y="358" width="565" height="560" key="dock-window-3/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584965812228" />
-    <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1589031625195">
+    <state x="976" y="432" width="737" height="606" key="find.popup" timestamp="1590155300196">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1589031625195" />
+    <state x="976" y="432" width="737" height="606" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1590155300196" />
     <state x="1123" y="472" key="refactoring.ChangeSignatureDialog" timestamp="1586600798541">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="1123" y="472" key="refactoring.ChangeSignatureDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586600798541" />
-    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup" timestamp="1588331052919">
+    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup" timestamp="1590148010536">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="943" y="315" width="672" height="678" key="search.everywhere.popup/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586543449362" />
-    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588331052919" />
+    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1590148010536" />
   </component>
 </project>

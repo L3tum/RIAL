@@ -1,5 +1,6 @@
 from typing import Dict, Tuple, List
 
+from rial.metadata.RIALFunction import RIALFunction
 from rial.rial_types.RIALAccessModifier import RIALAccessModifier
 from rial.rial_types.RIALVariable import RIALVariable
 
@@ -7,11 +8,11 @@ from rial.rial_types.RIALVariable import RIALVariable
 class StructDefinition:
     access_modifier: RIALAccessModifier
     properties: Dict[str, Tuple[int, RIALVariable]]
-    functions: List[str]
+    functions: List[RIALFunction]
     base_structs: List[str]
 
     def __init__(self, access_modifier: RIALAccessModifier = None,
-                 properties: Dict[str, Tuple[int, RIALVariable]] = None, functions: List[str] = None,
+                 properties: Dict[str, Tuple[int, RIALVariable]] = None, functions: List[RIALFunction] = None,
                  base_structs: List[str] = None):
         self.access_modifier = access_modifier
         self.properties = properties

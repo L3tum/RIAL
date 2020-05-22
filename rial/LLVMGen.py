@@ -3,12 +3,13 @@ from typing import Optional, Union, Tuple, List, Any
 
 from llvmlite import ir
 from llvmlite.ir import IRBuilder, AllocaInstr, Branch, FunctionType, Type, VoidType, PointerType, \
-    Argument, CallInstr, Block, Constant, FormattedConstant, GlobalVariable, ConditionalBranch, CastInstr
+    Argument, CallInstr, Block, Constant, FormattedConstant, GlobalVariable, ConditionalBranch, CastInstr, \
+    Value
 
 from rial.LLVMBlock import LLVMBlock, create_llvm_block
 from rial.LLVMUIntType import LLVMUIntType
 from rial.ParserState import ParserState
-from rial.builtin_type_to_llvm_mapper import map_llvm_to_type, null, NULL
+from rial.builtin_type_to_llvm_mapper import map_llvm_to_type, null, NULL, Int32
 from rial.compilation_manager import CompilationManager
 from rial.concept.name_mangler import mangle_function_name
 from rial.metadata.FunctionDefinition import FunctionDefinition
@@ -37,16 +38,81 @@ class LLVMGen:
         self.current_struct = None
         self.currently_unsafe = False
 
-    def _get_by_identifier(self, identifier: str, variable: Optional = None) -> Optional:
-        if not variable is None and hasattr(variable, 'type') and isinstance(variable.type, PointerType):
-            if isinstance(variable.type.pointee, RIALIdentifiedStructType):
-                struct = ParserState.find_struct(variable.type.pointee.name)
+    # TODO: Constructor
+    def get_def(self, identifier: str, rial_arg_types: List[str] = None,
+                current_variable: Optional[
+                    Union[RIALVariable, RIALFunction, Value, RIALIdentifiedStructType]] = None) -> Optional[
+        Union[RIALVariable, RIALFunction, Value, RIALIdentifiedStructType]]:
+        """
+        Will search for the definition.
+        1. Checks whether :identifier: equals 'constructor'.
+        2. Checks whether the :identifier: contains any colons, will split it and try to add the module as a dependency.
+        3. Checks whether the :identifier: contains any dots, will split it and "walk" the nested access via recursion.
+        4. Checks for whether :current_variable: is set and tries to access the nested property or function.
+        5. Checks for local variables.
+        6. Checks for global variables in current module.
+        7. Checks for global variables in usings and declares them in the current module if they aren't.
+        8. Checks for structs via ParserState.find_struct.
+        9. Checks for functions in current module.
+        10. Checks for functions in usings and declares them in the current module if they aren't.
+        :param identifier: Identifier of whatever you want to search. Can be function name, struct name, property name..
+        :param rial_arg_types: List of argument types passed to a function call. Helps identifying the correct function.
+        :param current_variable: Current variable to use for nested access. Only used in recursion. Shouldn't be supplied by the original caller.
+        :return: The found variable. Can be a struct, function, variable or value
+        """
+        # Check for module specifier in identifier
+        if ':' in identifier:
+            parts = identifier.split(':')
+            module_name = ':'.join(parts[0:-1])
+            ident = parts[-1]
+            ParserState.add_dependency_and_wait(module_name)
+            definition = self.get_def(ident, rial_arg_types)
+            ParserState.remove_dependency(module_name)
 
-                if struct is None:
-                    return None
+            return definition
 
-                if not self.check_struct_access_allowed(struct):
-                    raise PermissionError(f"Tried accesssing struct {struct.name}")
+        # Check for nested access in identifier
+        if '.' in identifier:
+            identifiers = identifier.split('.')
+
+            for ident in identifiers:
+                current_variable = self.get_def(ident, rial_arg_types, current_variable)
+
+                if current_variable is None:
+                    break
+
+            # Fuck it, search for full identifier
+            if current_variable is not None:
+                return current_variable
+
+        # Access current variable
+        if current_variable is not None:
+            # Functions have no nested anything
+            if isinstance(current_variable, RIALFunction):
+                raise TypeError(identifier, current_variable)
+            # Types need to be instantiated
+            if isinstance(current_variable, RIALIdentifiedStructType):
+                raise TypeError(identifier, current_variable)
+            # Again, needs to be instantiated, ie variable
+            if isinstance(current_variable, RIALVariable):
+                raise TypeError(identifier, current_variable)
+
+            # Is alloca or gep
+            ty = current_variable.type.pointee
+            if isinstance(ty, RIALIdentifiedStructType):
+                struct: RIALIdentifiedStructType = ty
+                # Search for functions and properties
+                funcs_found = list()
+                for func in struct.definition.functions:
+                    if func.canonical_name == identifier:
+                        mangled_name = rial_arg_types is not None and mangle_function_name(identifier, rial_arg_types,
+                                                                                           struct.name) or identifier
+                        if mangled_name == func.name:
+                            funcs_found.append(func)
+                if len(funcs_found) == 1:
+                    return funcs_found[0]
+                elif len(funcs_found) > 1:
+                    raise NameError(identifier)
 
                 prop = struct.definition.properties[identifier]
 
@@ -57,97 +123,97 @@ class LLVMGen:
                 if not self.check_property_access_allowed(struct, prop[1]):
                     raise PermissionError(f"Tried to access property {prop[1].name} but it was not allowed!")
 
-                variable = self.builder.gep(variable, [ir.Constant(ir.IntType(32), 0),
-                                                       ir.Constant(ir.IntType(32), prop[0])])
-        else:
-            # Search local variables
-            variable = self.current_block.get_named_value(identifier)
+                return self.builder.gep(current_variable, [Int32(0), Int32(prop[0])])
 
-            # Search for a global variable
-            if variable is None:
-                glob = ParserState.find_global(identifier)
+        # Prioritize local variables
+        current_variable = self.current_block.get_named_value(identifier)
 
-                # Check if in same module
-                if glob is not None:
-                    if glob.module_name != ParserState.module().name:
-                        glob_current_module = ParserState.module().get_global_safe(glob.name)
+        if current_variable is not None:
+            return current_variable
 
-                        if glob_current_module is not None:
-                            variable = glob_current_module
-                        else:
-                            # TODO: Check if global access is allowed
-                            variable = self.gen_global(glob.name, None, glob.backing_value.type.pointee,
-                                                       glob.access_modifier, "external",
-                                                       glob.backing_value.global_constant)
-                    else:
-                        variable = glob.backing_value
+        # Then global variables
+        current_variable = ParserState.find_global(identifier)
 
-        # If variable is none, just do a full function search
-        if variable is None:
-            variable = ParserState.find_function(identifier)
+        if current_variable is not None:
+            # Check if declared in current module
+            if current_variable.module_name != ParserState.module().name:
+                glob_current_module = ParserState.module().get_global_safe(current_variable.name)
 
-            if variable is None:
-                variable = ParserState.find_function(mangle_function_name(identifier, []))
+                if glob_current_module is not None:
+                    current_variable = glob_current_module
+                else:
+                    # TODO: Check if global access is allowed
+                    current_variable = self.gen_global(current_variable.name, None,
+                                                       current_variable.backing_value.type.pointee,
+                                                       current_variable.access_modifier, "external",
+                                                       current_variable.backing_value.global_constant)
+            else:
+                current_variable = current_variable.backing_value
+            return current_variable
 
-            # Check if in same module
-            if variable is not None:
-                if variable.module.name != ParserState.module().name:
-                    variable_current_module = ParserState.module().get_global_safe(variable.name)
+        # Then struct
+        current_variable = ParserState.find_struct(identifier)
 
-                    if variable_current_module is not None:
-                        variable = variable_current_module
-                    else:
-                        variable = self.create_function_with_type(variable.name, variable.name, variable.function_type,
-                                                                  variable.linkage,
-                                                                  variable.calling_convention,
-                                                                  [arg[1] for arg in variable.definition.rial_args],
-                                                                  variable.definition)
+        if current_variable is not None:
+            if self.check_struct_access_allowed(current_variable):
+                return current_variable
+            raise PermissionError(identifier)
 
-        return variable
+        # Then functions
+        # Current module
+        funcs = ParserState.module().get_function(identifier)
+        if len(funcs) == 1:
+            return funcs[0]
+        elif len(funcs) > 1 and rial_arg_types is not None:
+            funcs_found = list()
+            mangled_name = rial_arg_types is not None and mangle_function_name(
+                f"{ParserState.module().name}:{identifier}", rial_arg_types) or identifier
+            for func in funcs:
+                if mangled_name == func.name:
+                    funcs_found.append(func)
+            if len(funcs_found) == 1:
+                return funcs_found[0]
+            elif len(funcs_found) > 1:
+                raise NameError(identifier)
 
-    def get_exact_definition(self, identifier: str):
-        identifiers = identifier.split('.')
-        variable = None
+        if current_variable is None:
+            # Dependencies
+            funcs_found = list()
+            for using in ParserState.module().dependencies:
+                module = CompilationManager.modules[CompilationManager.path_from_mod_name(using)]
+                funcs = module.get_function(identifier)
+                funcs_found.extend(funcs)
 
-        for ident in identifiers:
-            variable = self._get_by_identifier(ident, variable)
+            if len(funcs_found) == 1:
+                current_variable = funcs_found[0]
+            elif len(funcs_found) > 1 and rial_arg_types is not None:
+                mangled_name = rial_arg_types is not None and mangle_function_name(
+                    f"{ParserState.module().name}:{identifier}", rial_arg_types) or identifier
+                for func in funcs_found:
+                    if mangled_name != func.name:
+                        funcs_found.remove(func)
 
-        # Search for the full name
-        if variable is None:
-            variable = self._get_by_identifier(identifier, variable)
+                if len(funcs_found) == 1:
+                    current_variable = funcs_found[0]
+                elif len(funcs_found) > 1:
+                    raise NameError(identifier)
 
-        return variable
+        if current_variable is not None:
+            # Check if declared in current module
+            variable_current_module = ParserState.module().get_global_safe(current_variable.name)
 
-    def get_definition(self, identifier: str):
-        variable = self.get_exact_definition(identifier)
-
-        # Search with module specifier
-        if variable is None:
-            if ':' in identifier:
-                parts = identifier.split(':')
-                module_name = ':'.join(parts[0:-1])
-
-                if CompilationManager.check_module_already_compiled(module_name):
-                    return None
-
-                if ParserState.add_dependency_and_wait(module_name):
-                    return self.get_definition(identifier)
-
-                return None
-
-        return variable
-
-    def gen_integer(self, number: int, length: int, unsigned: bool = False):
-        return ir.Constant((unsigned and LLVMUIntType(length) or ir.IntType(length)), number)
-
-    def gen_half(self, number: float):
-        return ir.Constant(ir.HalfType(), number)
-
-    def gen_float(self, number: float):
-        return ir.Constant(ir.FloatType(), number)
-
-    def gen_double(self, number: float):
-        return ir.Constant(ir.DoubleType(), number)
+            if variable_current_module is not None:
+                return variable_current_module
+            else:
+                return self.create_function_with_type(current_variable.name, current_variable.canonical_name,
+                                                      current_variable.function_type,
+                                                      current_variable.linkage,
+                                                      current_variable.calling_convention,
+                                                      [arg[1] for arg in
+                                                       current_variable.definition.rial_args],
+                                                      current_variable.definition)
+        # Nothing found
+        return None
 
     def gen_global(self, name: str, value: Optional[ir.Constant], ty: Type, access_modifier: RIALAccessModifier,
                    linkage: str,
@@ -283,36 +349,20 @@ class LLVMGen:
 
         return mathed
 
-    def gen_function_call(self, possible_function_names: List[str],
-                          llvm_args: List) -> Optional[CallInstr]:
-        func = None
-        # Check if it's actually a local variable
-        for function_name in possible_function_names:
-            var = self.get_definition(function_name)
+    def gen_function_call(self, function_name: str,
+                          llvm_args: List, rial_arg_types: List[str]) -> Optional[CallInstr]:
+        # Search for function
+        func = self.get_def(function_name, rial_arg_types)
 
-            if var is not None:
-                func = var
-
-        # Try to find by function name
-        if func is None:
-            for function_name in possible_function_names:
-                func = ParserState.find_function(function_name)
-
-                if func is not None:
-                    break
-
-        # Try to find by function name but enable canonical name
-        if func is None:
-            rial_arg_types = [map_llvm_to_type(arg.type) for arg in llvm_args]
-
-            for function_name in possible_function_names:
-                func = ParserState.find_function(function_name, rial_arg_types)
-
-                if func is not None:
-                    break
+        if function_name == "0_cast.constructor":
+            print(func.name, rial_arg_types)
 
         if func is None:
             return None
+
+        if isinstance(func, RIALIdentifiedStructType):
+            print(function_name)
+            print(rial_arg_types)
 
         if isinstance(func, ir.PointerType) and isinstance(func.pointee, RIALFunction):
             func = func.pointee
@@ -334,6 +384,7 @@ class LLVMGen:
         args = list()
 
         # Gen a load if necessary
+        # TODO: Check for constants -> no load; or no constants -> load
         for i, arg in enumerate(llvm_args):
             rial_arg = func.definition.rial_args[i][0]
             llvm_arg = ParserState.map_type_to_llvm(rial_arg)
@@ -345,6 +396,7 @@ class LLVMGen:
             args.append(self.builder.load(arg))
 
         # Check type matching
+        # TODO: Switch to RIAL types
         for i, arg in enumerate(args):
             if len(func.args) > i and arg.type != func.args[i].type:
                 # Check for base types
@@ -377,7 +429,7 @@ class LLVMGen:
         return self.builder.call(func, args)
 
     def gen_no_op(self):
-        self.gen_function_call(["rial:builtin:settings:nop_function"], [])
+        self.gen_function_call("rial:builtin:settings:nop_function", [], [])
 
     def check_function_call_allowed(self, func: RIALFunction):
         # Unsafe in safe context is big no-no
@@ -487,6 +539,9 @@ class LLVMGen:
         return variable
 
     def declare_variable(self, identifier: str, value) -> Optional[AllocaInstr]:
+        if value is None:
+            print(identifier)
+
         variable = self.current_block.get_named_value(identifier)
         if variable is not None:
             return None
@@ -528,7 +583,7 @@ class LLVMGen:
 
     def assign_to_variable(self, identifier: Union[str, Any], value):
         if isinstance(identifier, str):
-            variable = self.get_definition(identifier)
+            variable = self.get_def(identifier)
         else:
             variable = identifier
 

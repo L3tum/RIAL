@@ -55,6 +55,11 @@ class ParserState:
         return False
 
     @staticmethod
+    def remove_dependency(module_name: str):
+        if module_name in ParserState.module().dependencies:
+            ParserState.module().dependencies.remove(module_name)
+
+    @staticmethod
     def search_structs(name: str) -> Optional[RIALIdentifiedStructType]:
         # Does a global search.
         return ParserState.module().context.get_identified_type_if_exists(name)
@@ -221,6 +226,12 @@ class ParserState:
 
     @staticmethod
     def find_struct(struct_name: str) -> Optional[RIALIdentifiedStructType]:
+        """
+        Searches through all structs currently specified by trying out the current module,
+        current module specifier and all using specifiers.
+        :param struct_name:
+        :return:
+        """
         # Search with name
         struct = ParserState.search_structs(struct_name)
 

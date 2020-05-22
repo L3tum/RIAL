@@ -141,7 +141,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
         # Map RIAL args to llvm arg types
         llvm_args = [ParserState.map_type_to_llvm(arg[0]) for arg in args if not arg[1].endswith("...")]
 
-        full_function_name = mangle_function_name(name, llvm_args, this_arg)
+        full_function_name = mangle_function_name(name, [arg[0] for arg in args], this_arg)
         full_function_name = f"{ParserState.module().name}:{full_function_name}"
 
         # Hasn't been declared previously, redeclare the function type here
@@ -173,7 +173,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
                 ParserState.module().functions.remove(func)
                 raise Discard()
 
-            struct.definition.functions.append(func.name)
+            struct.definition.functions.append(func)
 
         if not has_body:
             raise Discard()
@@ -234,10 +234,10 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
             full_function_name = name
         else:
             if self.llvmgen.current_struct is not None:
-                full_function_name = mangle_function_name(name, llvm_args,
+                full_function_name = mangle_function_name(name, [arg[0] for arg in args],
                                                           self.llvmgen.current_struct.name)
             else:
-                full_function_name = mangle_function_name(name, llvm_args)
+                full_function_name = mangle_function_name(name, [arg[0] for arg in args])
                 full_function_name = f"{ParserState.module().name}:{full_function_name}"
 
         # Check if main method
@@ -276,7 +276,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
                                                                          unsafe))
 
         if self.llvmgen.current_struct is not None:
-            self.llvmgen.current_struct.definition.functions.append(func.name)
+            self.llvmgen.current_struct.definition.functions.append(func)
 
         # Always inline the main function into the compiler supplied one
         if main_function:
