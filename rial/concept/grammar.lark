@@ -93,19 +93,15 @@ sizeof : "sizeof" "(" expression ")"
        | array_constructor
        | array_access
 array_assignment : array_access ASSIGN expression
-array_constructor : "new" IDENTIFIER "[" (INT|BIN_INT|HEX_INT|var) "]"
-array_access : var "[" (INT|BIN_INT|HEX_INT|var) "]"
+array_constructor : "new" IDENTIFIER "[" (number|var) "]"
+array_access : var "[" (number|var) "]"
 
 // Base expression
 ?expression : sizeof
             | array
             | function_call
             | math
-            | expression SMALLER expression -> smaller_than
-            | expression BIGGER expression -> bigger_than
-            | expression BIGGER_EQUAL expression -> bigger_equal
-            | expression SMALLER_EQUAL expression -> smaller_equal
-            | expression EQUAL expression -> equal
+            | expression (SMALLER|BIGGER|BIGGER_EQUAL|SMALLER_EQUAL|EQUAL) expression -> comparison
             | STRING -> string
             | "true" -> true
             | "false" -> false

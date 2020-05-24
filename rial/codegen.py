@@ -5,9 +5,9 @@ from typing import List, Optional
 
 from llvmlite import ir, binding
 from llvmlite.binding import ExecutionEngine, ModuleRef, TargetMachine, PassManagerBuilder, ModulePassManager
+from llvmlite.ir import BaseStructType, Type, Module
 
 from rial.log import log_fail
-from rial.metadata.RIALModule import RIALModule
 from rial.profiling import run_with_profiling, ExecutionStep
 
 
@@ -82,7 +82,8 @@ class CodeGen:
             pm_module.close()
             pm_manager.close()
 
-    def get_module(self, name: str, filename: str, directory: str) -> RIALModule:
+    def get_module(self, name: str, filename: str, directory: str) -> Module:
+        from rial.metadata.RIALModule import RIALModule
         module = RIALModule(name=name)
         module.filename = filename
         module.triple = self.binding.get_default_triple()
@@ -104,7 +105,7 @@ class CodeGen:
 
         return module
 
-    def load_module(self, path: str) -> Optional[RIALModule]:
+    def load_module(self, path: str) -> Optional[Module]:
         from rial.compilation_manager import CompilationManager
         with run_with_profiling(CompilationManager.filename_from_path(path), ExecutionStep.READ_CACHE):
             try:
@@ -113,14 +114,14 @@ class CodeGen:
             except Exception:
                 return None
 
-    def save_module(self, module: RIALModule, path: str):
+    def save_module(self, module: Module, path: str):
         from rial.compilation_manager import CompilationManager
         with run_with_profiling(CompilationManager.filename_from_path(path), ExecutionStep.WRITE_CACHE):
             self._check_dirs_exist(path)
             with open(path, "wb") as file:
                 pickle.dump(module, file)
 
-    def compile_ir(self, module: RIALModule) -> ModuleRef:
+    def compile_ir(self, module: Module) -> ModuleRef:
         with self.lock:
             llvm_ir = str(module)
             try:
@@ -163,3 +164,14 @@ class CodeGen:
         self._check_dirs_exist(dest)
         with open(dest, "wb") as file:
             file.write(module.as_bitcode())
+
+    def get_size(self, ty: Type) -> Optional[int]:
+        if isinstance(ty, ir.IntType):
+            return int(ty.width / 8)
+        if isinstance(ty, ir.FloatType):
+            return int(32 / 8)
+        if isinstance(ty, ir.DoubleType):
+            return int(64 / 8)
+        if isinstance(ty, BaseStructType):
+            return ty.get_abi_size(self.target_machine.target_data)
+        return None

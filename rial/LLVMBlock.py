@@ -1,11 +1,13 @@
 from typing import Dict, Optional, Any
 
-from llvmlite.ir import Block, Value
+from llvmlite.ir import Block
+
+from rial.rial_types.RIALVariable import RIALVariable
 
 
 class LLVMBlock:
     block: Block
-    named_values: Dict[str, Value]
+    named_values: Dict[str, RIALVariable]
     parent: Any
     sibling: Any
 
@@ -13,7 +15,7 @@ class LLVMBlock:
         self.block = block
         self.named_values = dict()
 
-    def get_named_value(self, name: str) -> Optional[Value]:
+    def get_named_value(self, name: str) -> Optional[RIALVariable]:
         current = self
         while True:
             if name in current.named_values:
@@ -37,7 +39,7 @@ class LLVMBlock:
             else:
                 return None
 
-    def add_named_value(self, name: str, value: Value):
+    def add_named_value(self, name: str, value: RIALVariable):
         self.named_values[name] = value
 
 

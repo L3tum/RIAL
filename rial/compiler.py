@@ -16,6 +16,7 @@ from rial.Cache import Cache
 from rial.DesugarTransformer import DesugarTransformer
 from rial.FunctionDeclarationTransformer import FunctionDeclarationTransformer
 from rial.GlobalDeclarationTransformer import GlobalDeclarationTransformer
+from rial.LLVMGen import LLVMGen
 from rial.ParserState import ParserState
 from rial.PrimitiveASTTransformer import PrimitiveASTTransformer
 from rial.StructDeclarationTransformer import StructDeclarationTransformer
@@ -232,6 +233,7 @@ def compile_file(path: str):
         module = CompilationManager.codegen.get_module(module_name, filename,
                                                        str(CompilationManager.config.source_path))
         ParserState.set_module(module)
+        ParserState.set_llvmgen(LLVMGen())
 
         if not ParserState.module().name.startswith("rial:builtin:always_imported"):
             ParserState.module().dependencies.extend(CompilationManager.always_imported)

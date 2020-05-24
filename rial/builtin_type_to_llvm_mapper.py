@@ -1,29 +1,17 @@
 import re
+from functools import lru_cache
 from typing import Optional
 
 from llvmlite import ir
-from llvmlite.ir import Type, BaseStructType, Constant
+from llvmlite.ir import Type, Constant
 
 from rial.LLVMUIntType import LLVMUIntType
-from rial.compilation_manager import CompilationManager
 
 NULL = ir.Constant(ir.IntType(8), 0).inttoptr(ir.PointerType(ir.IntType(8)))
 TRUE = ir.Constant(ir.IntType(1), 1)
 FALSE = ir.Constant(ir.IntType(1), 0)
 Int32 = ir.IntType(32)
 Long = ir.IntType(64)
-
-
-def get_size(ty: Type) -> Optional[int]:
-    if isinstance(ty, ir.IntType):
-        return int(ty.width / 8)
-    if isinstance(ty, ir.FloatType):
-        return int(32 / 8)
-    if isinstance(ty, ir.DoubleType):
-        return int(64 / 8)
-    if isinstance(ty, BaseStructType):
-        return ty.get_abi_size(CompilationManager.codegen.target_machine.target_data)
-    return None
 
 
 def null(ty):
@@ -34,6 +22,11 @@ def is_builtin_type(ty: str):
     return ty in ("Int32", "Int64", "UInt64", "UInt64", "Double64", "Float32", "Boolean", "Byte", "Char", "Half")
 
 
+def is_array(rial_type: str):
+    return rial_type.endswith("[]")
+
+
+@lru_cache(128)
 def map_shortcut_to_type(shortcut: str) -> str:
     if shortcut == "int":
         return "Int32"
@@ -68,6 +61,7 @@ def map_shortcut_to_type(shortcut: str) -> str:
     return shortcut
 
 
+@lru_cache(128)
 def map_type_to_llvm(rial_type: str) -> Optional[Type]:
     rial_type = map_shortcut_to_type(rial_type)
 
@@ -102,10 +96,10 @@ def map_type_to_llvm(rial_type: str) -> Optional[Type]:
     if rial_type == "Double64":
         return ir.DoubleType()
 
-    if rial_type == "Byte":
+    if rial_type == "Byte" or rial_type == "UInt8":
         return LLVMUIntType(8)
 
-    if rial_type == "Char":
+    if rial_type == "Char" or rial_type == "Int8":
         return ir.IntType(8)
 
     if rial_type == "Half":
@@ -115,16 +109,25 @@ def map_type_to_llvm(rial_type: str) -> Optional[Type]:
         return ir.ArrayType(map_type_to_llvm(''.join(rial_type[0:-2])), 0)
 
     # Variable integer
-    match = re.match(r"^i([0-9]+)$", rial_type)
+    match = re.match(r"^Int([0-9]+)$", rial_type)
 
     if match is not None:
         count = match.group(1)
 
         return ir.IntType(int(count))
 
+    # Variable integer
+    match = re.match(r"^UInt([0-9]+)$", rial_type)
+
+    if match is not None:
+        count = match.group(1)
+
+        return LLVMUIntType(int(count))
+
     return None
 
 
+@lru_cache(128, typed=True)
 def map_llvm_to_type(llvm_type: Type):
     # TODO: Handle more types
     # TODO: Handle structs
@@ -149,9 +152,20 @@ def map_llvm_to_type(llvm_type: Type):
             if llvm_type.pointee.width == 8:
                 return "CString"
 
+    from rial.metadata.RIALIdentifiedStructType import RIALIdentifiedStructType
+    if isinstance(llvm_type, RIALIdentifiedStructType):
+        return llvm_type.name
+
+    if isinstance(llvm_type, ir.ArrayType):
+        return f"{map_llvm_to_type(llvm_type.element)}[]"
+
+    if isinstance(llvm_type, ir.PointerType):
+        return map_llvm_to_type(llvm_type.pointee)
+
     return llvm_type
 
 
+@lru_cache(128)
 def convert_number_to_constant(value: str) -> Constant:
     value.replace("_", "")
     value_lowered = value.lower()
@@ -169,11 +183,14 @@ def convert_number_to_constant(value: str) -> Constant:
     if value.startswith("0b"):
         return Int32(int(value, 2))
 
-    if value_lowered.endswith("b"):
+    if value_lowered.endswith("ub"):
         return LLVMUIntType(8)(int(value_lowered.strip("b")))
 
     if value_lowered.endswith("ul"):
         return LLVMUIntType(64)(int(value_lowered.strip("ul")))
+
+    if value_lowered.endswith("b"):
+        return ir.IntType(8)(int(value_lowered.strip("b")))
 
     if value_lowered.endswith("u"):
         return LLVMUIntType(32)(int(value_lowered.strip("u")))

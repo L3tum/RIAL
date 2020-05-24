@@ -1,4 +1,5 @@
 import threading
+from functools import lru_cache
 from pathlib import Path
 from typing import Optional, List, Tuple, Dict
 
@@ -22,7 +23,7 @@ class ParserState:
     cached_struct_modules: Dict[str, RIALModule]
     implemented_functions: List[str]
     threadLocalModule: threading.local
-    builtin_types: Dict[str, Dict[str, RIALFunction]]
+    threadLocalLLVMGen: threading.local
 
     def __init__(self):
         raise PermissionError()
@@ -31,9 +32,9 @@ class ParserState:
     def init():
         ParserState.implemented_functions = list()
         ParserState.threadLocalModule = threading.local()
+        ParserState.threadLocalLLVMGen = threading.local()
         ParserState.cached_functions = dict()
         ParserState.cached_struct_modules = dict()
-        ParserState.builtin_types = dict()
 
     @staticmethod
     def set_module(module: RIALModule):
@@ -42,6 +43,14 @@ class ParserState:
     @classmethod
     def module(cls) -> RIALModule:
         return cls.threadLocalModule.module
+
+    @staticmethod
+    def set_llvmgen(llvmgen):
+        ParserState.threadLocalLLVMGen.llvmgen = llvmgen
+
+    @classmethod
+    def llvmgen(cls):
+        return cls.threadLocalLLVMGen.llvmgen
 
     @staticmethod
     def add_dependency_and_wait(module_name: str):
@@ -96,7 +105,7 @@ class ParserState:
             if glob.access_modifier == RIALAccessModifier.PRIVATE:
                 raise PermissionError(name)
 
-            if glob.access_modifier == RIALAccessModifier.INTERNAL and glob.module_name.split(':')[0] != \
+            if glob.access_modifier == RIALAccessModifier.INTERNAL and glob.backing_value.parent.name.split(':')[0] != \
                     ParserState.module().name.split(':')[
                         0]:
                 raise PermissionError(name)
@@ -248,6 +257,7 @@ class ParserState:
         return struct
 
     @staticmethod
+    @lru_cache(maxsize=128)
     def map_type_to_llvm(name: str):
         llvm_type = ParserState.map_type_to_llvm_no_pointer(name)
 
@@ -258,6 +268,7 @@ class ParserState:
         return llvm_type
 
     @staticmethod
+    @lru_cache(maxsize=128)
     def map_type_to_llvm_no_pointer(name: str):
         llvm_type = map_type_to_llvm(name)
 

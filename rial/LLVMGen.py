@@ -2,8 +2,9 @@ from contextlib import contextmanager
 from typing import Optional, Union, Tuple, List, Any
 
 from llvmlite import ir
-from llvmlite.ir import IRBuilder, AllocaInstr, Branch, FunctionType, Type, VoidType, PointerType, \
-    Argument, CallInstr, Block, Constant, FormattedConstant, GlobalVariable, ConditionalBranch, CastInstr
+from llvmlite.ir import IRBuilder, AllocaInstr, Branch, FunctionType, Type, PointerType, \
+    Argument, CallInstr, Block, Constant, FormattedConstant, GlobalVariable, ConditionalBranch, CastInstr, GEPInstr, \
+    Value
 
 from rial.LLVMBlock import LLVMBlock, create_llvm_block
 from rial.LLVMUIntType import LLVMUIntType
@@ -38,6 +39,9 @@ class LLVMGen:
         self.currently_unsafe = False
 
     def _get_by_identifier(self, identifier: str, variable: Optional = None) -> Optional:
+        if isinstance(variable, RIALVariable):
+            variable = variable.backing_value
+
         if not variable is None and hasattr(variable, 'type') and isinstance(variable.type, PointerType):
             if isinstance(variable.type.pointee, RIALIdentifiedStructType):
                 struct = ParserState.find_struct(variable.type.pointee.name)
@@ -69,16 +73,16 @@ class LLVMGen:
 
                 # Check if in same module
                 if glob is not None:
-                    if glob.module_name != ParserState.module().name:
+                    if glob.backing_value.parent.name != ParserState.module().name:
                         glob_current_module = ParserState.module().get_global_safe(glob.name)
 
                         if glob_current_module is not None:
                             variable = glob_current_module
                         else:
                             # TODO: Check if global access is allowed
-                            variable = self.gen_global(glob.name, None, glob.backing_value.type.pointee,
-                                                       glob.access_modifier, "external",
-                                                       glob.backing_value.global_constant)
+                            variable = self.gen_global_new(glob.name, glob, null(glob.llvm_type), glob.access_modifier,
+                                                           "external",
+                                                           glob.backing_value.global_constant)
                     else:
                         variable = glob.backing_value
 
@@ -100,12 +104,11 @@ class LLVMGen:
                         variable = self.create_function_with_type(variable.name, variable.name, variable.function_type,
                                                                   variable.linkage,
                                                                   variable.calling_convention,
-                                                                  [arg[1] for arg in variable.definition.rial_args],
                                                                   variable.definition)
 
         return variable
 
-    def get_exact_definition(self, identifier: str):
+    def get_exact_definition(self, identifier: str) -> Optional[Union[RIALFunction, GEPInstr, Value, GlobalVariable]]:
         identifiers = identifier.split('.')
         variable = None
 
@@ -118,7 +121,7 @@ class LLVMGen:
 
         return variable
 
-    def get_definition(self, identifier: str):
+    def get_definition(self, identifier: str) -> Optional[Union[RIALFunction, GEPInstr, Value, GlobalVariable]]:
         variable = self.get_exact_definition(identifier)
 
         # Search with module specifier
@@ -164,11 +167,31 @@ class LLVMGen:
         if value is not None:
             glob.initializer = value
 
-        rial_variable = RIALVariable(name, ParserState.module().name, map_llvm_to_type(ty), glob,
-                                     access_modifier)
+        rial_variable = RIALVariable(name, map_llvm_to_type(ty), glob, access_modifier)
         ParserState.module().global_variables.append(rial_variable)
 
         return glob
+
+    def gen_global_new(self, name: str, value: RIALVariable, initializer: Optional[ir.Value],
+                       access_modifier: RIALAccessModifier,
+                       linkage: str,
+                       constant: bool):
+        rial_variable = ParserState.module().get_rial_variable(name)
+
+        if rial_variable is not None:
+            return rial_variable.backing_value
+
+        glob = ir.GlobalVariable(ParserState.module(), value.llvm_type, name=name)
+        glob.linkage = linkage
+        glob.global_constant = constant
+
+        if initializer is not None:
+            glob.initializer = initializer
+
+        rial_variable = RIALVariable(name, value.rial_type, glob, access_modifier)
+        ParserState.module().global_variables.append(rial_variable)
+
+        return rial_variable
 
     def gen_string_lit(self, name: str, value: str):
         value = eval("'{}'".format(value))
@@ -254,7 +277,7 @@ class LLVMGen:
         left = self.gen_load_if_necessary(left)
         right = self.gen_load_if_necessary(right)
 
-        if isinstance(left.type, LLVMUIntType):
+        if isinstance(left.type, LLVMUIntType) or isinstance(left.type, ir.PointerType):
             return self.builder.icmp_unsigned(comparison, left, right)
 
         if isinstance(left.type, ir.IntType):
@@ -283,8 +306,7 @@ class LLVMGen:
 
         return mathed
 
-    def gen_function_call(self, possible_function_names: List[str],
-                          llvm_args: List) -> Optional[CallInstr]:
+    def gen_function_call(self, possible_function_names: List[str], args: List[RIALVariable]) -> Optional[CallInstr]:
         func = None
         # Check if it's actually a local variable
         for function_name in possible_function_names:
@@ -303,7 +325,7 @@ class LLVMGen:
 
         # Try to find by function name but enable canonical name
         if func is None:
-            rial_arg_types = [map_llvm_to_type(arg.type) for arg in llvm_args]
+            rial_arg_types = [arg.rial_type for arg in args]
 
             for function_name in possible_function_names:
                 func = ParserState.find_function(function_name, rial_arg_types)
@@ -316,9 +338,16 @@ class LLVMGen:
 
         if isinstance(func, ir.PointerType) and isinstance(func.pointee, RIALFunction):
             func = func.pointee
-        elif isinstance(func, GlobalVariable):
+        elif isinstance(func, RIALVariable):
+            if isinstance(func.backing_value, RIALFunction):
+                func = func.backing_value
+            else:
+                loaded_func = self.builder.load(func.backing_value)
+                call = self.builder.call(loaded_func, [arg.backing_value for arg in args])
+                return call
+        elif isinstance(func, ir.GlobalVariable):
             loaded_func = self.builder.load(func)
-            call = self.builder.call(loaded_func, llvm_args)
+            call = self.builder.call(loaded_func, [arg.backing_value for arg in args])
             return call
 
         # Check if call is allowed
@@ -328,53 +357,52 @@ class LLVMGen:
         # Check if function is declared in current module
         if ParserState.module().get_global_safe(func.name) is None:
             func = self.create_function_with_type(func.name, func.canonical_name, func.function_type, func.linkage,
-                                                  func.calling_convention,
-                                                  [arg.name for arg in func.args], func.definition)
+                                                  func.calling_convention, func.definition)
 
-        args = list()
+        # Get the LLVM args and match them to the function arguments
+        llvm_args = list()
 
-        # Gen a load if necessary
-        for i, arg in enumerate(llvm_args):
-            rial_arg = func.definition.rial_args[i][0]
-            llvm_arg = ParserState.map_type_to_llvm(rial_arg)
-
-            if llvm_arg == arg.type:
-                args.append(arg)
-                continue
-
-            args.append(self.builder.load(arg))
+        for i, arg in enumerate(func.definition.rial_args):
+            try:
+                llvm_args.append(args[i].value_for_rial_type(arg.rial_type))
+            except IndexError:
+                # Variable args also accept zero args
+                if arg.name.endswith("..."):
+                    pass
+                else:
+                    raise
 
         # Check type matching
-        for i, arg in enumerate(args):
-            if len(func.args) > i and arg.type != func.args[i].type:
-                # Check for base types
-                ty = isinstance(arg.type, PointerType) and arg.type.pointee or arg.type
-                func_arg_type = isinstance(func.args[i].type, PointerType) and func.args[i].type.pointee or func.args[
-                    i].type
-
-                if isinstance(ty, RIALIdentifiedStructType):
-                    struct = ParserState.find_struct(ty.name)
-
-                    if struct is not None:
-                        found = False
-
-                        # Check if a base struct matches the type expected
-                        # TODO: Recursive check
-                        for base_struct in struct.definition.base_structs:
-                            if base_struct == func_arg_type.name:
-                                args.remove(arg)
-                                args.insert(i, self.builder.bitcast(arg, ir.PointerType(base_struct)))
-                                found = True
-                                break
-                        if found:
-                            continue
-
-                    # TODO: SLOC information
-                raise TypeError(
-                    f"Function {func.name} expects a {func.args[i].type} but got a {arg.type}")
+        # for i, arg in enumerate(args):
+        #     if len(func.args) > i and arg.type != func.args[i].type:
+        #         # Check for base types
+        #         ty = isinstance(arg.type, PointerType) and arg.type.pointee or arg.type
+        #         func_arg_type = isinstance(func.args[i].type, PointerType) and func.args[i].type.pointee or func.args[
+        #             i].type
+        #
+        #         if isinstance(ty, RIALIdentifiedStructType):
+        #             struct = ParserState.find_struct(ty.name)
+        #
+        #             if struct is not None:
+        #                 found = False
+        #
+        #                 # Check if a base struct matches the type expected
+        #                 # TODO: Recursive check
+        #                 for base_struct in struct.definition.base_structs:
+        #                     if base_struct == func_arg_type.name:
+        #                         args.remove(arg)
+        #                         args.insert(i, self.builder.bitcast(arg, ir.PointerType(base_struct)))
+        #                         found = True
+        #                         break
+        #                 if found:
+        #                     continue
+        #
+        #             # TODO: SLOC information
+        #         raise TypeError(
+        #             f"Function {func.name} expects a {func.args[i].type} but got a {arg.type}")
 
         # Gen call
-        return self.builder.call(func, args)
+        return self.builder.call(func, llvm_args)
 
     def gen_no_op(self):
         self.gen_function_call(["rial:builtin:settings:nop_function"], [])
@@ -607,9 +635,6 @@ class LLVMGen:
 
     def create_conditional_jump(self, condition, true_block: LLVMBlock, false_block: LLVMBlock,
                                 true_branch_weight: int = 50, false_branch_weight: int = 50) -> ConditionalBranch:
-        # Check if condition is a variable, we need to load that for LLVM
-        condition = self.gen_load_if_necessary(condition)
-
         cbranch = self.builder.cbranch(condition, true_block.block, false_block.block)
 
         cbranch.set_weights([true_branch_weight, false_branch_weight])
@@ -676,7 +701,6 @@ class LLVMGen:
     def create_function_with_type(self, name: str, canonical_name: str, ty: FunctionType,
                                   linkage: str,
                                   calling_convention: str,
-                                  arg_names: List[str],
                                   function_def: FunctionDefinition) -> RIALFunction:
         """
         Creates an IR Function with the specified arguments. NOTHING MORE.
@@ -698,9 +722,7 @@ class LLVMGen:
 
         # Set argument names
         for i, arg in enumerate(func.args):
-            arg.name = arg_names[i]
-
-        ParserState.module().rial_functions.append(func)
+            arg.name = function_def.rial_args[i].name
 
         return func
 
@@ -764,11 +786,14 @@ class LLVMGen:
                         self.gen_no_op()
         self.current_func = None
 
-    def create_return_statement(self, statement=VoidType()):
-        if isinstance(statement, VoidType):
+    def create_return_statement(self, statement: RIALVariable):
+        if statement.is_void:
             return self.builder.ret_void()
 
-        return self.builder.ret(statement)
+        # Return the actual value if the return type is not a pointer
+        if not isinstance(self.current_func.function_type.return_type, ir.PointerType):
+            return self.builder.ret(statement.value_for_calculations)
+        return self.builder.ret(statement.backing_value)
 
     def finish_loop(self):
         self.conditional_block = None
@@ -790,7 +815,7 @@ class LLVMGen:
 
         if func is None:
             func_type = self.create_function_type(ir.VoidType(), [], False)
-            func = self.create_function_with_type('global_ctor', 'global_ctor', func_type, "internal", "ccc", [],
+            func = self.create_function_with_type('global_ctor', 'global_ctor', func_type, "internal", "ccc",
                                                   FunctionDefinition('void'))
             self.create_function_body(func, [])
             struct_type = ir.LiteralStructType([ir.IntType(32), func_type.as_pointer(), ir.IntType(8).as_pointer()])

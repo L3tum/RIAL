@@ -17,11 +17,8 @@ class StructDeclarationTransformer(TransformerInterpreter):
 
     def __init__(self):
         super().__init__()
-        self.llvmgen = LLVMGen()
+        self.llvmgen = ParserState.llvmgen()
         self.fdt = FunctionDeclarationTransformer()
-
-        # This guarantees that variables such as current_struct and the like are also visible in the FDT
-        self.fdt.llvmgen = self.llvmgen
 
     def struct_decl(self, tree: Tree):
         nodes: List = tree.children
@@ -39,6 +36,7 @@ class StructDeclarationTransformer(TransformerInterpreter):
         bases: List[str] = list()
 
         # Find body of struct (variables)
+        # TODO: Own Tree for better readability
         i = 2
         while i < len(nodes):
             node: Tree = nodes[i]
@@ -54,8 +52,7 @@ class StructDeclarationTransformer(TransformerInterpreter):
                     variable_value = variable[3]
 
                 body.append(
-                    RIALVariable(variable_name, ParserState.module().name, rial_type, backing_value=variable_value,
-                                 access_modifier=acc_modifier))
+                    RIALVariable(variable_name, rial_type, backing_value=variable_value, access_modifier=acc_modifier))
             elif isinstance(node, Tree) and node.data == "function_decl":
                 function_decls.append(node)
             elif isinstance(node, Token) and node.type == "IDENTIFIER":
