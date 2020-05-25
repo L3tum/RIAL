@@ -16,9 +16,8 @@ class GlobalDeclarationTransformer(TransformerInterpreter):
 
     def __init__(self):
         super().__init__()
-        self.llvmgen = LLVMGen()
+        self.llvmgen = ParserState.llvmgen()
         self.ast_visitor = ASTVisitor()
-        self.ast_visitor.llvmgen = self.llvmgen
 
     def global_variable_decl(self, tree: Tree):
         body = tree.children[1].children

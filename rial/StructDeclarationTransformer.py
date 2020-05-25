@@ -17,11 +17,8 @@ class StructDeclarationTransformer(TransformerInterpreter):
 
     def __init__(self):
         super().__init__()
-        self.llvmgen = LLVMGen()
+        self.llvmgen = ParserState.llvmgen()
         self.fdt = FunctionDeclarationTransformer()
-
-        # This guarantees that variables such as current_struct and the like are also visible in the FDT
-        self.fdt.llvmgen = self.llvmgen
 
     def struct_decl(self, tree: Tree):
         nodes: List = tree.children

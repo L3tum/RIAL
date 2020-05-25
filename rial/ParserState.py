@@ -22,6 +22,7 @@ class ParserState:
     cached_struct_modules: Dict[str, RIALModule]
     implemented_functions: List[str]
     threadLocalModule: threading.local
+    threadLocalLLVMGen: threading.local
     builtin_types: Dict[str, Dict[str, RIALFunction]]
 
     def __init__(self):
@@ -31,6 +32,7 @@ class ParserState:
     def init():
         ParserState.implemented_functions = list()
         ParserState.threadLocalModule = threading.local()
+        ParserState.threadLocalLLVMGen = threading.local()
         ParserState.cached_functions = dict()
         ParserState.cached_struct_modules = dict()
         ParserState.builtin_types = dict()
@@ -42,6 +44,14 @@ class ParserState:
     @classmethod
     def module(cls) -> RIALModule:
         return cls.threadLocalModule.module
+
+    @staticmethod
+    def set_llvmgen(llvmgen):
+        ParserState.threadLocalLLVMGen.llvmgen = llvmgen
+
+    @classmethod
+    def llvmgen(cls):
+        return cls.threadLocalLLVMGen.llvmgen
 
     @staticmethod
     def add_dependency_and_wait(module_name: str):

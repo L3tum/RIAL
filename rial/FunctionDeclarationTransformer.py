@@ -21,7 +21,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
 
     def __init__(self):
         super().__init__()
-        self.llvmgen = LLVMGen()
+        self.llvmgen = ParserState.llvmgen()
         self.mangling = True
 
     def attributed_func_decl(self, tree: Tree):

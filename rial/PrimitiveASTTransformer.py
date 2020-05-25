@@ -15,7 +15,7 @@ class PrimitiveASTTransformer(Transformer_InPlaceRecursive):
 
     def __init__(self):
         super().__init__()
-        self.llvmgen = LLVMGen()
+        self.llvmgen = ParserState.llvmgen()
 
     def using(self, nodes):
         mod_name = ':'.join([node.value for node in nodes])

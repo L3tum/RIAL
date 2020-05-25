@@ -19,7 +19,7 @@ class ASTVisitor(Interpreter):
 
     def __init__(self):
         super().__init__()
-        self.llvmgen = LLVMGen()
+        self.llvmgen = ParserState.llvmgen()
 
     def transform_helper(self, node):
         if isinstance(node, Tree):
