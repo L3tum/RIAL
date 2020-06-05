@@ -1,10 +1,10 @@
 import os
+from pathlib import Path
 from typing import Dict, Optional
 
 import jsonpickle as jsonpickle
 
-from rial.compilation_manager import CompilationManager
-from rial.metadata.RIALModule import RIALModule
+from rial.ir.RIALModule import RIALModule
 from rial.profiling import run_with_profiling, ExecutionStep
 
 
@@ -22,6 +22,7 @@ class CachedModule:
     @property
     def module(self) -> RIALModule:
         if self._module is None:
+            from rial.compilation_manager import CompilationManager
             self._module = CompilationManager.codegen.load_module(self.cache_path)
 
         return self._module
@@ -29,14 +30,21 @@ class CachedModule:
 
 class Cache:
     cached_modules: Dict[str, CachedModule]
+    cache_path: Path
+    disabled: bool
+
+    @staticmethod
+    def init(cache_path: Path, disabled: bool):
+        Cache.cache_path = cache_path
+        Cache.disabled = disabled
 
     @staticmethod
     @run_with_profiling("/cache/index.json", ExecutionStep.READ_CACHE)
     def load_cache():
-        if CompilationManager.config.raw_opts.disable_cache:
+        if Cache.disabled:
             Cache.cached_modules = dict()
             return
-        index = CompilationManager.config.cache_path.joinpath("index.json")
+        index = Cache.cache_path.joinpath("index.json")
 
         if index.exists():
             with index.open("r") as file:
@@ -48,10 +56,9 @@ class Cache:
     def cache_module(module: RIALModule, src_path: str, cache_path: str, last_modified: float):
         Cache.cached_modules[src_path] = CachedModule(cache_path, module, last_modified)
 
-    @staticmethod
     @run_with_profiling("/cache/index.json", ExecutionStep.WRITE_CACHE)
-    def save_cache():
-        index = CompilationManager.config.cache_path.joinpath("index.json")
+    def save_cache(self):
+        index = Cache.cache_path.joinpath("index.json")
 
         if index.exists():
             os.remove(str(index))

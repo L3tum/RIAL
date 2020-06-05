@@ -1,0 +1,12 @@
+struct String{
+    public char[] data;
+    public uint length;
+}
+
+public String from_cstring(char[] cstr){
+    var str = String();
+    str.data = cstr;
+    str.length = sizeof(cstr) / sizeof(char);
+
+    return str;
+}

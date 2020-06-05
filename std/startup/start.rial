@@ -1,0 +1,6 @@
+const main_module = use #programMainModule;
+
+#[no_mangle]
+public void main(){
+    main_module.main();
+}

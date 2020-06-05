@@ -25,7 +25,7 @@ class TestHelloWorld(unittest.TestCase):
             os.mkdir(cls.src_path)
 
         with open(cls.main_file, "w") as file:
-            file.write("use rial:builtin:print;\n")
+            file.write("const printer = use rial:core:print;\n")
             file.write("public void main() {\n")
             file.write('\tprintln("Hello World!");\n')
             file.write("}\n")
@@ -42,7 +42,7 @@ class TestHelloWorld(unittest.TestCase):
         with open(os.path.join(os.path.join(self.dir_path, "output"), "main.ll"), "r") as ir:
             content = ir.read()
 
-        self.assertIn('call fastcc void @"rial:builtin:print:println.i8"', content)
+        self.assertIn('call fastcc void @"rial:core:print:println.i8"', content)
         bin_size = os.path.getsize(os.path.join(os.path.join(self.dir_path, "bin"), "TestHelloWorld"))
         self.assertLessEqual(bin_size, 5816)
 

@@ -1,4 +1,4 @@
-?start : [(unsafe_top_level_block|struct_decl|global_variable_decl|global_variable_assignment|attributed_func_decl|function_decl|using|attributed_compiler_directive)*]
+?start : [(unsafe_top_level_block|struct_decl|global_variable_decl|global_variable_assignment|attributed_func_decl|function_decl|imported)+]
 ?statement : conditional_block
            | conditional_elif_block
            | switch_block
@@ -9,7 +9,6 @@
            | function_call
            | expression ";"
            | variable_decl ";"
-           | using ";"
            | continue_rule
            | break_rule
            | return_rule
@@ -22,7 +21,7 @@ conditional_block : "if" "(" expression ")" likely_unlikely_modifier "{" conditi
 conditional_body : statement*
 conditional_elif_block : "elif" "(" expression ")" likely_unlikely_modifier "{" conditional_body "}"
 conditional_else_block : "else" likely_unlikely_modifier "{" conditional_body "}"
-likely_unlikely_modifier : ["[" (LIKELY|UNLIKELY) "]"]
+likely_unlikely_modifier : ["#[" (LIKELY|UNLIKELY) "]"]
 LIKELY : "likely"
 UNLIKELY : "unlikely"
 
@@ -56,30 +55,30 @@ variable_arithmetic : var PLUS~2
                     | var DIV ASSIGN expression
 
 // Structs
-struct_decl : modifier "struct" IDENTIFIER [":" IDENTIFIER ("," IDENTIFIER)*] "{" [(attributed_func_decl|function_decl|struct_property_declaration ";")*] "}"
-struct_property_declaration : modifier IDENTIFIER IDENTIFIER ["=" expression]
+struct_decl : modifier "struct" IDENTIFIER [":" chained_identifier ("," chained_identifier)*] "{" struct_body "}"
+struct_body : (attributed_func_decl|function_decl|struct_property_declaration ";")*
+struct_property_declaration : modifier chained_identifier IDENTIFIER ["=" expression]
 
 // Functions
-?function_call : IDENTIFIER "(" function_args ")"
+?function_call : chained_identifier "(" function_args ")"
                | constructor_call
-               | nested_function_call
-constructor_call : "new" IDENTIFIER "(" function_args ")"
-nested_function_call : IDENTIFIER ("." IDENTIFIER)+ "(" function_args ")"
+constructor_call : "new" chained_identifier "(" function_args ")"
 function_args : [expression ("," expression)*]
 
-?function_decl : modifier IDENTIFIER IDENTIFIER "(" [IDENTIFIER IDENTIFIER ("," IDENTIFIER IDENTIFIER)*] ")" "{" [statement*] "}"
+?function_decl : modifier chained_identifier IDENTIFIER "(" function_decl_args ")" "{" [statement*] "}"
               | external_function_decl
               | extension_function_decl
-extension_function_decl : modifier IDENTIFIER IDENTIFIER "(" "this" IDENTIFIER IDENTIFIER ("," IDENTIFIER IDENTIFIER)* ")" "{" [statement*] "}"
-external_function_decl : ("external" modifier|modifier "external") IDENTIFIER IDENTIFIER "(" [PARAMS? IDENTIFIER IDENTIFIER ("," IDENTIFIER IDENTIFIER | "," PARAMS IDENTIFIER IDENTIFIER)*] ")" ";"
+extension_function_decl : modifier chained_identifier IDENTIFIER "(" "this" chained_identifier IDENTIFIER ("," function_decl_args)? ")" "{" [statement*] "}"
+external_function_decl : ("external" modifier|modifier "external") chained_identifier IDENTIFIER "(" function_decl_args ")" ";"
+function_decl_args : [chained_identifier IDENTIFIER ("," chained_identifier IDENTIFIER | "," PARAMS chained_identifier IDENTIFIER)*]
 
 // Modifiers
 modifier : (ACCESS_MODIFIER|UNSAFE)*
 
 // Attributes
 ?attribute : "[" function_call "]"
+           | "#[" /[^\]]+/ "]" -> builtin_attribute
 attributed_func_decl : attribute+ function_decl
-attributed_compiler_directive : PREPRO_FLAG attribute
 
 // Unsafe
 unsafe_block : UNSAFE "{" statement* "}"
@@ -93,19 +92,15 @@ sizeof : "sizeof" "(" expression ")"
        | array_constructor
        | array_access
 array_assignment : array_access ASSIGN expression
-array_constructor : "new" IDENTIFIER "[" (INT|BIN_INT|HEX_INT|var) "]"
-array_access : var "[" (INT|BIN_INT|HEX_INT|var) "]"
+array_constructor : "new" var "[" (number|var) "]"
+array_access : var "[" (number|var) "]"
 
 // Base expression
 ?expression : sizeof
             | array
             | function_call
             | math
-            | expression SMALLER expression -> smaller_than
-            | expression BIGGER expression -> bigger_than
-            | expression BIGGER_EQUAL expression -> bigger_equal
-            | expression SMALLER_EQUAL expression -> smaller_equal
-            | expression EQUAL expression -> equal
+            | expression (SMALLER|BIGGER|BIGGER_EQUAL|SMALLER_EQUAL|EQUAL) expression -> equal
             | STRING -> string
             | "true" -> true
             | "false" -> false
@@ -116,14 +111,17 @@ array_access : var "[" (INT|BIN_INT|HEX_INT|var) "]"
             | variable_arithmetic
             | shorthand_if
             | "(" expression ")"
-            | "(" IDENTIFIER ")" expression -> cast
+            | "(" chained_identifier ")" expression -> cast
 
-var : IDENTIFIER ("." IDENTIFIER)*
+var : chained_identifier
 math : expression (PLUS|MINUS|MUL|DIV) expression
 number: NUMBER
 
+// Variable modifiers
+!variable_mutability : "mut" | "const" | "ref"
 
-using : "use" IDENTIFIER (":" IDENTIFIER)* ";"
+
+imported : variable_mutability IDENTIFIER ASSIGN "use" IDENTIFIER (":" IDENTIFIER)* ";"
 ACCESS_MODIFIER.2 : "private" | "public" | "internal"
 UNSAFE.2 : "unsafe"
 
@@ -148,7 +146,10 @@ PARAMS: "params"
 THIS : "this"
 PREPRO_FLAG : "#"
 
-IDENTIFIER.-10 : /(_|[a-zA-Z])(_|[a-zA-Z0-9])*/ "[" "]" | "@\"" /[^"]+/ "\"" | /(?!(^(var|return|use|external|params|public|internal|private|sizeof)$))#?(_|[a-zA-Z])(_|[a-zA-Z0-9])*/
+chained_identifier : IDENTIFIER ("." IDENTIFIER)*
+IDENTIFIER.-10 : /(_|[a-zA-Z])(_|[a-zA-Z0-9])*/ "[" "]"
+               | "@\"" /[^"]+/ "\""
+               | /#?(_|[a-zA-Z])(_|[a-zA-Z0-9])*/
 
 COMMENT : "//" /[^\n]*/ "\n"
 ML_COMMENT : "/*" /[^*]*/ "*/"

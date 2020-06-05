@@ -1,0 +1,6 @@
+- [GetElementPTR / Global Variable](https://wiki.aalto.fi/pages/viewpage.action?pageId=55377710)
+- [Lark Cheatsheet](https://github.com/lark-parser/lark/blob/master/docs/lark_cheatsheet.pdf)
+- [No-Op](https://stackoverflow.com/questions/8188045/llvm-no-op-instruction)
+- [Global Variable Constructors](https://llvm.org/docs/LangRef.html#the-llvm-global-ctors-global-variable)
+- [OrderedSetQueue](https://stackoverflow.com/questions/16506429/check-if-element-is-already-in-a-queue)
+- [Install C Library on python install setup](https://stackoverflow.com/questions/47360113/compile-c-library-on-pip-install)

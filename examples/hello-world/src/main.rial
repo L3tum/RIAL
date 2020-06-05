@@ -1,5 +1,10 @@
-use rial:builtin:print;
+unsafe {
+    external void printf(CString format, params CString arg);
+}
 
 public void main(){
-    println("Hello World!");
+    unsafe{
+        printf("%i\n", sizeof("Hello World"));
+        printf("Hello World\n");
+    }
 }

@@ -1,0 +1,159 @@
+?start : [(unsafe_top_level_block|struct_decl|global_variable_decl|global_variable_assignment|attributed_func_decl|function_decl|using|attributed_compiler_directive)*]
+?statement : conditional_block
+           | conditional_elif_block
+           | switch_block
+           | for_loop
+           | while_loop
+           | loop_loop
+           | unsafe_block
+           | function_call
+           | expression ";"
+           | variable_decl ";"
+           | using ";"
+           | continue_rule
+           | break_rule
+           | return_rule
+           | attribute
+
+
+// Control flow structures
+// Transformed into list of [ expression, likely_unlikely_modifier, conditional_body, conditional_else_block? ]
+conditional_block : "if" "(" expression ")" likely_unlikely_modifier "{" conditional_body "}" conditional_elif_block* conditional_else_block?
+conditional_body : statement*
+conditional_elif_block : "elif" "(" expression ")" likely_unlikely_modifier "{" conditional_body "}"
+conditional_else_block : "else" likely_unlikely_modifier "{" conditional_body "}"
+likely_unlikely_modifier : ["[" (LIKELY|UNLIKELY) "]"]
+LIKELY : "likely"
+UNLIKELY : "unlikely"
+
+switch_block : "switch" "(" expression ")" "{" (switch_case|default_case)+ "}"
+switch_case : "case" expression ":" ("{" [statement*] "}")?
+default_case : "default" ":" ("{" [statement*] "}")?
+for_loop : "for" "(" variable_decl ";" expression ";" expression ")" "{" [statement*] "}"
+while_loop : "while" "(" expression ")" "{" [statement*] "}"
+loop_loop : "loop" "{" [statement*] "}"
+continue_rule : "continue" ";"
+break_rule : "break" ";"
+return_rule : "return" ";"
+            | "return" expression ";"
+
+// Shorthand structures
+shorthand_if : "if" expression "?" expression ":" expression
+
+// Variables
+global_variable_decl : modifier variable_decl ";"
+global_variable_assignment : variable_assignment ";"
+variable_decl : "var" IDENTIFIER ASSIGN expression
+variable_assignment : var ASSIGN expression
+
+// Math shortcuts
+// Transformed by DesugarTransformer
+variable_arithmetic : var PLUS~2
+                    | var PLUS ASSIGN expression
+                    | var MINUS~2
+                    | var MINUS ASSIGN expression
+                    | var MUL ASSIGN expression
+                    | var DIV ASSIGN expression
+
+// Structs
+struct_decl : modifier "struct" IDENTIFIER [":" IDENTIFIER ("," IDENTIFIER)*] "{" [(attributed_func_decl|function_decl|struct_property_declaration ";")*] "}"
+struct_property_declaration : modifier IDENTIFIER IDENTIFIER ["=" expression]
+
+// Functions
+?function_call : IDENTIFIER "(" function_args ")"
+               | constructor_call
+               | nested_function_call
+constructor_call : "new" IDENTIFIER "(" function_args ")"
+nested_function_call : IDENTIFIER ("." IDENTIFIER)+ "(" function_args ")"
+function_args : [expression ("," expression)*]
+
+?function_decl : modifier IDENTIFIER IDENTIFIER "(" [IDENTIFIER IDENTIFIER ("," IDENTIFIER IDENTIFIER)*] ")" "{" [statement*] "}"
+              | external_function_decl
+              | extension_function_decl
+extension_function_decl : modifier IDENTIFIER IDENTIFIER "(" "this" IDENTIFIER IDENTIFIER ("," IDENTIFIER IDENTIFIER)* ")" "{" [statement*] "}"
+external_function_decl : ("external" modifier|modifier "external") IDENTIFIER IDENTIFIER "(" [PARAMS? IDENTIFIER IDENTIFIER ("," IDENTIFIER IDENTIFIER | "," PARAMS IDENTIFIER IDENTIFIER)*] ")" ";"
+
+// Modifiers
+modifier : (ACCESS_MODIFIER|UNSAFE)*
+
+// Attributes
+?attribute : "[" function_call "]"
+attributed_func_decl : attribute+ function_decl
+attributed_compiler_directive : PREPRO_FLAG attribute
+
+// Unsafe
+unsafe_block : UNSAFE "{" statement* "}"
+unsafe_top_level_block : UNSAFE "{" (attributed_func_decl|function_decl|global_variable_decl|global_variable_assignment)* "}"
+
+// Sizeof
+sizeof : "sizeof" "(" expression ")"
+
+// Arrays
+?array : array_assignment
+       | array_constructor
+       | array_access
+array_assignment : array_access ASSIGN expression
+array_constructor : "new" IDENTIFIER "[" (number|var) "]"
+array_access : var "[" (number|var) "]"
+
+// Base expression
+?expression : sizeof
+            | array
+            | function_call
+            | math
+            | expression (SMALLER|BIGGER|BIGGER_EQUAL|SMALLER_EQUAL|EQUAL) expression -> equal
+            | STRING -> string
+            | "true" -> true
+            | "false" -> false
+            | "null" -> null
+            | number
+            | var
+            | variable_assignment
+            | variable_arithmetic
+            | shorthand_if
+            | "(" expression ")"
+            | "(" IDENTIFIER ")" expression -> cast
+
+var : IDENTIFIER ("." IDENTIFIER)*
+math : expression (PLUS|MINUS|MUL|DIV) expression
+number: NUMBER
+
+
+using : "use" IDENTIFIER (":" IDENTIFIER)* ";"
+ACCESS_MODIFIER.2 : "private" | "public" | "internal"
+UNSAFE.2 : "unsafe"
+
+DIV.-4 : "/"
+MUL.-4 : "*"
+MINUS.-5 : "-"
+PLUS.-5 : "+"
+BIGGER.-6 : ">"
+SMALLER.-6 : "<"
+BIGGER_EQUAL.-7 : ">="
+SMALLER_EQUAL.-7 : "<="
+EQUAL.-7 : "=="
+ASSIGN.-8 : "="
+
+NUMBER.-3 : (PLUS|MINUS)? (HEX_INT|BIN_INT|FLOAT_SC|FLOAT|INT) ("uL"|"U"|"Ul"|"UL"|"ul"|"l"|"u"|"L"|"b"|"B")?
+FLOAT_SC.-1 : (FLOAT|INT) "e" ("-"|"+")? INT
+FLOAT.-2 : (INT+ "." INT+|INT+ "."|"." INT+) ("f"|"d"|"h")?
+BIN_INT : "0b" ("0"|"1"|"_")+
+HEX_INT : "0x" HEXDIGIT (HEXDIGIT|"_")*
+INT : DIGIT (DIGIT|"_")*
+PARAMS: "params"
+THIS : "this"
+PREPRO_FLAG : "#"
+
+IDENTIFIER.-10 : /(_|[a-zA-Z])(_|[a-zA-Z0-9])*/ "[" "]" | "@\"" /[^"]+/ "\"" | /(?!(^(var|return|use|external|params|public|internal|private|sizeof)$))#?(_|[a-zA-Z])(_|[a-zA-Z0-9])*/
+
+COMMENT : "//" /[^\n]*/ "\n"
+ML_COMMENT : "/*" /[^*]*/ "*/"
+
+%import common.ESCAPED_STRING -> STRING
+%import common.LETTER
+%import common.DIGIT
+%import common.HEXDIGIT
+%import common.WS
+%ignore WS
+%ignore COMMENT
+%ignore ML_COMMENT

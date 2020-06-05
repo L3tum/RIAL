@@ -1,0 +1,7 @@
+external private unsafe void @"llvm.donothing"();
+
+public void nop(){
+    unsafe {
+        @"llvm.donothing"();
+    }
+}

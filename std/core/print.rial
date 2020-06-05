@@ -1,0 +1,7 @@
+unsafe{
+    private external void printf(CString format, params CString[] args);
+}
+
+public void println(CString arg){
+    printf("%s\n", arg);
+}

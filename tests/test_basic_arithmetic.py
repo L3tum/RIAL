@@ -25,12 +25,12 @@ class TestBasicArithmetic(unittest.TestCase):
             os.mkdir(cls.src_path)
 
         with open(cls.main_file, "w") as file:
-            file.write("use rial:builtin:print;\n")
+            file.write("const printer = use rial:core:print;\n")
             file.write("public void main() {\n")
-            file.write('\tprintln(5 + 5);\n')
-            file.write('\tprintln(5 - 5);\n')
-            file.write('\tprintln(5 * 5);\n')
-            file.write('\tprintln(5 / 5);\n')
+            file.write('\tprinter.println("5 + 5");\n')
+            file.write('\tprinter.println("5 - 5");\n')
+            file.write('\tprinter.println("5 * 5");\n')
+            file.write('\tprinter.println("5 / 5");\n')
             file.write("}\n")
 
     @classmethod

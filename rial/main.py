@@ -10,12 +10,10 @@ import anyconfig
 from colorama import init
 from munch import munchify
 
-from rial.ParserState import ParserState
 from rial.compilation_manager import CompilationManager
-from rial.compiler import compiler
 from rial.configuration import Configuration
 from rial.profiling import set_profiling, execution_events, display_top
-from rial.util import pythonify, monkey_patch
+from rial.util.util import pythonify, monkey_patch, rreplace
 
 DEFAULT_OPTIONS = {
     'config': {
@@ -50,7 +48,6 @@ def main(options):
     monkey_patch()
 
     init()
-    ParserState.init()
 
     if options.profile_mem:
         import tracemalloc
@@ -59,7 +56,7 @@ def main(options):
 
     set_profiling(options.profile)
 
-    self_dir = __file__.replace("main.py", "")
+    self_dir = Path(rreplace(__file__.replace("main.py", ""), "/rial", "", 1)).joinpath("std")
     project_path = str(os.path.abspath(options.workdir))
     project_name = project_path.split('/')[-1]
 
@@ -83,10 +80,10 @@ def main(options):
     if not source_path.exists():
         raise FileNotFoundError(str(source_path))
 
-    config = Configuration(project_name, source_path, cache_path, output_path, bin_path, Path(self_dir), options)
+    config = Configuration(project_name, source_path, cache_path, output_path, bin_path, self_dir, options)
     CompilationManager.init(config)
-
-    compiler()
+    CompilationManager.compiler()
+    CompilationManager.fini()
 
     end = timer()
 
