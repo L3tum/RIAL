@@ -23,7 +23,7 @@ DEFAULT_OPTIONS = {
         'disable_cache': False,
         'disable_opt': False,
         'use_object_files': True,
-        'opt_level': '0',
+        'opt_level': '1',
         'print_link_command': False,
         'release': False,
         'profile': False,
@@ -31,7 +31,7 @@ DEFAULT_OPTIONS = {
         'profile_gil': False,
         'strip': False,
         'file': None,
-        'compile_units': multiprocessing.cpu_count()
+        'compile_units': multiprocessing.cpu_count(),
     },
     'release': {
         'opt_level': '3',

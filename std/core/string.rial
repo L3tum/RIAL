@@ -3,14 +3,14 @@ struct String{
     public uint length;
 }
 
-public String to_string(this CString cstr){
-    var str = String();
-    str.data = cstr;
-    str.length = sizeof(cstr) / sizeof(Char);
+public String to_string(this CString cstr, uint length){
+    var st = String();
+    st.data = cstr;
+    st.length = length;
 
-    return str;
+    return st;
 }
 
 public CString to_cstring(this String str){
-    return str.data[0];
+    return str.data;
 }

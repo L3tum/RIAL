@@ -1,6 +1,6 @@
 from typing import List
 
-from llvmlite.ir import Type, FunctionType, FunctionAttributes, ArrayType
+from llvmlite.ir import Type, FunctionType, FunctionAttributes, ArrayType, re
 
 from rial.concept.TransformerInterpreter import TransformerInterpreter
 from rial.concept.parser import Tree, Discard
@@ -119,8 +119,16 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
         else:
             return_type = map_shortcut_to_type('.'.join(nodes[1]))
 
-        if isinstance(llvm_return_type, RIALIdentifiedStructType) or isinstance(llvm_return_type, ArrayType):
+        # Builtins can be passed as raw values
+        if is_builtin_type(return_type):
+            llvm_return_type = llvm_return_type
+        # Pointer to first element for still normal arrays
+        elif re.match(r".+\[[0-9]+\]$", return_type) is not None:
             llvm_return_type = llvm_return_type.as_pointer()
+        elif isinstance(llvm_return_type, RIALIdentifiedStructType):
+            llvm_return_type = llvm_return_type.as_pointer()
+        else:
+            llvm_return_type = llvm_return_type
 
         # External functions cannot be declared in a struct
         if self.module.current_struct is not None:
@@ -179,8 +187,16 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
         else:
             return_type = map_shortcut_to_type('.'.join(nodes[1]))
 
-        if not is_builtin_type(return_type):
+        # Builtins can be passed as raw values
+        if is_builtin_type(return_type):
+            llvm_return_type = llvm_return_type
+        # Pointer to first element for still normal arrays
+        elif re.match(r".+\[[0-9]+\]$", return_type) is not None:
             llvm_return_type = llvm_return_type.as_pointer()
+        elif isinstance(llvm_return_type, RIALIdentifiedStructType):
+            llvm_return_type = llvm_return_type.as_pointer()
+        else:
+            llvm_return_type = llvm_return_type
 
         # Extension functions cannot be declared inside other classes.
         if self.module.current_struct is not None:
@@ -216,12 +232,16 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
             if arg.name.endswith("..."):
                 continue
 
-            # Pointer for array and struct types
-            if not is_builtin_type(arg.rial_type):
-                llvm_type = arg.llvm_type.as_pointer()
+            # Builtins can be passed as raw values
+            if is_builtin_type(arg.rial_type):
+                llvm_args.append(arg.llvm_type)
+            # Pointer to first element for still normal arrays
+            elif re.match(r".+\[[0-9]+\]$", arg.rial_type) is not None:
+                llvm_args.append(arg.llvm_type.as_pointer())
+            elif isinstance(arg.llvm_type, RIALIdentifiedStructType):
+                llvm_args.append(arg.llvm_type.as_pointer())
             else:
-                llvm_type = arg.llvm_type
-            llvm_args.append(llvm_type)
+                llvm_args.append(arg.llvm_type)
 
         # Hasn't been declared previously, redeclare the function type here
         func_type = FunctionType(llvm_return_type, llvm_args)
@@ -264,8 +284,16 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
         else:
             return_type = map_shortcut_to_type('.'.join(nodes[1]))
 
-        if isinstance(llvm_return_type, RIALIdentifiedStructType) or isinstance(llvm_return_type, ArrayType):
+        # Builtins can be passed as raw values
+        if is_builtin_type(return_type):
+            llvm_return_type = llvm_return_type
+        # Pointer to first element for still normal arrays
+        elif re.match(r".+\[[0-9]+\]$", return_type) is not None:
             llvm_return_type = llvm_return_type.as_pointer()
+        elif isinstance(llvm_return_type, RIALIdentifiedStructType):
+            llvm_return_type = llvm_return_type.as_pointer()
+        else:
+            llvm_return_type = llvm_return_type
 
         args: List[RIALVariable] = list()
 

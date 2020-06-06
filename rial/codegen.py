@@ -1,4 +1,5 @@
 import pickle
+from functools import lru_cache
 from pathlib import Path
 from threading import Lock
 from typing import List, Optional
@@ -165,6 +166,7 @@ class CodeGen:
         with open(dest, "wb") as file:
             file.write(module.as_bitcode())
 
+    @lru_cache(128)
     def get_size(self, ty: ir.Type) -> Optional[int]:
         if isinstance(ty, ir.IntType):
             return int(ty.width / 8)
@@ -173,5 +175,8 @@ class CodeGen:
         if isinstance(ty, ir.DoubleType):
             return int(64 / 8)
         if isinstance(ty, BaseStructType):
-            return ty.get_abi_size(self.target_machine.target_data)
+            from rial.compilation_manager import CompilationManager
+            for mod in CompilationManager.modules.values():
+                if ty in mod.get_identified_types().values():
+                    return ty.get_abi_size(self.target_machine.target_data, mod.context)
         return None

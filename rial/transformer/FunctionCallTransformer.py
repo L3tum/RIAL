@@ -24,7 +24,7 @@ class FunctionCallTransformer(BaseTransformer):
 
             if implicit_parameter is not None:
                 if isinstance(implicit_parameter, RIALVariable):
-                    arguments.append(implicit_parameter)
+                    arguments.insert(0, implicit_parameter)
         else:
             implicit_parameter = None
 

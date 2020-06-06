@@ -1,3 +1,5 @@
+const str = use core:string;
+
 unsafe {
     external void printf(CString format, params CString arg);
 }
@@ -6,5 +8,10 @@ public void main(){
     unsafe{
         printf("%i\n", sizeof("Hello World"));
         printf("Hello World\n");
+        var s = "Hello World!";
+        var str = s.to_string(13);
+        printf("%i\n", sizeof(str));
+        printf("%i\n", str.length);
+        printf("%s\n", str.to_cstring());
     }
 }

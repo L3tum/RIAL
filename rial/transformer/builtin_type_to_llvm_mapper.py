@@ -21,7 +21,7 @@ def null(ty):
 @lru_cache(24)
 def is_builtin_type(ty: str):
     ty = map_shortcut_to_type(ty)
-    return ty in ("Int32", "Int64", "UInt64", "UInt64", "Double64", "Float32", "Boolean", "Byte", "Char", "Half")
+    return ty in ("Int32", "Int64", "UInt32", "UInt64", "Double64", "Float32", "Boolean", "Byte", "Char", "Half")
 
 
 @lru_cache(24)

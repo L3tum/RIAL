@@ -19,159 +19,22 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Moved LLVMGen to be a threadlocal variable in ParserState.py">
-      <change afterPath="$PROJECT_DIR$/rial/ir/llvm_helper.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/ir/metadata/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/ir/modifier/AccessModifier.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/ir/modifier/DeclarationModifier.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/ir/modifier/VariableMutabilityModifier.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/ir/modifier/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/transformer/BaseTransformer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/transformer/BuiltinTransformer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/transformer/FunctionCallTransformer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/transformer/FunctionDeclarationTransformer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/transformer/GlobalDeclarationTransformer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/transformer/LoopTransformer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/transformer/MainTransformer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/transformer/StandardOperationsTransformer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/transformer/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/util/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/util/only_allowed_in_unsafe.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/Cache.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/DesugarTransformer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/GlobalDeclarationTransformer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/LLVMBlock.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/LLVMUIntType.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/StructDeclarationTransformer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/builtin/string.rial" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/combined_transformer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/compilation_manager.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/concept/Postlexer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/concept/TransformerInterpreter.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/concept/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/concept/config_schema.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/concept/grammar.lark" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/concept/metadata_token.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/concept/only_allowed_in_unsafe.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/concept/ordered_set_queue.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/concept/parser.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/concept/references.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/configuration.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/linking/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/linking/linker.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/linking/linking_options.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/metadata/FunctionDefinition.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/metadata/RIALFunction.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/metadata/RIALIdentifiedStructType.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/metadata/RIALModule.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/metadata/StructDefinition.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/metadata/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/platform_support/IPlatform.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/platform_support/LinuxPlatform.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/platform_support/Platform.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/platform_support/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/profiling.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/rial_types/RIALVariable.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/rial_types/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/stages/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/stages/post_ir_generation/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/stages/post_parsing/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/type_casting.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial_old/util.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/std/builtin/int32.rial" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/std/builtin/nop.rial" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/std/core/print.rial" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/std/core/settings.rial" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/std/core/string.rial" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/std/core/system.rial" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/std/startup/start.rial" afterDir="false" />
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Absolute unit of a commit&#10;&#10;- Reworked the entire compiler.&#10;- It's single threaded now for better performance (lol fuck python)&#10;- Definition finding is better now&#10;- Variable handling is better now&#10;- There still needs to be some work done for feature parity with the old one which now resides in rial_old&#10;- Moved to scoped imports&#10;- Redid the standard library and some other grammar related things&#10;- Improved code readability by A LOT">
+      <change afterPath="$PROJECT_DIR$/test_clang.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/examples/hello-world/src/main.rial" beforeDir="false" afterPath="$PROJECT_DIR$/examples/hello-world/src/main.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/ASTVisitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/ASTVisitor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/Cache.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/Cache.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/DesugarTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/DesugarTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/FunctionDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/FunctionDeclarationTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/GlobalDeclarationTransformer.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/LLVMBlock.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/LLVMBlock.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/LLVMGen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/LLVMGen.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/LLVMUIntType.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/LLVMUIntType.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/ParserState.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/ParserState.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/PrimitiveASTTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/PrimitiveASTTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/StructDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/StructDeclarationTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/builtin/always_imported/int32.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/builtin/always_imported/int32.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/builtin/always_imported/nop.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/builtin/always_imported/nop.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/builtin/attribute.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/builtin/attribute.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/builtin/ffi/print.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/builtin/ffi/print.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/builtin/no_mangle_attribute.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/builtin/no_mangle_attribute.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/builtin/print.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/builtin/print.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/builtin/settings.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/builtin/settings.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/builtin/start.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/builtin/start.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/builtin/system.rial" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/builtin/system.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/builtin_type_to_llvm_mapper.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/codegen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/codegen.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/combined_transformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/combined_transformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/compilation_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compilation_manager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/compiler.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/compiler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/Postlexer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/Postlexer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/TransformerInterpreter.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/TransformerInterpreter.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/compilation_unit.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/concept/compilation_unit.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/metadata_token.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/metadata/metadata_token.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/name_mangler.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/concept/name_mangler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/only_allowed_in_unsafe.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/ordered_set_queue.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/util/ordered_set_queue.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/fuzzing.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/fuzzing.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/log.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/util/log.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/ir/IRBuilder.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/IRBuilder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/ir/RIALVariable.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/RIALVariable.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/metadata/FunctionDefinition.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/metadata/FunctionDefinition.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/metadata/RIALFunction.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/RIALFunction.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/metadata/RIALIdentifiedStructType.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/RIALIdentifiedStructType.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/metadata/RIALModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/RIALModule.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/metadata/RIALValue.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/metadata/RIALValue.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/metadata/StructDefinition.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/metadata/StructDefinition.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/metadata/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/Transformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/profile.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/profile.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/rial_types/RIALAccessModifier.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/rial_types/RIALAccessModifier.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/rial_types/RIALFunctionDeclarationModifier.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/rial_types/RIALFunctionDeclarationModifier.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/rial_types/RIALVariable.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/rial_types/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/internals.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/stages/StageManager.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/stages/StageManager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/stages/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/philosophy.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/stages/post_ir_generation/PostIRGenerationInterface.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/stages/post_ir_generation/PostIRGenerationInterface.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/stages/post_ir_generation/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/IRBuilder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/stages/post_ir_generation/infinite_loop_detector.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/stages/post_ir_generation/infinite_loop_detector.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/stages/post_parsing/PostParsingInterface.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/stages/post_parsing/PostParsingInterface.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/stages/post_parsing/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/RIALVariable.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/stages/post_parsing/infinite_loop_detector.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/stages/post_parsing/infinite_loop_detector.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/type_casting.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/type_casting.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/util/util.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial_old/ast/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial_old/ast/binary_operation.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial_old/ast/expression_bag.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial_old/ast/function_body.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial_old/ast/function_call.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial_old/ast/function_declaration.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial_old/ast/node.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial_old/ast/number.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial_old/ast/program.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial_old/ast/statement.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial_old/ast/string_literal.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial_old/ast/variable_declaration.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial_old/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/builtin_type_to_llvm_mapper.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial_old/codegen.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/codegen.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial_old/lexer.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial_old/log.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/log.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial_old/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial_old/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial_old/parser.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial_old/parser_state.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial_old/tokens.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/rial.ini" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/src/boolean.rial" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/src/main.rial" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/src/print.rial" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_basic_arithmetic.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_basic_arithmetic.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_hello_world.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_hello_world.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/transformer/BuiltinTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/BuiltinTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/transformer/DesugarTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/DesugarTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/transformer/FunctionCallTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/FunctionCallTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/transformer/FunctionDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/FunctionDeclarationTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/transformer/MainTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/MainTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/transformer/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/builtin_type_to_llvm_mapper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/std/core/string.rial" beforeDir="false" afterPath="$PROJECT_DIR$/std/core/string.rial" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing_clang/test.c" beforeDir="false" afterPath="$PROJECT_DIR$/testing_clang/test.c" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -400,14 +263,10 @@
       <workItem from="1591190460055" duration="2005000" />
       <workItem from="1591262332117" duration="1109000" />
       <workItem from="1591264759368" duration="23424000" />
-      <workItem from="1591359260047" duration="7780000" />
-    </task>
-    <task id="LOCAL-00012" summary="Added float and double support&#10;Added underscore in numbers support&#10;Added binary and hex integer support&#10;Closes #17">
-      <created>1587122683913</created>
-      <option name="number" value="00012" />
-      <option name="presentableId" value="LOCAL-00012" />
-      <option name="project" value="LOCAL" />
-      <updated>1587122683913</updated>
+      <workItem from="1591359260047" duration="8543000" />
+      <workItem from="1591437923819" duration="3838000" />
+      <workItem from="1591444832368" duration="2331000" />
+      <workItem from="1591448238902" duration="3541000" />
     </task>
     <task id="LOCAL-00013" summary="Added support for specifying access modifier for external functions&#10;&#10;This in turn revealed a slew of bugs with the current implementation of functions and arguments.&#10;Which have been fixed, but....&#10;...All arguments are now passed as references.&#10;Special cases will need to be added to make this more secure (like specifying a const argument and thus invoking the generation of a new variable).&#10;&#10;Closes #20">
       <created>1587129272167</created>
@@ -745,7 +604,14 @@
       <option name="project" value="LOCAL" />
       <updated>1590398261648</updated>
     </task>
-    <option name="localTasksCounter" value="61" />
+    <task id="LOCAL-00061" summary="Absolute unit of a commit&#10;&#10;- Reworked the entire compiler.&#10;- It's single threaded now for better performance (lol fuck python)&#10;- Definition finding is better now&#10;- Variable handling is better now&#10;- There still needs to be some work done for feature parity with the old one which now resides in rial_old&#10;- Moved to scoped imports&#10;- Redid the standard library and some other grammar related things&#10;- Improved code readability by A LOT">
+      <created>1591392909137</created>
+      <option name="number" value="00061" />
+      <option name="presentableId" value="LOCAL-00061" />
+      <option name="project" value="LOCAL" />
+      <updated>1591392909138</updated>
+    </task>
+    <option name="localTasksCounter" value="62" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -774,7 +640,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Moved platform to platform_support since it apparently conflicts with Python's platform" />
     <MESSAGE value="Implemented access checking&#10;&#10;Moved function metadata to module to fix bugs&#10;Closes #38" />
     <MESSAGE value="Preliminary support for inheritance" />
     <MESSAGE value="Update&#10;&#10;Added const global variables&#10;Fixed name mangling bug&#10;Fixed type mapping bug&#10;Added ability to specify &quot;always imported&quot; modules that will always be added to the current usings. Currently limited to builtin.&#10;Fixed bug that could occur if a module only had external functions&#10;Added Extension Functions&#10;Added &quot;Primitive Boxed Types&quot; via extension functions, right now only int32.rial&#10;Fixed bug in parsing access modifier from Metadata&#10;Fixed bug that could occur when an argument is a pointer to something else than a struct&#10;Fixed bug in StructDeclarationTransformer.py when the FDT would discard a function" />
@@ -799,7 +664,8 @@
     <MESSAGE value="Added sizeof operator&#10;Added option to completely disable every optimization" />
     <MESSAGE value="Added &quot;primitive&quot; arrays&#10;Added better sizeof support&#10;Improved grammar" />
     <MESSAGE value="Moved LLVMGen to be a threadlocal variable in ParserState.py" />
-    <option name="LAST_COMMIT_MESSAGE" value="Moved LLVMGen to be a threadlocal variable in ParserState.py" />
+    <MESSAGE value="Absolute unit of a commit&#10;&#10;- Reworked the entire compiler.&#10;- It's single threaded now for better performance (lol fuck python)&#10;- Definition finding is better now&#10;- Variable handling is better now&#10;- There still needs to be some work done for feature parity with the old one which now resides in rial_old&#10;- Moved to scoped imports&#10;- Redid the standard library and some other grammar related things&#10;- Improved code readability by A LOT" />
+    <option name="LAST_COMMIT_MESSAGE" value="Absolute unit of a commit&#10;&#10;- Reworked the entire compiler.&#10;- It's single threaded now for better performance (lol fuck python)&#10;- Definition finding is better now&#10;- Variable handling is better now&#10;- There still needs to be some work done for feature parity with the old one which now resides in rial_old&#10;- Moved to scoped imports&#10;- Redid the standard library and some other grammar related things&#10;- Improved code readability by A LOT" />
   </component>
   <component name="WindowStateProjectService">
     <state x="906" y="378" key="#Inspections" timestamp="1588322612153">
@@ -843,11 +709,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1590578546519" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1590398262575">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1591392912567">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1590398262575" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591392912567" />
     <state x="97" y="126" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1589717472507">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -864,11 +730,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="1089" y="614" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587156453919" />
-    <state x="-2567" y="0" width="1293" height="1407" key="dock-window-1" timestamp="1591359562852">
+    <state x="-2567" y="0" width="1293" height="1407" key="dock-window-1" timestamp="1591448276500">
       <screen x="-3840" y="0" width="2560" height="1400" />
     </state>
     <state x="-2567" y="0" width="1293" height="1407" key="dock-window-1/0.0.2560.1400/-3840.0.2560.1400@-3840.0.2560.1400" timestamp="1590571897702" />
-    <state x="-2567" y="0" width="1293" height="1407" key="dock-window-1/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591359562852" />
+    <state x="-2567" y="0" width="1293" height="1407" key="dock-window-1/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591448276500" />
     <state x="-2447" y="332" width="489" height="559" key="dock-window-2" timestamp="1584965749099">
       <screen x="-3840" y="0" width="2560" height="1400" />
     </state>
@@ -877,10 +743,10 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="374" y="358" width="565" height="560" key="dock-window-3/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584965812228" />
-    <state x="976" y="432" width="737" height="616" key="find.popup" timestamp="1591270479355">
+    <state x="976" y="432" width="737" height="616" key="find.popup" timestamp="1591440134785">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="976" y="432" width="737" height="616" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591270479355" />
+    <state x="976" y="432" width="737" height="616" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591440134785" />
     <state x="1123" y="472" key="refactoring.ChangeSignatureDialog" timestamp="1586600798541">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

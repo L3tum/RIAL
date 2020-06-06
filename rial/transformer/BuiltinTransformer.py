@@ -50,11 +50,8 @@ class BuiltinTransformer(BaseTransformer):
                 size = self.module.builder.mul(Int32(size), self.module.builder.load(ty.count))
 
             return RIALVariable(f"sizeof_{ty.element}[{ty.count}]", "Int32", Int32, size)
-        elif not isinstance(variable.value, ir.GEPInstr):
-            size = Int32(CompilationManager.codegen.get_size(variable.llvm_type))
-
-            return RIALVariable(f"sizeof_{variable.rial_type}", "Int32", Int32, size)
-        else:
+        # If an array wasn't caught in the previous elif, then it doesn't have a set length and needs to be sized this way.
+        elif isinstance(variable.value, ir.GEPInstr) or variable.rial_type.endswith("]"):
             # This is worst case and practically only reserved for GEPs
             # This is worst case as it cannot be optimized away.
             base = self.module.builder.ptrtoint(
@@ -64,6 +61,10 @@ class BuiltinTransformer(BaseTransformer):
             size = self.module.builder.sub(val, base)
 
             return RIALVariable("sizeof_unknown", "Int32", Int32, size)
+        else:
+            size = Int32(CompilationManager.codegen.get_size(variable.llvm_type))
+
+            return RIALVariable(f"sizeof_{variable.rial_type}", "Int32", Int32, size)
 
     def unsafe_block(self, tree: Tree):
         nodes = tree.children

@@ -1,3 +1,4 @@
+import re
 from typing import Optional, List
 
 from llvmlite import ir
@@ -102,8 +103,8 @@ class IRBuilder(ir.IRBuilder):
                 if is_builtin_type(arg.rial_type):
                     args.append(arg.get_loaded_if_variable(self.module))
 
-                # Pointer to first element for arrays
-                elif arg.rial_type.endswith("]"):
+                # Pointer to first element for still normal arrays
+                elif re.match(r".+\[[0-9]+\]$", arg.rial_type) is not None:
                     args.append(self.gep(arg.value, [Int32(0), Int32(0)]))
 
                 else:

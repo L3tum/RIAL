@@ -3,7 +3,7 @@ from typing import Optional
 from llvmlite import ir
 
 from rial.ir.modifier.AccessModifier import AccessModifier
-from rial.transformer.builtin_type_to_llvm_mapper import map_shortcut_to_type, is_builtin_type
+from rial.transformer.builtin_type_to_llvm_mapper import map_shortcut_to_type
 
 
 class RIALVariable:
@@ -33,12 +33,21 @@ class RIALVariable:
 
     @property
     def is_variable(self):
-        return isinstance(self.value, ir.AllocaInstr) or \
-               isinstance(self.value, ir.GlobalValue) or \
-               isinstance(self.value, ir.GEPInstr) or \
-               (isinstance(self.value, ir.CastInstr) and (
-                       self.value.opname == "bitcast" or self.value.opname == "inttoptr")) or \
-               (isinstance(self.value, ir.Argument) and not is_builtin_type(self.rial_type))
+        if isinstance(self.value, ir.AllocaInstr):
+            return True
+        if isinstance(self.value, ir.GlobalVariable):
+            return True
+        if isinstance(self.value, ir.GEPInstr) and isinstance(self.value.type,
+                                                              ir.PointerType) and not self.rial_type.endswith("]"):
+            return True
+        if isinstance(self.value, ir.CastInstr) and (self.value.opname == "bitcast" or self.value.opname == "inttoptr"):
+            return True
+        if isinstance(self.value, ir.Argument) and isinstance(self.value.type, ir.PointerType):
+            return True
+        if isinstance(self.value, ir.CallInstr) and isinstance(self.value.callee, ir.Function) and isinstance(
+                self.value.callee.function_type.return_type, ir.PointerType):
+            return True
+        return False
 
     def get_loaded_if_variable(self, module):
         return self.is_variable and module.builder.load(self.value) or self.value
@@ -46,3 +55,9 @@ class RIALVariable:
     @property
     def array_element_type(self):
         return self.rial_type.split('[')[0]
+
+    def __str__(self):
+        return f"{self.name}: {self.rial_type}/{self.llvm_type}: {self.value} [{self.access_modifier}]"
+
+    def __repr__(self):
+        return self.__str__()

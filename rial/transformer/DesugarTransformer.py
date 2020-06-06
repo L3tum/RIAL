@@ -3,7 +3,8 @@ from typing import List
 from llvmlite import ir
 
 from rial.compilation_manager import CompilationManager
-from rial.concept.parser import Tree, Transformer_InPlaceRecursive, Token, Discard
+from rial.concept.Transformer import Transformer
+from rial.concept.parser import Tree, Token, Discard
 from rial.ir.RIALModule import RIALModule
 from rial.ir.RIALVariable import RIALVariable
 from rial.ir.modifier.AccessModifier import AccessModifier
@@ -14,7 +15,7 @@ from rial.util.log import log_warn_short
 from rial.util.util import good_hash
 
 
-class DesugarTransformer(Transformer_InPlaceRecursive):
+class DesugarTransformer(Transformer):
     module: RIALModule
 
     def __init__(self, module: RIALModule):
@@ -103,6 +104,10 @@ class DesugarTransformer(Transformer_InPlaceRecursive):
             raise NameError(var_name)
 
         mod_name = ':'.join([node.value for node in nodes[3:]])
+
+        if mod_name.startswith("core") or mod_name.startswith("std") or mod_name.startswith("startup"):
+            mod_name = f"rial:{mod_name}"
+
         CompilationManager.request_module(mod_name)
         self.module.dependencies[var_name] = mod_name
 
@@ -126,12 +131,16 @@ class DesugarTransformer(Transformer_InPlaceRecursive):
         value = nodes[0].value.strip("\"")
         name = ".const.string.%s" % good_hash(value)
 
+        existing = self.module.get_global_safe(name)
+        if existing is not None:
+            return self.module.global_variables[name]
+
         # Parse escape codes to be correct
         value = eval("'{}'".format(value))
         value = f"{value}\00"
         arr = bytearray(value.encode("utf-8"))
         const_char_arr = ir.Constant(ir.ArrayType(ir.IntType(8), len(arr)), arr)
-        glob = self.module.declare_global(name, "Char[]", const_char_arr.type, "private", const_char_arr,
+        glob = self.module.declare_global(name, f"Char[{len(arr)}]", const_char_arr.type, "private", const_char_arr,
                                           AccessModifier.PRIVATE, True)
 
         return glob

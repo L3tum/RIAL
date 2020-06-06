@@ -8,7 +8,7 @@ from rial.ir.RIALIdentifiedStructType import RIALIdentifiedStructType
 from rial.ir.RIALVariable import RIALVariable
 from rial.ir.metadata.metadata_token import MetadataToken
 from rial.transformer.BaseTransformer import BaseTransformer
-from rial.transformer.builtin_type_to_llvm_mapper import Int32, is_builtin_type, map_llvm_to_type
+from rial.transformer.builtin_type_to_llvm_mapper import Int32, is_builtin_type, map_llvm_to_type, map_shortcut_to_type
 from rial.util.only_allowed_in_unsafe import only_allowed_in_unsafe
 
 
@@ -97,13 +97,11 @@ class MainTransformer(BaseTransformer):
             if value.rial_type != variable.rial_type:
                 raise TypeError(value, variable)
 
-            if value.is_variable:
-                value.name = variable.name
-                self.module.current_block.add_named_value(variable.name, value)
-                return value
+            if variable.value.type.pointee == value.value.type:
+                self.module.builder.store(value.value, variable.value)
             else:
                 self.module.builder.store(value.get_loaded_if_variable(self.module), variable.value)
-                return variable
+            return variable
 
         raise TypeError(value)
 
@@ -144,6 +142,7 @@ class MainTransformer(BaseTransformer):
             if value.is_variable:
                 variable = value
             else:
+                print(value)
                 variable = self.module.builder.alloca(value.llvm_type)
                 self.module.builder.store(value.get_loaded_if_variable(self.module), variable)
                 variable = RIALVariable(identifier, value.rial_type, value.llvm_type, variable)
@@ -251,5 +250,9 @@ class MainTransformer(BaseTransformer):
             self.module.builder.ret_void()
         elif is_builtin_type(variable.rial_type):
             self.module.builder.ret(variable.get_loaded_if_variable(self.module))
+        # Special case for CStrings for now
+        elif self.module.current_func.definition.rial_return_type == map_shortcut_to_type("CString") and isinstance(
+                variable.value.type.pointee, ir.PointerType):
+            self.module.builder.ret(self.module.builder.load(variable.value))
         else:
             self.module.builder.ret(variable.value)
