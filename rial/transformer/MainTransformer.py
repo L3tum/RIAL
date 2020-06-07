@@ -17,34 +17,6 @@ class MainTransformer(BaseTransformer):
         for node in tree.children:
             self.transform_helper(node)
 
-    def array_constructor(self, tree: Tree):
-        nodes = tree.children
-        ty = self.transform_helper(nodes[0])
-        number: RIALVariable = self.transform_helper(nodes[1])
-
-        assert isinstance(number, RIALVariable)
-
-        if isinstance(number.value, ir.Constant):
-            number = number.value.constant
-        elif number.is_variable:
-            number = self.module.builder.load(number.value)
-        else:
-            number = number.value
-
-        if not isinstance(ty, ir.Type):
-            raise TypeError(nodes[0])
-
-        if isinstance(ty, RIALIdentifiedStructType):
-            name = ty.name
-        else:
-            name = str(ty)
-
-        arr_type = ir.ArrayType(ty, number)
-        allocated = self.module.builder.alloca(arr_type)
-
-        return RIALVariable(f"array_{name}[{number}]", f"{name}[{isinstance(number, int) and number or ''}]", arr_type,
-                            allocated)
-
     def array_assignment(self, tree: Tree):
         nodes = tree.children
         entry: RIALVariable = self.transform_helper(nodes[0])
@@ -66,6 +38,30 @@ class MainTransformer(BaseTransformer):
         nodes = tree.children
         variable: RIALVariable = self.transform_helper(nodes[0])
         index: RIALVariable = self.transform_helper(nodes[1])
+
+        if isinstance(variable, ir.Type):
+            ty = variable
+            number = index
+            assert isinstance(number, RIALVariable)
+
+            if isinstance(number.value, ir.Constant):
+                number = number.value.constant
+            elif number.is_variable:
+                number = self.module.builder.load(number.value)
+            else:
+                number = number.value
+
+            if isinstance(ty, RIALIdentifiedStructType):
+                name = ty.name
+            else:
+                name = str(ty)
+
+            arr_type = ir.ArrayType(ty, number)
+            allocated = self.module.builder.alloca(arr_type)
+
+            return RIALVariable(f"array_{name}[{number}]", f"{name}[{isinstance(number, int) and number or ''}]",
+                                arr_type,
+                                allocated)
 
         if not variable.rial_type.endswith("]"):
             raise TypeError(variable)

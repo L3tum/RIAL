@@ -61,8 +61,7 @@ struct_property_declaration : modifier chained_identifier IDENTIFIER ["=" expres
 
 // Functions
 ?function_call : chained_identifier "(" function_args ")"
-               | constructor_call
-constructor_call : "new" chained_identifier "(" function_args ")"
+               | "new" chained_identifier "(" function_args ")"
 function_args : [expression ("," expression)*]
 
 ?function_decl : modifier chained_identifier IDENTIFIER "(" function_decl_args ")" "{" [statement*] "}"
@@ -89,11 +88,10 @@ sizeof : "sizeof" "(" expression ")"
 
 // Arrays
 ?array : array_assignment
-       | array_constructor
        | array_access
 array_assignment : array_access ASSIGN expression
-array_constructor : "new" var "[" (number|var) "]"
 array_access : var "[" (number|var) "]"
+             | "new" var "[" (number|var) "]"
 
 // Base expression
 ?expression : sizeof
