@@ -5,6 +5,7 @@ from llvmlite import ir
 from rial.compilation_manager import CompilationManager
 from rial.concept.Transformer import Transformer
 from rial.concept.parser import Tree, Token, Discard
+from rial.ir.LLVMUIntType import LLVMUIntType
 from rial.ir.RIALModule import RIALModule
 from rial.ir.RIALVariable import RIALVariable
 from rial.ir.modifier.AccessModifier import AccessModifier
@@ -139,11 +140,25 @@ class DesugarTransformer(Transformer):
         value = eval("'{}'".format(value))
         value = f"{value}\00"
         arr = bytearray(value.encode("utf-8"))
-        const_char_arr = ir.Constant(ir.ArrayType(ir.IntType(8), len(arr)), arr)
+        const_char_arr = ir.Constant(ir.ArrayType(LLVMUIntType(8), len(arr)), arr)
         glob = self.module.declare_global(name, f"Char[{len(arr)}]", const_char_arr.type, "private", const_char_arr,
                                           AccessModifier.PRIVATE, True)
 
         return glob
+
+    def char(self, nodes):
+        value = nodes[0].value.strip("'")
+        # Parse escape codes to be correct
+        value = eval("'{}'".format(value))
+        name = ".const.char.%s" % good_hash(value)
+
+        if len(value) == 0:
+            value = '\00'
+
+        value = ord(value)
+        const_char = ir.Constant(LLVMUIntType(8), value)
+
+        return RIALVariable(name, "Char", const_char.type, const_char)
 
     def variable_mutability(self, nodes):
         mutability = nodes[0].value

@@ -100,6 +100,7 @@ array_access : var "[" (number|var) "]"
             | math
             | expression (SMALLER|BIGGER|BIGGER_EQUAL|SMALLER_EQUAL|EQUAL) expression -> equal
             | STRING -> string
+            | CHAR -> char
             | "true" -> true
             | "false" -> false
             | "null" -> null
@@ -114,6 +115,7 @@ array_access : var "[" (number|var) "]"
 var : chained_identifier
 math : expression (PLUS|MINUS|MUL|DIV) expression
 number: NUMBER
+CHAR : "'" _STRING_ESC_INNER "'"
 
 // Variable modifiers
 !variable_mutability : "mut" | "const" | "ref"
@@ -157,6 +159,7 @@ ML_COMMENT : "/*" /[^*]*/ "*/"
 %import common.DIGIT
 %import common.HEXDIGIT
 %import common.WS
+%import common._STRING_ESC_INNER
 %ignore WS
 %ignore COMMENT
 %ignore ML_COMMENT

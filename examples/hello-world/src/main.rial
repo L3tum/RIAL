@@ -5,7 +5,11 @@ unsafe {
 }
 
 public void main(){
+    var p = 'a';
+    var q = '';
+
     unsafe{
+        printf("%c\n", p);
         printf("%i\n", sizeof("Hello World"));
         printf("Hello World\n");
         var s = "Hello World!";

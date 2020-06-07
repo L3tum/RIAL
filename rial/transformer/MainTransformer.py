@@ -138,7 +138,6 @@ class MainTransformer(BaseTransformer):
             if value.is_variable:
                 variable = value
             else:
-                print(value)
                 variable = self.module.builder.alloca(value.llvm_type)
                 self.module.builder.store(value.get_loaded_if_variable(self.module), variable)
                 variable = RIALVariable(identifier, value.rial_type, value.llvm_type, variable)
