@@ -328,7 +328,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
             self.attributes.add('alwaysinline')
 
             # Check that main method returns either Int32 or void
-            if return_type != "Int32" and return_type != "void":
+            if return_type != "Int32" and return_type != "Void":
                 log_fail(f"Main method must return an integer status code or void, {return_type} given!")
 
         # Hasn't been declared previously, redeclare the function type here

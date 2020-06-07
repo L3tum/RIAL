@@ -13,98 +13,63 @@ FALSE = ir.Constant(ir.IntType(1), 0)
 Int32 = ir.IntType(32)
 Long = ir.IntType(64)
 
+SHORTCUT_TO_TYPE = {
+    'int': 'Int32',
+    'long': 'Int64',
+    'uint': 'UInt32',
+    'ulong': 'UInt64',
+    'double': 'Double64',
+    'float': 'Float32',
+    'bool': 'Boolean',
+    'byte': 'Byte',
+    'sbyte': 'SByte',
+    'char': 'Char',
+    'half': 'Half',
+    'void': 'Void',
+    'CString': 'Char[]'
+}
+
+TYPE_TO_LLVM = {
+    'Int32': ir.IntType(32),
+    'UInt32': LLVMUIntType(32),
+    'Int64': ir.IntType(64),
+    'UInt64': LLVMUIntType(64),
+    'Boolean': ir.IntType(1),
+    'Void': ir.VoidType(),
+    'Float32': ir.FloatType(),
+    'Double64': ir.DoubleType(),
+    'Byte': LLVMUIntType(8),
+    'SByte': ir.IntType(8),
+    'Char': LLVMUIntType(8),
+    'Half': ir.HalfType()
+}
+
 
 def null(ty):
     return ir.Constant(ty, None)
 
 
-@lru_cache(24)
+@lru_cache(len(TYPE_TO_LLVM) + 20)
 def is_builtin_type(ty: str):
     ty = map_shortcut_to_type(ty)
-    return ty in ("Int32", "Int64", "UInt32", "UInt64", "Double64", "Float32", "Boolean", "Byte", "Char", "Half")
+    return ty in TYPE_TO_LLVM
 
 
-@lru_cache(24)
+@lru_cache(len(SHORTCUT_TO_TYPE) + 20)
 def map_shortcut_to_type(shortcut: str) -> str:
-    if shortcut == "int":
-        return "Int32"
-
-    if shortcut == "long":
-        return "Int64"
-
-    if shortcut == "ulong":
-        return "UInt64"
-
-    if shortcut == "uint":
-        return "UInt32"
-
-    if shortcut == "double":
-        return "Double64"
-
-    if shortcut == "float":
-        return "Float32"
-
-    if shortcut == "bool":
-        return "Boolean"
-
-    if shortcut == "byte":
-        return "Byte"
-
-    if shortcut == "char":
-        return "Char"
-
-    if shortcut == "half":
-        return "Half"
-
-    if shortcut == "CString":
-        return "Int8[]"
-
-    return shortcut
+    return SHORTCUT_TO_TYPE[shortcut] if shortcut in SHORTCUT_TO_TYPE else shortcut
 
 
 @lru_cache(128)
 def map_type_to_llvm(rial_type: str) -> Optional[Type]:
     rial_type = map_shortcut_to_type(rial_type)
 
-    if rial_type == "Int32":
-        # 32bit integer
-        return ir.IntType(32)
-
-    if rial_type == "UInt32":
-        return LLVMUIntType(32)
-
-    if rial_type == "Int64":
-        return ir.IntType(64)
-
-    if rial_type == "UInt64":
-        return LLVMUIntType(64)
-
-    if rial_type == "Boolean":
-        # 1 bit
-        return ir.IntType(1)
+    if rial_type in TYPE_TO_LLVM:
+        return TYPE_TO_LLVM[rial_type]
 
     if rial_type == "CString":
         # Char pointer
         return ir.IntType(8).as_pointer()
-
-    if rial_type == "void":
-        # Void
-        return ir.VoidType()
-
-    if rial_type == "Float32":
-        return ir.FloatType()
-
-    if rial_type == "Double64":
-        return ir.DoubleType()
-
-    if rial_type == "Byte":
-        return LLVMUIntType(8)
-
-    if rial_type == "Char":
-        return ir.IntType(8)
-
-    if rial_type == "Half":
-        return ir.HalfType()
 
     # Variable integer
     match = re.match(r"^Int([0-9]+)$", rial_type)
@@ -113,6 +78,14 @@ def map_type_to_llvm(rial_type: str) -> Optional[Type]:
         count = match.group(1)
 
         return ir.IntType(int(count))
+
+    # Variable uinteger
+    match = re.match(r"^UInt([0-9]+)$", rial_type)
+
+    if match is not None:
+        count = match.group(1)
+
+        return LLVMUIntType(int(count))
 
     return None
 
