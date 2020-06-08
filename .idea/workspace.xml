@@ -19,11 +19,16 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Added LLVM IR instruction and builtin method call">
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Moved llvm_ir builtin to be only accessible in unsafe blocks">
+      <change afterPath="$PROJECT_DIR$/examples/fibonacci-benchmark/src/main.rial" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/fibonacci/src/main.rial" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/testing_clang/test.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/examples/hello-world/src/main.rial" beforeDir="false" afterPath="$PROJECT_DIR$/examples/hello-world/src/main.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/transformer/BuiltinTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/BuiltinTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/util/only_allowed_in_unsafe.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/util/only_allowed_in_unsafe.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/platform_support/LinuxPlatform.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/platform_support/LinuxPlatform.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/transformer/MainTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/MainTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/transformer/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/builtin_type_to_llvm_mapper.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -258,14 +263,7 @@
       <workItem from="1591448238902" duration="5786000" />
       <workItem from="1591531464200" duration="9920000" />
       <workItem from="1591612650035" duration="162000" />
-      <workItem from="1591612828353" duration="5080000" />
-    </task>
-    <task id="LOCAL-00019" summary="Added byte and char support&#10;Fixed bug that caused the constructor to not be registered as a function&#10;Theoretically added support for Half&#10;Closes #29">
-      <created>1587292361296</created>
-      <option name="number" value="00019" />
-      <option name="presentableId" value="LOCAL-00019" />
-      <option name="project" value="LOCAL" />
-      <updated>1587292361296</updated>
+      <workItem from="1591612828353" duration="13651000" />
     </task>
     <task id="LOCAL-00020" summary="Removed SingleParserState.py&#10;Added necessary additions as threadlocal storage to ParserState.py&#10;Moved necessary methods to ParserState.py&#10;(Part of an ongoing refactoring process)">
       <created>1587294913014</created>
@@ -603,7 +601,14 @@
       <option name="project" value="LOCAL" />
       <updated>1591618500456</updated>
     </task>
-    <option name="localTasksCounter" value="68" />
+    <task id="LOCAL-00068" summary="Moved llvm_ir builtin to be only accessible in unsafe blocks">
+      <created>1591618753553</created>
+      <option name="number" value="00068" />
+      <option name="presentableId" value="LOCAL-00068" />
+      <option name="project" value="LOCAL" />
+      <updated>1591618753553</updated>
+    </task>
+    <option name="localTasksCounter" value="69" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -632,7 +637,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Update&#10;&#10;Fixed multithreading issues. In particular the GIL caused a lot of lockstep inbetween the various threads which caused a massive slowdown.&#10;Fixed caching. Now structs are also cached and don't throw an exception. Dependencies are also correctly saved and not just the last seen one.&#10;Fixed cache invalidation. Previously it was only checked if the module was about to be compiled, not if it actually was already compiled.&#10;Improved metadata handling. Moved most of the definition metadata into custom subclasses to avoid the parsing overhead and reduce the clutter in the LLVM IR. This also improved the caching situation.&#10;Improved profiling&#10;Refactored a bit to improve readability" />
     <MESSAGE value="Allow function declarations and function calls to contain reserved characters if enclosed by @&quot;[name]&quot;&#10;&#10;Closes #45" />
     <MESSAGE value="Improved grammar to improve readability of the AST Visitors" />
     <MESSAGE value="Inlined an import to avoid errors for an optional target" />
@@ -657,7 +661,8 @@
     <MESSAGE value="Improved type mapping" />
     <MESSAGE value="Added support for static functions (properties is TODO)&#10;Refactored identifier parsing" />
     <MESSAGE value="Added LLVM IR instruction and builtin method call" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added LLVM IR instruction and builtin method call" />
+    <MESSAGE value="Moved llvm_ir builtin to be only accessible in unsafe blocks" />
+    <option name="LAST_COMMIT_MESSAGE" value="Moved llvm_ir builtin to be only accessible in unsafe blocks" />
   </component>
   <component name="WindowStateProjectService">
     <state x="906" y="378" key="#Inspections" timestamp="1588322612153">
@@ -685,10 +690,10 @@
     </state>
     <state x="905" y="294" key="CommitChangelistDialog2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532721340" />
     <state x="753" y="288" width="1109" height="863" key="CommitChangelistDialog2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586767099729" />
-    <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog" timestamp="1591613177286">
+    <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog" timestamp="1591647382454">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591613177286" />
+    <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591647382454" />
     <state x="1059" y="474" key="FileChooserDialogImpl" timestamp="1590574965128">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -701,11 +706,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1590578546519" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1591618501539">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1591618754348">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591618501539" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591618754348" />
     <state x="1094" y="434" key="VcsDiffUtil.ChangesDialog" timestamp="1591553388418">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -726,11 +731,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="1089" y="614" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587156453919" />
-    <state x="-2567" y="0" width="1293" height="1407" key="dock-window-1" timestamp="1591613054838">
+    <state x="-2567" y="0" width="1293" height="1407" key="dock-window-1" timestamp="1591643059517">
       <screen x="-3840" y="0" width="2560" height="1400" />
     </state>
     <state x="-2567" y="0" width="1293" height="1407" key="dock-window-1/0.0.2560.1400/-3840.0.2560.1400@-3840.0.2560.1400" timestamp="1590571897702" />
-    <state x="-2567" y="0" width="1293" height="1407" key="dock-window-1/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591613054838" />
+    <state x="-2567" y="0" width="1293" height="1407" key="dock-window-1/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591643059517" />
     <state x="-2447" y="332" width="489" height="559" key="dock-window-2" timestamp="1584965749099">
       <screen x="-3840" y="0" width="2560" height="1400" />
     </state>
@@ -739,10 +744,10 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="374" y="358" width="565" height="560" key="dock-window-3/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584965812228" />
-    <state x="976" y="432" width="737" height="616" key="find.popup" timestamp="1591534245843">
+    <state x="976" y="432" width="737" height="616" key="find.popup" timestamp="1591647441553">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="976" y="432" width="737" height="616" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591534245843" />
+    <state x="976" y="432" width="737" height="616" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591647441553" />
     <state x="1123" y="472" key="refactoring.ChangeSignatureDialog" timestamp="1586600798541">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

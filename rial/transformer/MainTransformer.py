@@ -74,7 +74,7 @@ class MainTransformer(BaseTransformer):
 
         var = self.module.builder.gep(variable.value, indices)
 
-        return RIALVariable(f"{variable.name}[{index}]", variable.rial_type, variable.llvm_type, var)
+        return RIALVariable(f"{variable.name}[{index}]", variable.array_element_type, variable.llvm_type.element, var)
 
     def variable_assignment(self, tree: Tree):
         nodes = tree.children
@@ -233,6 +233,10 @@ class MainTransformer(BaseTransformer):
 
         if self.module.current_block.block.terminator is not None:
             raise PermissionError("Return after return")
+
+        if len(nodes) == 0:
+            self.module.builder.ret_void()
+            return
 
         variable: RIALVariable = self.transform_helper(nodes[0])
 

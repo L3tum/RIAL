@@ -52,7 +52,7 @@ class LinuxPlatform(IPlatform):
         opts.linker_pre_args.append("-fwrapv")
 
         # Enable link-time-optimizations (LTO)
-        opts.linker_pre_args.append("-flto")
+        opts.linker_pre_args.append("-flto=full")
 
         # We want to be able to strip as much executable code as possible
         # from the linker command line, and this flag indicates to the

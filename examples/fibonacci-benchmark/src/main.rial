@@ -1,0 +1,15 @@
+unsafe{
+    private external void printf(CString format, params CString args);
+}
+
+public void main(){
+    printf("%llu \n", fib(46uL));
+}
+
+private ulong fib(ulong n){
+    if(n <= 1uL) {
+        return 1uL;
+    }
+
+    return fib(n - 1uL) + fib(n - 2uL);
+}

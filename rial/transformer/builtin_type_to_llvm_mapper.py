@@ -90,7 +90,7 @@ def map_type_to_llvm(rial_type: str) -> Optional[Type]:
     return None
 
 
-@lru_cache(128)
+@lru_cache(128, typed=True)
 def map_llvm_to_type(llvm_type: Type):
     # TODO: Handle more types
     # TODO: Handle structs

@@ -45,15 +45,6 @@ global_variable_assignment : variable_assignment ";"
 variable_decl : "var" IDENTIFIER ASSIGN expression
 variable_assignment : var ASSIGN expression
 
-// Math shortcuts
-// Transformed by DesugarTransformer
-variable_arithmetic : var PLUS~2
-                    | var PLUS ASSIGN expression
-                    | var MINUS~2
-                    | var MINUS ASSIGN expression
-                    | var MUL ASSIGN expression
-                    | var DIV ASSIGN expression
-
 // Structs
 struct_decl : modifier "struct" IDENTIFIER [":" chained_identifier ("," chained_identifier)*] "{" struct_body "}"
 struct_body : (attributed_func_decl|function_decl|struct_property_declaration ";")*
@@ -122,6 +113,15 @@ CHAR : "'" _STRING_ESC_INNER "'"
 // Variable modifiers
 !variable_mutability : "mut" | "const" | "ref"
 
+// Math shortcuts
+// Transformed by DesugarTransformer
+variable_arithmetic : expression PLUS~2
+                    | expression PLUS ASSIGN expression
+                    | expression MINUS~2
+                    | expression MINUS ASSIGN expression
+                    | expression MUL ASSIGN expression
+                    | expression DIV ASSIGN expression
+
 
 imported : variable_mutability IDENTIFIER ASSIGN "use" IDENTIFIER (":" IDENTIFIER)* ";"
 ACCESS_MODIFIER.2 : "private" | "public" | "internal"
@@ -132,14 +132,14 @@ DIV.-4 : "/"
 MUL.-4 : "*"
 MINUS.-5 : "-"
 PLUS.-5 : "+"
-BIGGER.-6 : ">"
-SMALLER.-6 : "<"
-BIGGER_EQUAL.-7 : ">="
-SMALLER_EQUAL.-7 : "<="
+BIGGER_EQUAL.-6 : ">="
+SMALLER_EQUAL.-6 : "<="
+BIGGER.-7 : ">"
+SMALLER.-7 : "<"
 EQUAL.-7 : "=="
 ASSIGN.-8 : "="
 
-NUMBER.-3 : (PLUS|MINUS)? (HEX_INT|BIN_INT|FLOAT_SC|FLOAT|INT) ("uL"|"U"|"Ul"|"UL"|"ul"|"l"|"u"|"L"|"b"|"B")?
+NUMBER.-3 : (PLUS|MINUS)? (HEX_INT|BIN_INT|FLOAT_SC|FLOAT|INT) ("uL"|"Ul"|"UL"|"ul"|"l"|"u"|"U"|"L"|"b"|"B")?
 FLOAT_SC.-1 : (FLOAT|INT) "e" ("-"|"+")? INT
 FLOAT.-2 : (INT+ "." INT+|INT+ "."|"." INT+) ("f"|"d"|"h")?
 BIN_INT : "0b" ("0"|"1"|"_")+
