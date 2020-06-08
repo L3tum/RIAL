@@ -5,8 +5,6 @@ unsafe {
 }
 
 public void main(){
-    var b = @llvm_ir("%\"a\" = add i32 5, 5", int, "a");
-
     var w = 5+5;
     var p = 'a';
     var q = '';
@@ -14,6 +12,7 @@ public void main(){
     var t = str.String::FromCString("Hello World!", 13);
 
     unsafe{
+        var b = @llvm_ir("%\"a\" = add i32 5, 5", int, "a");
         printf("%i\n", b);
         printf("%c\n", p);
         printf("%i\n", @sizeof("Hello World"));

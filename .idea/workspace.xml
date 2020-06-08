@@ -19,14 +19,11 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Added support for static functions (properties is TODO)&#10;Refactored identifier parsing">
-      <change afterPath="$PROJECT_DIR$/rial/ir/LLVMIRInstruction.py" afterDir="false" />
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Added LLVM IR instruction and builtin method call">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/examples/hello-world/src/main.rial" beforeDir="false" afterPath="$PROJECT_DIR$/examples/hello-world/src/main.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/ir/IRBuilder.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/IRBuilder.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/transformer/BuiltinTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/BuiltinTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/util/only_allowed_in_unsafe.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/util/only_allowed_in_unsafe.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -261,14 +258,7 @@
       <workItem from="1591448238902" duration="5786000" />
       <workItem from="1591531464200" duration="9920000" />
       <workItem from="1591612650035" duration="162000" />
-      <workItem from="1591612828353" duration="4809000" />
-    </task>
-    <task id="LOCAL-00018" summary="Added equality operator&#10;Closes #26">
-      <created>1587247409585</created>
-      <option name="number" value="00018" />
-      <option name="presentableId" value="LOCAL-00018" />
-      <option name="project" value="LOCAL" />
-      <updated>1587247409585</updated>
+      <workItem from="1591612828353" duration="5080000" />
     </task>
     <task id="LOCAL-00019" summary="Added byte and char support&#10;Fixed bug that caused the constructor to not be registered as a function&#10;Theoretically added support for Half&#10;Closes #29">
       <created>1587292361296</created>
@@ -606,7 +596,14 @@
       <option name="project" value="LOCAL" />
       <updated>1591614607664</updated>
     </task>
-    <option name="localTasksCounter" value="67" />
+    <task id="LOCAL-00067" summary="Added LLVM IR instruction and builtin method call">
+      <created>1591618500456</created>
+      <option name="number" value="00067" />
+      <option name="presentableId" value="LOCAL-00067" />
+      <option name="project" value="LOCAL" />
+      <updated>1591618500456</updated>
+    </task>
+    <option name="localTasksCounter" value="68" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -635,7 +632,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Rewrote threading. It congests less but doesn't work with caching right now. It's also unnecessarily more complex" />
     <MESSAGE value="Update&#10;&#10;Fixed multithreading issues. In particular the GIL caused a lot of lockstep inbetween the various threads which caused a massive slowdown.&#10;Fixed caching. Now structs are also cached and don't throw an exception. Dependencies are also correctly saved and not just the last seen one.&#10;Fixed cache invalidation. Previously it was only checked if the module was about to be compiled, not if it actually was already compiled.&#10;Improved metadata handling. Moved most of the definition metadata into custom subclasses to avoid the parsing overhead and reduce the clutter in the LLVM IR. This also improved the caching situation.&#10;Improved profiling&#10;Refactored a bit to improve readability" />
     <MESSAGE value="Allow function declarations and function calls to contain reserved characters if enclosed by @&quot;[name]&quot;&#10;&#10;Closes #45" />
     <MESSAGE value="Improved grammar to improve readability of the AST Visitors" />
@@ -660,7 +656,8 @@
     <MESSAGE value="Added char literals and switched chars to be UInts" />
     <MESSAGE value="Improved type mapping" />
     <MESSAGE value="Added support for static functions (properties is TODO)&#10;Refactored identifier parsing" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added support for static functions (properties is TODO)&#10;Refactored identifier parsing" />
+    <MESSAGE value="Added LLVM IR instruction and builtin method call" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added LLVM IR instruction and builtin method call" />
   </component>
   <component name="WindowStateProjectService">
     <state x="906" y="378" key="#Inspections" timestamp="1588322612153">
@@ -704,11 +701,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1590578546519" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1591614609022">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1591618501539">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591614609022" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591618501539" />
     <state x="1094" y="434" key="VcsDiffUtil.ChangesDialog" timestamp="1591553388418">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

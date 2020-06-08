@@ -9,6 +9,7 @@ from rial.ir.RIALIdentifiedStructType import RIALIdentifiedStructType
 from rial.ir.RIALVariable import RIALVariable
 from rial.transformer.BaseTransformer import BaseTransformer
 from rial.transformer.builtin_type_to_llvm_mapper import map_llvm_to_type, Int32
+from rial.util.only_allowed_in_unsafe import only_allowed_in_unsafe
 
 
 class BuiltinTransformer(BaseTransformer):
@@ -76,6 +77,9 @@ class BuiltinTransformer(BaseTransformer):
         raise Discard()
 
     def llvm_ir(self, tree: Tree):
+        # Check for unsafe
+        with only_allowed_in_unsafe("llvm_ir is only allowed in unsafe functions or blocks!"):
+            pass
         nodes = tree.children
         llvm_ir: str = nodes[0].value.strip("\"")
         llvm_ir = eval("'{}'".format(llvm_ir))
