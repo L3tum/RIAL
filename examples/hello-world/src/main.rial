@@ -5,18 +5,22 @@ unsafe {
 }
 
 public void main(){
+    var b = @llvm_ir("%\"a\" = add i32 5, 5", int, "a");
+
+    var w = 5+5;
     var p = 'a';
     var q = '';
 
     var t = str.String::FromCString("Hello World!", 13);
 
     unsafe{
+        printf("%i\n", b);
         printf("%c\n", p);
-        printf("%i\n", sizeof("Hello World"));
+        printf("%i\n", @sizeof("Hello World"));
         printf("Hello World\n");
         var s = "Hello World!";
         var str = s.to_string(13);
-        printf("%i\n", sizeof(str));
+        printf("%i\n", @sizeof(str));
         printf("%i\n", str.length);
         printf("%s\n", str.to_cstring());
     }

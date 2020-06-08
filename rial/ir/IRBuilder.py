@@ -4,6 +4,7 @@ from typing import Optional, List
 from llvmlite import ir
 
 from rial.ir.LLVMBlock import LLVMBlock, create_llvm_block
+from rial.ir.LLVMIRInstruction import LLVMIRInstruction
 from rial.ir.RIALFunction import RIALFunction
 from rial.ir.RIALIdentifiedStructType import RIALIdentifiedStructType
 from rial.ir.RIALVariable import RIALVariable
@@ -137,3 +138,9 @@ class IRBuilder(ir.IRBuilder):
             return variable
 
         return None
+
+    def ir(self, ty: ir.Type, llvm_ir: str):
+        instr = LLVMIRInstruction(ty, llvm_ir)
+        self._insert(instr)
+
+        return instr

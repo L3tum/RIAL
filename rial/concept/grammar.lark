@@ -83,8 +83,9 @@ attributed_func_decl : attribute+ function_decl
 unsafe_block : UNSAFE "{" statement* "}"
 unsafe_top_level_block : UNSAFE "{" (attributed_func_decl|function_decl|global_variable_decl|global_variable_assignment)* "}"
 
-// Sizeof
-sizeof : "sizeof" "(" expression ")"
+// Builtins
+sizeof : "@sizeof" "(" expression ")"
+llvm_ir : "@llvm_ir" "(" STRING ("," var? ("," STRING?)?)? ")"
 
 // Arrays
 ?array : array_assignment
@@ -95,6 +96,7 @@ array_access : var "[" (number|var) "]"
 
 // Base expression
 ?expression : sizeof
+            | llvm_ir
             | array
             | function_call
             | math

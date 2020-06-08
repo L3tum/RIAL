@@ -19,19 +19,14 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Improved type mapping">
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Added support for static functions (properties is TODO)&#10;Refactored identifier parsing">
+      <change afterPath="$PROJECT_DIR$/rial/ir/LLVMIRInstruction.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/examples/hello-world/src/main.rial" beforeDir="false" afterPath="$PROJECT_DIR$/examples/hello-world/src/main.rial" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/ir/RIALModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/RIALModule.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/ir/modifier/DeclarationModifier.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/modifier/DeclarationModifier.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/transformer/DesugarTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/DesugarTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/transformer/FunctionDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/FunctionDeclarationTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/transformer/MainTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/MainTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/transformer/StructDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/StructDeclarationTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/std/core/string.rial" beforeDir="false" afterPath="$PROJECT_DIR$/std/core/string.rial" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/ir/IRBuilder.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/IRBuilder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/transformer/BuiltinTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/BuiltinTransformer.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -266,14 +261,7 @@
       <workItem from="1591448238902" duration="5786000" />
       <workItem from="1591531464200" duration="9920000" />
       <workItem from="1591612650035" duration="162000" />
-      <workItem from="1591612828353" duration="1713000" />
-    </task>
-    <task id="LOCAL-00017" summary="Update&#10;Fix passing variables as arguments (require a load)&#10;Refactor mod/path transition&#10;Add attributed functions as a possibility with an example being NoMangle&#10;Added inheritance and inherited constructor calls in constructor&#10;Refactored main.py to give control back a bit faster&#10;Refactored builtin and std resolution">
-      <created>1587240440067</created>
-      <option name="number" value="00017" />
-      <option name="presentableId" value="LOCAL-00017" />
-      <option name="project" value="LOCAL" />
-      <updated>1587240440067</updated>
+      <workItem from="1591612828353" duration="4809000" />
     </task>
     <task id="LOCAL-00018" summary="Added equality operator&#10;Closes #26">
       <created>1587247409585</created>
@@ -611,7 +599,14 @@
       <option name="project" value="LOCAL" />
       <updated>1591552178595</updated>
     </task>
-    <option name="localTasksCounter" value="66" />
+    <task id="LOCAL-00066" summary="Added support for static functions (properties is TODO)&#10;Refactored identifier parsing">
+      <created>1591614607664</created>
+      <option name="number" value="00066" />
+      <option name="presentableId" value="LOCAL-00066" />
+      <option name="project" value="LOCAL" />
+      <updated>1591614607664</updated>
+    </task>
+    <option name="localTasksCounter" value="67" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -640,7 +635,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Update&#10;&#10;Moved builtin_types to ParserState.py&#10;Changed builtin and std to now require rial: prefix&#10;Removed cache file hash checking to speed up worst case (and if file modification doesn't match then it most likely changed)&#10;Improved compilation speed when cache is disabled&#10;Improved compatibility with Python versions&#10;&#10;Added ability to work singlethreaded-ish. This was a giant change that completely overhauled the way the compilation units and scheduling was done. Before when a thread encounters a using statement it would block until that using statement was resolved....Now if theres a sufficient number of modules and none of them could completely be resolved you'd get a deadlock. &#10;So now threads pack it all up into compilation_unit.py(s) and start working on other files in a double-list fashion. As a result the in-operation support for resolving uses from function names was removed (it was dumb anyways honestly). There's still a lot to be refactored and improved though, especially in regard to readability.&#10;&#10;Profiler now checks if an event was already recorded and will append the time to the first event" />
     <MESSAGE value="Rewrote threading. It congests less but doesn't work with caching right now. It's also unnecessarily more complex" />
     <MESSAGE value="Update&#10;&#10;Fixed multithreading issues. In particular the GIL caused a lot of lockstep inbetween the various threads which caused a massive slowdown.&#10;Fixed caching. Now structs are also cached and don't throw an exception. Dependencies are also correctly saved and not just the last seen one.&#10;Fixed cache invalidation. Previously it was only checked if the module was about to be compiled, not if it actually was already compiled.&#10;Improved metadata handling. Moved most of the definition metadata into custom subclasses to avoid the parsing overhead and reduce the clutter in the LLVM IR. This also improved the caching situation.&#10;Improved profiling&#10;Refactored a bit to improve readability" />
     <MESSAGE value="Allow function declarations and function calls to contain reserved characters if enclosed by @&quot;[name]&quot;&#10;&#10;Closes #45" />
@@ -665,7 +659,8 @@
     <MESSAGE value="Simplified instantiation of types and arrays" />
     <MESSAGE value="Added char literals and switched chars to be UInts" />
     <MESSAGE value="Improved type mapping" />
-    <option name="LAST_COMMIT_MESSAGE" value="Improved type mapping" />
+    <MESSAGE value="Added support for static functions (properties is TODO)&#10;Refactored identifier parsing" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added support for static functions (properties is TODO)&#10;Refactored identifier parsing" />
   </component>
   <component name="WindowStateProjectService">
     <state x="906" y="378" key="#Inspections" timestamp="1588322612153">
@@ -709,11 +704,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1590578546519" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1591552179517">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1591614609022">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591552179517" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591614609022" />
     <state x="1094" y="434" key="VcsDiffUtil.ChangesDialog" timestamp="1591553388418">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

@@ -3,7 +3,8 @@ from typing import Optional
 from llvmlite import ir
 
 from rial.compilation_manager import CompilationManager
-from rial.concept.parser import Tree
+from rial.concept.parser import Tree, Token, Discard
+from rial.ir.LLVMIRInstruction import LLVMIRInstruction
 from rial.ir.RIALIdentifiedStructType import RIALIdentifiedStructType
 from rial.ir.RIALVariable import RIALVariable
 from rial.transformer.BaseTransformer import BaseTransformer
@@ -71,3 +72,40 @@ class BuiltinTransformer(BaseTransformer):
         self.module.currently_unsafe = True
         for node in nodes[1:]:
             self.transform_helper(node)
+
+        raise Discard()
+
+    def llvm_ir(self, tree: Tree):
+        nodes = tree.children
+        llvm_ir: str = nodes[0].value.strip("\"")
+        llvm_ir = eval("'{}'".format(llvm_ir))
+        ty = None
+        return_name = None
+
+        i = 1
+        while i < len(nodes):
+            if isinstance(nodes[i], Tree):
+                ty = self.transform_helper(nodes[1])
+            elif isinstance(nodes[i], Token):
+                return_name = nodes[i].value.strip("\"")
+
+            i += 1
+
+        self.module.builder.ir(ty, llvm_ir)
+
+        if return_name is not None:
+            if ty is None:
+                raise KeyError("Need to specify type if you want to use @llvm_ir as a variable!")
+            if isinstance(ty, RIALIdentifiedStructType):
+                ty_name = ty.name
+            else:
+                ty_name = map_llvm_to_type(ty)
+            variable = self.module.builder.alloca(ty)
+            self.module.builder.store(LLVMIRInstruction(ty, f"%\"{return_name}\""), variable)
+            variable = RIALVariable("llvm_ir", ty_name, ty, variable)
+            if return_name in self.module.current_block.named_values:
+                raise KeyError(f"{return_name} has been previously defined!")
+            self.module.current_block.add_named_value(return_name, variable)
+            return variable
+
+        raise Discard()
