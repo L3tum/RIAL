@@ -11,6 +11,7 @@ from rial.ir.RIALVariable import RIALVariable
 from rial.ir.metadata.FunctionDefinition import FunctionDefinition
 from rial.ir.metadata.metadata_token import MetadataToken
 from rial.ir.modifier.AccessModifier import AccessModifier
+from rial.ir.modifier.DeclarationModifier import DeclarationModifier
 from rial.transformer.builtin_type_to_llvm_mapper import map_shortcut_to_type, is_builtin_type
 from rial.util.log import log_fail
 
@@ -109,8 +110,16 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
 
     def external_function_decl(self, tree: Tree):
         nodes = tree.children
-        access_modifier: AccessModifier = nodes[0].access_modifier
-        unsafe: bool = nodes[0].unsafe
+        modifier: DeclarationModifier = nodes[0]
+
+        if isinstance(modifier, MetadataToken):
+            return tree
+
+        if modifier.static:
+            raise PermissionError("External functions cannot be static")
+
+        access_modifier: AccessModifier = modifier.access_modifier
+        unsafe: bool = modifier.unsafe
         name = nodes[2].value
         llvm_return_type = self.module.get_definition(nodes[1])
 
@@ -175,8 +184,16 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
 
     def extension_function_decl(self, tree: Tree):
         nodes = tree.children
-        access_modifier: AccessModifier = nodes[0].access_modifier
-        unsafe: bool = nodes[0].unsafe
+        modifier: DeclarationModifier = nodes[0]
+
+        if isinstance(modifier, MetadataToken):
+            return tree
+
+        if modifier.static:
+            raise PermissionError("Extension functions cannot be static")
+
+        access_modifier: AccessModifier = modifier.access_modifier
+        unsafe: bool = modifier.unsafe
         linkage = access_modifier.get_linkage()
         calling_convention = self.default_cc
         name = nodes[2].value
@@ -272,8 +289,13 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
 
     def function_decl(self, tree: Tree):
         nodes = tree.children
-        access_modifier: AccessModifier = nodes[0].access_modifier
-        unsafe: bool = nodes[0].unsafe
+        modifier: DeclarationModifier = nodes[0]
+
+        if isinstance(modifier, MetadataToken):
+            return tree
+
+        access_modifier: AccessModifier = modifier.access_modifier
+        unsafe: bool = modifier.unsafe
         linkage = access_modifier.get_linkage()
         calling_convention = self.default_cc
         name = nodes[2].value
@@ -298,7 +320,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
         args: List[RIALVariable] = list()
 
         # Add class as implicit parameter
-        if self.module.current_struct is not None:
+        if self.module.current_struct is not None and not modifier.static:
             args.append(RIALVariable("this", self.module.current_struct.name, self.module.current_struct, None))
 
         args.extend(self.visit(nodes[3]))
@@ -319,9 +341,17 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
 
         # If the function has the NoMangleAttribute we need to use the normal name
         if 'noduplicate' in self.attributes:
+            if modifier.static:
+                raise PermissionError("NoMangle for static function doesn't work")
             full_function_name = name
         else:
-            full_function_name = self.module.get_unique_function_name(name, [arg.rial_type for arg in args])
+            if modifier.static:
+                if self.module.current_struct is None:
+                    raise PermissionError("Static functions can only be declared in types")
+                full_function_name = self.module.get_unique_function_name(f"{self.module.current_struct.name}::{name}",
+                                                                          [arg.rial_type for arg in args])
+            else:
+                full_function_name = self.module.get_unique_function_name(name, [arg.rial_type for arg in args])
 
         # Check if main method
         if name.endswith("main") and self.module.name.endswith("main"):

@@ -37,24 +37,23 @@ class CompilerRTInstall(install):
         run_command(command, str(llvm_project_path))
 
         # Build compiler-rt
-        # TODO: Cross compile on demand, this only compiles for the current arch
-        # compiler_rt_build_path.mkdir(parents=False, exist_ok=False)
-        #
-        # llvm_config = which("llvm-config")
-        #
-        # if llvm_config is None:
-        #     llvm_config = which("llvm-config-8")
-        #
-        # if llvm_config is None:
-        #     raise FileNotFoundError("Missing llvm-config or llvm-config-8 in PATH")
-        # command = f"cmake {str(compiler_rt_src_path)} -DLLVM_CONFIG_PATH={llvm_config} && make"
-        # process = subprocess.Popen(command, shell=True, cwd=str(compiler_rt_build_path))
-        # process.wait()
-        # if process.returncode != 0:
-        #     sys.exit(process.returncode)
+        compiler_rt_build_path.mkdir(parents=False, exist_ok=False)
+
+        llvm_config = which("llvm-config")
+
+        if llvm_config is None:
+            llvm_config = which("llvm-config-8")
+
+        if llvm_config is None:
+            raise FileNotFoundError("Missing llvm-config or llvm-config-8 in PATH")
+        command = f"cmake {str(compiler_rt_src_path)} -DLLVM_CONFIG_PATH={llvm_config} && make"
+        process = subprocess.Popen(command, shell=True, cwd=str(compiler_rt_build_path))
+        process.wait()
+        if process.returncode != 0:
+            sys.exit(process.returncode)
 
         # Install yourself
-        install.run(self)
+        # install.run(self)
 
 
 setup(

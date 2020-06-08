@@ -72,7 +72,7 @@ external_function_decl : ("external" modifier|modifier "external") chained_ident
 function_decl_args : [chained_identifier IDENTIFIER ("," chained_identifier IDENTIFIER | "," PARAMS chained_identifier IDENTIFIER)*]
 
 // Modifiers
-modifier : (ACCESS_MODIFIER|UNSAFE)*
+modifier : (ACCESS_MODIFIER|UNSAFE|STATIC)*
 
 // Attributes
 ?attribute : "[" function_call "]"
@@ -124,6 +124,7 @@ CHAR : "'" _STRING_ESC_INNER "'"
 imported : variable_mutability IDENTIFIER ASSIGN "use" IDENTIFIER (":" IDENTIFIER)* ";"
 ACCESS_MODIFIER.2 : "private" | "public" | "internal"
 UNSAFE.2 : "unsafe"
+STATIC.2 : "static"
 
 DIV.-4 : "/"
 MUL.-4 : "*"
@@ -145,11 +146,15 @@ INT : DIGIT (DIGIT|"_")*
 PARAMS: "params"
 THIS : "this"
 PREPRO_FLAG : "#"
+DOT : "."
+DOUBLE_COLON : "::"
 
-chained_identifier : IDENTIFIER ("." IDENTIFIER)*
-IDENTIFIER.-10 : /(_|[a-zA-Z])(_|[a-zA-Z0-9])*/ "[" "]"
-               | "@\"" /[^"]+/ "\""
-               | /#?(_|[a-zA-Z])(_|[a-zA-Z0-9])*/
+chained_identifier : IDENTIFIER (DOT IDENTIFIER | DOUBLE_COLON IDENTIFIER)*
+PREPRO_IDENTIFIER : PREPRO_FLAG /[a-zA-Z0-9_]*/
+IDENTIFIER.-10 : /(_|[a-zA-Z])[a-zA-Z0-9_]*/ ("[" "]")?
+           | LITERAL_IDENTIFIER
+           | PREPRO_IDENTIFIER
+LITERAL_IDENTIFIER : "@\"" /[^"]+/ "\""
 
 COMMENT : "//" /[^\n]*/ "\n"
 ML_COMMENT : "/*" /[^*]*/ "*/"

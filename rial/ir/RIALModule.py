@@ -205,7 +205,14 @@ class RIALModule(Module):
     def get_unique_function_name(self, canonical_name: str, rial_args: List[str]):
         assert isinstance(canonical_name, str)
         assert isinstance(rial_args, List)
-        return f"mangled_{canonical_name}{len(rial_args) > 0 and '.' or ''}{'_'.join(rial_args)}"
+        clean_args = list()
+
+        for rial_arg in rial_args:
+            if '[' in rial_arg:
+                rial_arg = f"{rial_arg.split('[')[0]}[]"
+            clean_args.append(rial_arg)
+
+        return f"mangled_{canonical_name}{len(rial_args) > 0 and '.' or ''}{'_'.join(clean_args)}"
 
     def declare_global(self, name: str, rial_type: str, llvm_type: ir.Type, linkage: str,
                        initializer: Optional[ir.Constant], access_modifier: AccessModifier = AccessModifier.PRIVATE,

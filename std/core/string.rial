@@ -1,6 +1,10 @@
 struct String{
     public char[] data;
     public uint length;
+
+    public static String FromCString(CString cstr, uint length){
+        return String();
+    }
 }
 
 public String to_string(this CString cstr, uint length){

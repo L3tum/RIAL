@@ -1,3 +1,4 @@
+import sys
 from typing import List
 
 from llvmlite import ir
@@ -67,6 +68,7 @@ class DesugarTransformer(Transformer):
     def modifier(self, nodes: List):
         access_modifier = AccessModifier.INTERNAL
         unsafe = False
+        static = False
 
         for node in nodes:
             node: Token
@@ -74,10 +76,14 @@ class DesugarTransformer(Transformer):
                 access_modifier = AccessModifier[node.value.upper()]
             elif node.type == "UNSAFE":
                 if unsafe:
-                    log_warn_short(f"Multiple unsafe declarations for function at {node.line}")
+                    log_warn_short(f"Multiple unsafe declarations for declaration at {node.line}")
                 unsafe = True
+            elif node.type == "STATIC":
+                if static:
+                    log_warn_short(f"Multiple static declarations for declaration at {node.line}")
+                static = True
 
-        return DeclarationModifier(access_modifier=access_modifier, unsafe=unsafe)
+        return DeclarationModifier(access_modifier=access_modifier, unsafe=unsafe, static=static)
 
     def unsafe_top_level_block(self, nodes: List):
         """
@@ -173,4 +179,22 @@ class DesugarTransformer(Transformer):
         raise NameError(mutability)
 
     def chained_identifier(self, nodes):
-        return [node.value for node in nodes]
+        identifiers: List[str] = list()
+        found_static: bool = False
+        identifiers.append(nodes[0].value)
+        i = 1
+        while i < len(nodes):
+            if nodes[i].type == "DOT":
+                i += 1
+                identifiers.append(nodes[i].value)
+            elif nodes[i].type == "DOUBLE_COLON":
+                if found_static:
+                    raise PermissionError("Two statics cannot be done")
+                i += 1
+                last_identifier = identifiers.pop()
+                identifier = f"{last_identifier}::{nodes[i].value}"
+                identifiers.append(identifier)
+                found_static = True
+            i += 1
+
+        return identifiers

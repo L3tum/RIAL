@@ -8,6 +8,8 @@ public void main(){
     var p = 'a';
     var q = '';
 
+    var t = str.String::FromCString("Hello World!", 13);
+
     unsafe{
         printf("%c\n", p);
         printf("%i\n", sizeof("Hello World"));

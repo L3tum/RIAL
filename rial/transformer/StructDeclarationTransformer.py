@@ -51,7 +51,8 @@ class StructDeclarationTransformer(TransformerInterpreter):
 
     def struct_decl(self, tree: Tree):
         nodes: List = tree.children
-        access_modifier = nodes[0].access_modifier
+        modifier: DeclarationModifier = nodes[0]
+        access_modifier = modifier.access_modifier
         name = nodes[1].value
 
         if name in self.module.context.identified_types:
