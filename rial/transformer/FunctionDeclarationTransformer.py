@@ -77,6 +77,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
                 self.attributes.add('noduplicate')
             elif node == "cold":
                 self.attributes.add('cold')
+                self.default_cc = "cold"
             elif node == "inline(always)":
                 self.attributes.add("alwaysinline")
             elif node == "inline(never)":
@@ -86,6 +87,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
 
     def attributed_func_decl(self, tree: Tree):
         nodes = tree.children
+        old_default_cc = self.default_cc
         attributes: List[Tree] = list()
         func_decl: Tree = None
 
@@ -106,6 +108,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
 
         func_decl = self.visit(func_decl)
         self.attributes = FunctionAttributes()
+        self.default_cc = old_default_cc
         return func_decl
 
     def external_function_decl(self, tree: Tree):
@@ -192,7 +195,6 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
         access_modifier: AccessModifier = modifier.access_modifier
         unsafe: bool = modifier.unsafe
         linkage = access_modifier.get_linkage()
-        calling_convention = self.default_cc
         name = nodes[2].value
         llvm_return_type = self.module.get_definition(nodes[1])
 
@@ -263,7 +265,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
         # Create the actual function in IR
         func = RIALFunction(self.module, func_type, full_function_name, name)
         func.linkage = linkage
-        func.calling_convention = calling_convention
+        func.calling_convention = self.default_cc
         func.definition = FunctionDefinition(return_type, access_modifier, args, args[0].rial_type, unsafe)
 
         # Update args
@@ -296,7 +298,6 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
         access_modifier: AccessModifier = modifier.access_modifier
         unsafe: bool = modifier.unsafe
         linkage = access_modifier.get_linkage()
-        calling_convention = self.default_cc
         name = nodes[2].value
         llvm_return_type = self.module.get_definition(nodes[1])
 
@@ -366,7 +367,7 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
         # Create the actual function in IR
         func = RIALFunction(self.module, func_type, full_function_name, name)
         func.linkage = linkage
-        func.calling_convention = calling_convention
+        func.calling_convention = self.default_cc
         func.definition = FunctionDefinition(return_type, access_modifier, args,
                                              self.module.current_struct is not None and self.module.current_struct or "",
                                              unsafe)

@@ -90,8 +90,9 @@ array_access : var "[" (number|var) "]"
             | llvm_ir
             | array
             | function_call
-            | math
+            | not_rule
             | expression (SMALLER|BIGGER|BIGGER_EQUAL|SMALLER_EQUAL|EQUAL) expression -> equal
+            | math
             | STRING -> string
             | CHAR -> char
             | "true" -> true
@@ -106,7 +107,8 @@ array_access : var "[" (number|var) "]"
             | "(" chained_identifier ")" expression -> cast
 
 var : chained_identifier
-math : expression (PLUS|MINUS|MUL|DIV) expression
+math : expression (PLUS|MINUS|MUL|DIV|REM) expression
+not_rule : ("!"|"not") expression
 number: NUMBER
 CHAR : "'" _STRING_ESC_INNER "'"
 
@@ -121,6 +123,7 @@ variable_arithmetic : expression PLUS~2
                     | expression MINUS ASSIGN expression
                     | expression MUL ASSIGN expression
                     | expression DIV ASSIGN expression
+                    | expression REM ASSIGN expression
 
 
 imported : variable_mutability IDENTIFIER ASSIGN "use" IDENTIFIER (":" IDENTIFIER)* ";"
@@ -128,15 +131,16 @@ ACCESS_MODIFIER.2 : "private" | "public" | "internal"
 UNSAFE.2 : "unsafe"
 STATIC.2 : "static"
 
-DIV.-4 : "/"
-MUL.-4 : "*"
-MINUS.-5 : "-"
-PLUS.-5 : "+"
+REM.-8 : "%"
+DIV.-8 : "/"
+MUL.-8 : "*"
+MINUS.-7 : "-"
+PLUS.-7 : "+"
 BIGGER_EQUAL.-6 : ">="
 SMALLER_EQUAL.-6 : "<="
-BIGGER.-7 : ">"
-SMALLER.-7 : "<"
-EQUAL.-7 : "=="
+BIGGER.-5 : ">"
+SMALLER.-5 : "<"
+EQUAL.-4 : "=="
 ASSIGN.-8 : "="
 
 NUMBER.-3 : (PLUS|MINUS)? (HEX_INT|BIN_INT|FLOAT_SC|FLOAT|INT) ("uL"|"Ul"|"UL"|"ul"|"l"|"u"|"U"|"L"|"b"|"B")?

@@ -19,17 +19,17 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Bugfixes and examples&#10;&#10;- Fixed empty return not returning void&#10;- Fixed LLVM to RIAL type parsing being wrongly cached&#10;- Fixed smaller_equal being lower priority than just smaller&#10;- Added examples for iterative and recursive fibonacci&#10;&#10;(Apparently clang++-8 (using same LLVM version as we do) is around 0,2 secs faster, while g++ takes half the time for a compiled recursive fibonacci run). Realistically aiming at clang perf is &quot;enough&quot; aka doable by improving linking (mostly) and giving more hints to LLVM.">
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Improvements&#10;&#10;- Improved loop in BuiltinTransformer.py&#10;- External functions are inherently marked as unsafe and no longer require to be declared in an unsafe block&#10;- Function body creation and entering has been simplified&#10;- Calls to unsafe functions now correctly require to be in an unsafe context&#10;- Lowered LLVMBlock.py to inherit from ir.Block to simplify it&#10;- Fixed bugs in LoopTransformer.py&#10;- Fixed bugs in MainTransformer.py and updated with the simplified function body creation">
+      <change afterPath="$PROJECT_DIR$/examples/100-doors/src/main.rial" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/examples/fibonacci-benchmark/src/main.rial" beforeDir="false" afterPath="$PROJECT_DIR$/examples/fibonacci-benchmark/src/main.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/ir/IRBuilder.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/IRBuilder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/ir/LLVMBlock.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/LLVMBlock.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/ir/RIALFunction.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/RIALFunction.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/ir/RIALModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/RIALModule.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/transformer/BuiltinTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/BuiltinTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/transformer/DesugarTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/DesugarTransformer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/transformer/FunctionDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/FunctionDeclarationTransformer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/transformer/LoopTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/LoopTransformer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/transformer/MainTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/MainTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/transformer/StandardOperationsTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/StandardOperationsTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/transformer/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/builtin_type_to_llvm_mapper.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -266,14 +266,7 @@
       <workItem from="1591612650035" duration="162000" />
       <workItem from="1591612828353" duration="14555000" />
       <workItem from="1591710248418" duration="3729000" />
-      <workItem from="1591871164312" duration="2690000" />
-    </task>
-    <task id="LOCAL-00021" summary="Moved function call logic into LLVMGen.py&#10;Added optimization that moves allocas to the top of the function in release mode">
-      <created>1587303433733</created>
-      <option name="number" value="00021" />
-      <option name="presentableId" value="LOCAL-00021" />
-      <option name="project" value="LOCAL" />
-      <updated>1587303433733</updated>
+      <workItem from="1591871164312" duration="10726000" />
     </task>
     <task id="LOCAL-00022" summary="Added config file support&#10;Refactored config layout&#10;Refactored main.py to be all about arguments&#10;Closes #10">
       <created>1587328248067</created>
@@ -611,7 +604,14 @@
       <option name="project" value="LOCAL" />
       <updated>1591655793614</updated>
     </task>
-    <option name="localTasksCounter" value="70" />
+    <task id="LOCAL-00070" summary="Improvements&#10;&#10;- Improved loop in BuiltinTransformer.py&#10;- External functions are inherently marked as unsafe and no longer require to be declared in an unsafe block&#10;- Function body creation and entering has been simplified&#10;- Calls to unsafe functions now correctly require to be in an unsafe context&#10;- Lowered LLVMBlock.py to inherit from ir.Block to simplify it&#10;- Fixed bugs in LoopTransformer.py&#10;- Fixed bugs in MainTransformer.py and updated with the simplified function body creation">
+      <created>1591874069372</created>
+      <option name="number" value="00070" />
+      <option name="presentableId" value="LOCAL-00070" />
+      <option name="project" value="LOCAL" />
+      <updated>1591874069372</updated>
+    </task>
+    <option name="localTasksCounter" value="71" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -640,7 +640,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Improved grammar to improve readability of the AST Visitors" />
     <MESSAGE value="Inlined an import to avoid errors for an optional target" />
     <MESSAGE value="Implemented globals for non-constant values&#10;Refactored function finding which nets a small performance plus&#10;Fixed a bug in default constructor generation mixing up type and name&#10;Closes #37" />
     <MESSAGE value="Implemented access modifiers for globals&#10;Fixed bugs concerning name mangling for globals&#10;Refactored global finding for easier readability" />
@@ -665,7 +664,8 @@
     <MESSAGE value="Added LLVM IR instruction and builtin method call" />
     <MESSAGE value="Moved llvm_ir builtin to be only accessible in unsafe blocks" />
     <MESSAGE value="Bugfixes and examples&#10;&#10;- Fixed empty return not returning void&#10;- Fixed LLVM to RIAL type parsing being wrongly cached&#10;- Fixed smaller_equal being lower priority than just smaller&#10;- Added examples for iterative and recursive fibonacci&#10;&#10;(Apparently clang++-8 (using same LLVM version as we do) is around 0,2 secs faster, while g++ takes half the time for a compiled recursive fibonacci run). Realistically aiming at clang perf is &quot;enough&quot; aka doable by improving linking (mostly) and giving more hints to LLVM." />
-    <option name="LAST_COMMIT_MESSAGE" value="Bugfixes and examples&#10;&#10;- Fixed empty return not returning void&#10;- Fixed LLVM to RIAL type parsing being wrongly cached&#10;- Fixed smaller_equal being lower priority than just smaller&#10;- Added examples for iterative and recursive fibonacci&#10;&#10;(Apparently clang++-8 (using same LLVM version as we do) is around 0,2 secs faster, while g++ takes half the time for a compiled recursive fibonacci run). Realistically aiming at clang perf is &quot;enough&quot; aka doable by improving linking (mostly) and giving more hints to LLVM." />
+    <MESSAGE value="Improvements&#10;&#10;- Improved loop in BuiltinTransformer.py&#10;- External functions are inherently marked as unsafe and no longer require to be declared in an unsafe block&#10;- Function body creation and entering has been simplified&#10;- Calls to unsafe functions now correctly require to be in an unsafe context&#10;- Lowered LLVMBlock.py to inherit from ir.Block to simplify it&#10;- Fixed bugs in LoopTransformer.py&#10;- Fixed bugs in MainTransformer.py and updated with the simplified function body creation" />
+    <option name="LAST_COMMIT_MESSAGE" value="Improvements&#10;&#10;- Improved loop in BuiltinTransformer.py&#10;- External functions are inherently marked as unsafe and no longer require to be declared in an unsafe block&#10;- Function body creation and entering has been simplified&#10;- Calls to unsafe functions now correctly require to be in an unsafe context&#10;- Lowered LLVMBlock.py to inherit from ir.Block to simplify it&#10;- Fixed bugs in LoopTransformer.py&#10;- Fixed bugs in MainTransformer.py and updated with the simplified function body creation" />
   </component>
   <component name="WindowStateProjectService">
     <state x="906" y="378" key="#Inspections" timestamp="1588322612153">
@@ -705,15 +705,15 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="1106" y="402" key="RollbackChangesDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1589375108539" />
-    <state x="781" y="342" key="SettingsEditor" timestamp="1590578546519">
+    <state x="781" y="342" key="SettingsEditor" timestamp="1591878579956">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1590578546519" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1591655795461">
+    <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591878579956" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1591874070641">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591655795461" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591874070641" />
     <state x="1094" y="434" key="VcsDiffUtil.ChangesDialog" timestamp="1591553388418">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

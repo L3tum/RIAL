@@ -51,8 +51,7 @@ def null(ty):
 
 @lru_cache(len(TYPE_TO_LLVM) + 20)
 def is_builtin_type(ty: str):
-    ty = map_shortcut_to_type(ty)
-    return ty in TYPE_TO_LLVM
+    return map_type_to_llvm(ty) is not None
 
 
 @lru_cache(len(SHORTCUT_TO_TYPE) + 20)

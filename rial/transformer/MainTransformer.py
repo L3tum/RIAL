@@ -1,3 +1,5 @@
+import sys
+
 from llvmlite import ir
 from llvmlite.ir import VoidType
 
@@ -20,7 +22,7 @@ class MainTransformer(BaseTransformer):
     def array_assignment(self, tree: Tree):
         nodes = tree.children
         entry: RIALVariable = self.transform_helper(nodes[0])
-        val: RIALVariable = self.transform_helper(nodes[1])
+        val: RIALVariable = self.transform_helper(nodes[2])
 
         assert isinstance(entry, RIALVariable)
         assert isinstance(val, RIALVariable)
@@ -30,7 +32,7 @@ class MainTransformer(BaseTransformer):
 
         value = val.get_loaded_if_variable(self.module)
 
-        self.module.builder.store(value, entry)
+        self.module.builder.store(value, entry.value)
 
         return val
 
@@ -51,11 +53,7 @@ class MainTransformer(BaseTransformer):
             else:
                 number = number.value
 
-            if isinstance(ty, RIALIdentifiedStructType):
-                name = ty.name
-            else:
-                name = str(ty)
-
+            name = map_llvm_to_type(ty)
             arr_type = ir.ArrayType(ty, number)
             allocated = self.module.builder.alloca(arr_type)
 

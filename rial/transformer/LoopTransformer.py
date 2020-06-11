@@ -1,8 +1,10 @@
+import re
 from typing import Optional
 
 from rial.concept.parser import Tree, Discard, Token
 from rial.ir.RIALVariable import RIALVariable
 from rial.transformer.BaseTransformer import BaseTransformer
+from rial.transformer.builtin_type_to_llvm_mapper import is_builtin_type, Int32, map_llvm_to_type
 
 
 class LoopTransformer(BaseTransformer):
@@ -229,6 +231,17 @@ class LoopTransformer(BaseTransformer):
         self.module.builder.enter_block(body_block)
         true_value: RIALVariable = self.transform_helper(nodes[1])
         assert isinstance(true_value, RIALVariable)
+        # Builtins can be passed but need to be loaded
+        if is_builtin_type(true_value.rial_type):
+            true_val = true_value.get_loaded_if_variable(self.module)
+            ty = true_value.llvm_type
+        # Pointer to first element for still normal arrays
+        elif re.match(r".+\[[0-9]+\]$", true_value.rial_type) is not None:
+            true_val = self.module.builder.gep(true_value.value, [Int32(0), Int32(0)])
+            ty = true_val.type
+        else:
+            true_val = true_value.value
+            ty = true_value.llvm_type
 
         # Jump out of body
         if not self.module.current_block.is_terminated:
@@ -238,6 +251,14 @@ class LoopTransformer(BaseTransformer):
         self.module.builder.enter_block(else_block)
         false_value: RIALVariable = self.transform_helper(nodes[2])
         assert isinstance(false_value, RIALVariable)
+        # Builtins can be passed but need to be loaded
+        if is_builtin_type(false_value.rial_type):
+            false_val = false_value.get_loaded_if_variable(self.module)
+        # Pointer to first element for still normal arrays
+        elif re.match(r".+\[[0-9]+\]$", false_value.rial_type) is not None:
+            false_val = self.module.builder.gep(false_value.value, [Int32(0), Int32(0)])
+        else:
+            false_val = false_value.value
 
         # Jump out of else
         if not self.module.current_block.is_terminated:
@@ -247,13 +268,13 @@ class LoopTransformer(BaseTransformer):
         self.module.builder.enter_block(end_block)
 
         # PHI the values
-        phi = self.module.builder.phi(true_value.llvm_type)
-        phi.add_incoming(true_value.value, body_block)
-        phi.add_incoming(false_value.value, else_block)
+        phi = self.module.builder.phi(ty)
+        phi.add_incoming(true_val, body_block)
+        phi.add_incoming(false_val, else_block)
         self.module.conditional_block = old_conditional_block
         self.module.end_block = old_end_block
 
-        return RIALVariable("phi", true_value.rial_type, true_value.llvm_type, phi)
+        return RIALVariable("phi", map_llvm_to_type(ty), ty, phi)
 
     def switch_block(self, tree: Tree):
         nodes = tree.children

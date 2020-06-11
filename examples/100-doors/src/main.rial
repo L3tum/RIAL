@@ -1,0 +1,30 @@
+private external void printf(CString format, params CString args);
+
+public void main(){
+    var doors = bool[100];
+
+    for(var i = 0; i < 100; i++){
+        doors[i] = false;
+    }
+
+    //For each pass...
+    for (var p = 0; p < 100; p++)//number of passes
+    {
+        //For each door to toggle...
+        for (var d = 0; d < 100; d++)//door number
+        {
+            if (((d + 1) % (p + 1)) == 0)
+            {
+                doors[d] = !doors[d];
+            }
+        }
+    }
+
+    unsafe{
+        for(var i = 0; i < 100; i++){
+            printf("%s ", if doors[i] == true ? "true" : "false");
+        }
+
+        printf("\n");
+    }
+}

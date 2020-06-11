@@ -1,4 +1,3 @@
-import sys
 from typing import List
 
 from llvmlite import ir
@@ -198,3 +197,8 @@ class DesugarTransformer(Transformer):
             i += 1
 
         return identifiers
+
+    def not_rule(self, nodes):
+        return Tree('equal',
+                    [nodes[0], Token('EQUAL', '=='),
+                     RIALVariable("number", "Int1", ir.IntType(1), ir.Constant(ir.IntType(1), 0))])

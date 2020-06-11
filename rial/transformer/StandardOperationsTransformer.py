@@ -84,6 +84,13 @@ class StandardOperationsTransformer(BaseTransformer):
                 result = self.module.builder.sdiv(left_val, right_val)
             elif isinstance(left.llvm_type, ir._BaseFloatType):
                 result = self.module.builder.fdiv(left_val, right_val)
+        elif op == "REM":
+            if isinstance(left.llvm_type, LLVMUIntType):
+                result = self.module.builder.urem(left_val, right_val)
+            elif isinstance(left.llvm_type, ir.IntType):
+                result = self.module.builder.srem(left_val, right_val)
+            elif isinstance(left.llvm_type, ir._BaseFloatType):
+                result = self.module.builder.frem(left_val, right_val)
 
         if result is None:
             raise TypeError(left, op, right)
