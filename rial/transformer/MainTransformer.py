@@ -172,11 +172,11 @@ class MainTransformer(BaseTransformer):
             # Casting integer to type (unsafe!)
             if is_builtin_type(value.rial_type):
                 with only_allowed_in_unsafe():
-                    casted = self.llvmgen.builder.inttoptr(value.get_loaded_if_variable(self.module), ty.as_pointer())
+                    casted = self.module.builder.inttoptr(value.get_loaded_if_variable(self.module), ty.as_pointer())
                     return RIALVariable("cast", ty.name, ty, casted)
             else:
                 # Simple type cast
-                casted = self.llvmgen.builder.bitcast(value.value, ty.as_pointer())
+                casted = self.module.builder.bitcast(value.value, ty.as_pointer())
                 return RIALVariable("cast", ty.name, ty, casted)
 
         raise TypeError(ty, value)
@@ -197,13 +197,9 @@ class MainTransformer(BaseTransformer):
             self.transform_helper(func_decl)
 
         self.module.current_struct = None
-        self.module.current_func = None
-        self.module.current_block = None
 
     def function_decl(self, tree: Tree):
         nodes = tree.children
-        old_current_func = self.module.current_func
-        old_current_block = self.module.current_block
 
         node: MetadataToken = nodes[0]
         assert isinstance(node, MetadataToken)
@@ -213,25 +209,14 @@ class MainTransformer(BaseTransformer):
         if func is None:
             raise KeyError("Expected a function but didn't find it!")
 
-        self.module.create_function_body(func)
-        # Swapping values
-        old_unsafe = self.module.currently_unsafe
-        self.module.currently_unsafe = func.definition.unsafe
-
-        for node in nodes[body_start:]:
-            self.transform_helper(node)
-
-        if not self.module.current_block.block.is_terminated:
-            self.module.builder.ret_void()
-        self.module.finish_current_func()
-        self.module.currently_unsafe = old_unsafe
-        self.module.current_func = old_current_func
-        self.module.current_block = old_current_block
+        with self.module.create_or_enter_function_body(func):
+            for node in nodes[body_start:]:
+                self.transform_helper(node)
 
     def return_rule(self, tree: Tree):
         nodes = tree.children
 
-        if self.module.current_block.block.terminator is not None:
+        if self.module.current_block.terminator is not None:
             raise PermissionError("Return after return")
 
         if len(nodes) == 0:

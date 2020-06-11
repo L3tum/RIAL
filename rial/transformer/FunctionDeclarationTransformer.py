@@ -146,9 +146,6 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
 
         args: List[RIALVariable] = self.visit(nodes[3])
 
-        if not unsafe and not self.llvmgen.currently_unsafe:
-            raise PermissionError("Can only declare external functions in unsafe blocks or as unsafe functions.")
-
         llvm_args = list()
 
         # Map RIAL args to llvm arg types
@@ -276,6 +273,8 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
 
         # If it has no body we can discard it now.
         if len(nodes) <= body_start:
+            with self.module.create_or_enter_function_body(func):
+                self.module.builder.ret_void()
             raise Discard()
 
         token = nodes[2]
@@ -380,6 +379,8 @@ class FunctionDeclarationTransformer(TransformerInterpreter):
 
         # If it has no body we do not need to go through it later as it's already declared with this method.
         if not len(nodes) > 4:
+            with self.module.create_or_enter_function_body(func):
+                self.module.builder.ret_void()
             raise Discard()
 
         token = nodes[2]

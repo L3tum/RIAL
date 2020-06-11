@@ -6,7 +6,7 @@ from llvmlite import ir
 from llvmlite.ir import Module, Context, Block, AllocaInstr
 
 from rial.ir.IRBuilder import IRBuilder
-from rial.ir.LLVMBlock import LLVMBlock, create_llvm_block
+from rial.ir.LLVMBlock import LLVMBlock
 from rial.ir.RIALFunction import RIALFunction
 from rial.ir.RIALIdentifiedStructType import RIALIdentifiedStructType
 from rial.ir.RIALVariable import RIALVariable
@@ -241,39 +241,83 @@ class RIALModule(Module):
 
         return func
 
-    def create_function_body(self, func: RIALFunction):
-        self.current_func = func
+    @contextmanager
+    def _create_function_body(self, func: RIALFunction):
+        with self._enter_function_body(func):
+            # Allocate new variables for passed arguments unless they're already pointers
+            for i, arg in enumerate(func.args):
+                if func.definition.rial_args[i].is_variable:
+                    variable = func.definition.rial_args[i]
+                else:
+                    variable = self.builder.alloca(func.definition.rial_args[i].llvm_type)
+                    self.builder.store(arg, variable)
+                    variable = RIALVariable(arg.name, func.definition.rial_args[i].rial_type, arg.type, variable)
 
-        # Entry block
-        bb = func.append_basic_block("entry")
-        llvm_bb = create_llvm_block(bb)
-        self.current_block = llvm_bb
+                self.current_block.add_named_value(arg.name, variable)
+
+            yield
+
+    @contextmanager
+    def _enter_function_body(self, func: RIALFunction, block: Optional[LLVMBlock] = None):
+        old_func = self.current_func
+        old_conditional_block = self.conditional_block
+        old_end_block = self.end_block
+        old_block = self.current_block
+        old_pos = self.builder is not None and self.builder._anchor or 0
+        old_unsafe = self.currently_unsafe
+
+        self.current_func = func
+        self.currently_unsafe = func.definition.unsafe
+        self.conditional_block = None
+        self.end_block = None
+
+        if len(func.basic_blocks) == 0:
+            # Entry block
+            bb = func.append_basic_block("entry")
+            self.current_block = bb
+        elif block is not None:
+            bb = next(([blc for blc in func.basic_blocks if blc.name == block.name]), None)
+
+            if bb is None:
+                raise KeyError(bb)
+            self.current_block = bb
+        else:
+            bb = func.basic_blocks[-1]
+            self.current_block = bb
 
         if self.builder is None:
             self.builder = IRBuilder(bb)
 
-        self.builder.position_at_start(bb)
+        if bb.is_terminated:
+            self.builder.position_before(bb.terminator)
+        else:
+            self.builder.position_at_end(bb)
 
-        # Allocate new variables for passed arguments unless they're already pointers
-        for i, arg in enumerate(func.args):
-            if func.definition.rial_args[i].is_variable:
-                variable = func.definition.rial_args[i]
-            else:
-                variable = self.builder.alloca(func.definition.rial_args[i].llvm_type)
-                self.builder.store(arg, variable)
-                variable = RIALVariable(arg.name, func.definition.rial_args[i].rial_type, arg.type, variable)
+        yield
 
-            self.current_block.add_named_value(arg.name, variable)
+        if not self.current_block.is_terminated:
+            self.builder.ret_void()
+
+        self.finish_current_func()
+        self.current_func = old_func
+        self.conditional_block = old_conditional_block
+        self.end_block = old_end_block
+        self.current_block = old_block
+        self.builder._block = self.current_block
+        self.builder._anchor = old_pos
+        self.currently_unsafe = old_unsafe
+
+    @contextmanager
+    def create_or_enter_function_body(self, func: RIALFunction, block: Optional[LLVMBlock] = None):
+        if len(func.basic_blocks) == 0:
+            with self._create_function_body(func):
+                yield
+        else:
+            with self._enter_function_body(func, block):
+                yield
 
     @contextmanager
     def create_in_global_ctor(self):
-        current_block = self.current_block
-        current_func = self.current_func
-        current_struct = self.current_struct
-        conditional_block = self.conditional_block
-        end_block = self.end_block
-        pos = self.builder is not None and self.builder._anchor or 0
-
         func = self.get_global_safe('global_ctor')
 
         if func is None:
@@ -286,29 +330,9 @@ class RIALModule(Module):
             glob_type = ir.ArrayType(struct_type, 1)
 
             self.declare_global("llvm.global_ctors", map_llvm_to_type(glob_type), glob_type, "appending", glob_value)
-            self.create_function_body(func)
-            self.builder.ret_void()
-            self.builder.position_before(func.entry_basic_block.terminator)
-        else:
-            self.builder.position_before(func.entry_basic_block.terminator)
-            self.current_func = func
-            self.current_block = create_llvm_block(func.entry_basic_block)
 
-        self.current_struct = None
-        self.conditional_block = None
-        self.end_block = None
-
-        yield
-
-        self.current_block = current_block
-        self.current_func = current_func
-        self.current_struct = current_struct
-        self.conditional_block = conditional_block
-        self.end_block = end_block
-        self.builder._anchor = pos
-        self.builder._block = self.current_block is not None and self.current_block.block or None
-
-        return
+        with self.create_or_enter_function_body(func):
+            yield
 
     def finish_current_func(self):
         # If we're in release mode
@@ -338,4 +362,3 @@ class RIALModule(Module):
                     if len(instr_block[1].instructions) == 0:
                         self.builder.position_before(instr_block[1].terminator)
                         self.builder.gen_no_op()
-        self.current_func = None

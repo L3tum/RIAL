@@ -10,7 +10,7 @@ class LoopTransformer(BaseTransformer):
         if self.module.conditional_block is None:
             raise PermissionError("Continue outside of loop")
 
-        self.module.builder.branch(self.module.conditional_block.block)
+        self.module.builder.branch(self.module.conditional_block)
 
         raise Discard()
 
@@ -18,13 +18,13 @@ class LoopTransformer(BaseTransformer):
         if self.module.end_block is None:
             raise PermissionError("Break outside of loop")
 
-        self.module.builder.branch(self.module.end_block.block)
+        self.module.builder.branch(self.module.end_block)
 
         raise Discard()
 
     def loop_loop(self, tree: Tree):
         nodes = tree.children
-        name = self.module.current_block.block.name
+        name = self.module.current_block.name
         body_block = self.module.builder.create_block(f"{name}.loop.body", parent=self.module.current_block)
         end_block = self.module.builder.create_block(f"{name}.loop.end", sibling=self.module.current_block)
 
@@ -40,7 +40,7 @@ class LoopTransformer(BaseTransformer):
             self.transform_helper(node)
 
         # Jump back into body
-        if not self.module.current_block.block.is_terminated:
+        if not self.module.current_block.is_terminated:
             self.module.builder.create_jump(body_block)
 
         # Go out of loop
@@ -50,7 +50,7 @@ class LoopTransformer(BaseTransformer):
 
     def for_loop(self, tree: Tree):
         nodes = tree.children
-        name = self.module.current_block.block.name
+        name = self.module.current_block.name
         name = f"{name}.for.wrapper"
 
         wrapper_block = self.module.builder.create_block(name, parent=self.module.current_block)
@@ -86,11 +86,11 @@ class LoopTransformer(BaseTransformer):
             self.transform_helper(node)
 
         # Build incrementor
-        if not self.module.current_block.block.is_terminated:
+        if not self.module.current_block.is_terminated:
             self.transform_helper(nodes[2])
 
         # Create jump back into condition
-        if not self.module.current_block.block.is_terminated:
+        if not self.module.current_block.is_terminated:
             self.module.builder.create_jump(conditional_block)
 
         # Get out of loop
@@ -100,7 +100,7 @@ class LoopTransformer(BaseTransformer):
 
     def while_loop(self, tree: Tree):
         nodes = tree.children
-        name = f"{self.module.current_block.block.name}.while"
+        name = f"{self.module.current_block.name}.while"
         conditional_block = self.module.builder.create_block(f"{name}.condition", parent=self.module.current_block)
         body_block = self.module.builder.create_block(f"{name}.body", parent=conditional_block)
         end_block = self.module.builder.create_block(f"{name}.end", sibling=self.module.current_block)
@@ -126,7 +126,7 @@ class LoopTransformer(BaseTransformer):
             self.transform_helper(node)
 
         # Jump back into condition
-        if not self.module.current_block.block.is_terminated:
+        if not self.module.current_block.is_terminated:
             self.module.builder.create_jump(conditional_block)
 
         # Get out of loop
@@ -136,7 +136,7 @@ class LoopTransformer(BaseTransformer):
 
     def conditional_block(self, tree: Tree):
         nodes = tree.children
-        name = f"{self.module.current_block.block.name}.conditional"
+        name = f"{self.module.current_block.name}.conditional"
         condition = nodes[0]
         likely_unlikely_modifier: Token = nodes[1]
         body = nodes[2]
@@ -192,7 +192,7 @@ class LoopTransformer(BaseTransformer):
             self.transform_helper(node)
 
         # Jump out of body
-        if not self.module.current_block.block.is_terminated:
+        if not self.module.current_block.is_terminated:
             self.module.builder.create_jump(end_block)
 
         # Create else if necessary
@@ -200,7 +200,7 @@ class LoopTransformer(BaseTransformer):
             self.module.builder.enter_block(else_block)
             for node in else_conditional.children:
                 self.transform_helper(node)
-            if not self.module.current_block.block.is_terminated:
+            if not self.module.current_block.is_terminated:
                 self.module.builder.create_jump(end_block)
 
         # Leave conditional block
@@ -210,7 +210,7 @@ class LoopTransformer(BaseTransformer):
 
     def shorthand_if(self, tree: Tree):
         nodes = tree.children
-        name = f"{self.module.current_block.block.name}.shorthand_conditional"
+        name = f"{self.module.current_block.name}.shorthand_conditional"
         conditional_block = self.module.builder.create_block(f"{name}.condition", parent=self.module.current_block)
         body_block = self.module.builder.create_block(f"{name}.body", parent=conditional_block)
         else_block = self.module.builder.create_block(f"{name}.else", parent=conditional_block)
@@ -231,7 +231,7 @@ class LoopTransformer(BaseTransformer):
         assert isinstance(true_value, RIALVariable)
 
         # Jump out of body
-        if not self.module.current_block.block.is_terminated:
+        if not self.module.current_block.is_terminated:
             self.module.builder.create_jump(end_block)
 
         # Create else
@@ -240,7 +240,7 @@ class LoopTransformer(BaseTransformer):
         assert isinstance(false_value, RIALVariable)
 
         # Jump out of else
-        if not self.module.current_block.block.is_terminated:
+        if not self.module.current_block.is_terminated:
             self.module.builder.create_jump(end_block)
 
         # Leave conditional block
@@ -248,8 +248,8 @@ class LoopTransformer(BaseTransformer):
 
         # PHI the values
         phi = self.module.builder.phi(true_value.llvm_type)
-        phi.add_incoming(true_value.value, body_block.block)
-        phi.add_incoming(false_value.value, else_block.block)
+        phi.add_incoming(true_value.value, body_block)
+        phi.add_incoming(false_value.value, else_block)
         self.module.conditional_block = old_conditional_block
         self.module.end_block = old_end_block
 
@@ -260,8 +260,8 @@ class LoopTransformer(BaseTransformer):
         parent = self.module.current_block
         variable: RIALVariable = self.transform_helper(nodes[0])
         assert isinstance(variable, RIALVariable)
-        end_block = self.module.builder.create_block(f"{self.llvmgen.current_block.block.name}.end_switch",
-                                                     sibling=self.llvmgen.current_block)
+        end_block = self.module.builder.create_block(f"{self.module.current_block.name}.end_switch",
+                                                     sibling=self.module.current_block)
         old_end_block = self.module.end_block
         old_conditional_block = self.module.conditional_block
         self.module.end_block = end_block
@@ -296,7 +296,7 @@ class LoopTransformer(BaseTransformer):
             self.module.builder.enter_block_end(parent)
 
         if switch.default is None:
-            switch.default = end_block.block
+            switch.default = end_block
 
         if len(collected_empties) > 0:
             raise PermissionError("Empty cases in switch statement!")
@@ -315,31 +315,31 @@ class LoopTransformer(BaseTransformer):
 
         if len(nodes) == 1:
             return var, None
-        block = self.module.builder.create_block(f"{self.module.current_block.block.name}.switch.case",
+        block = self.module.builder.create_block(f"{self.module.current_block.name}.switch.case",
                                                  self.module.current_block)
         self.module.builder.enter_block(block)
 
         for node in nodes[1:]:
             self.transform_helper(node)
 
-        if not self.module.current_block.block.is_terminated:
+        if not self.module.current_block.is_terminated:
             self.module.builder.ret_void()
 
-        self.module.current_block = self.module.current_block.parent
+        self.module.current_block = self.module.current_block.llvmblock_parent
 
         return var, block
 
     def default_case(self, tree: Tree):
         nodes = tree.children
-        block = self.module.builder.create_block(f"{self.module.current_block.block.name}.switch.default",
+        block = self.module.builder.create_block(f"{self.module.current_block.name}.switch.default",
                                                  self.module.current_block)
         self.module.builder.enter_block(block)
         for node in nodes:
             self.transform_helper(node)
 
-        if not self.module.current_block.block.is_terminated:
+        if not self.module.current_block.is_terminated:
             self.module.builder.ret_void()
 
-        self.module.current_block = self.module.current_block.parent
+        self.module.current_block = self.module.current_block.llvmblock_parent
 
         return None, block

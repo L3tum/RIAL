@@ -86,14 +86,11 @@ class BuiltinTransformer(BaseTransformer):
         ty = None
         return_name = None
 
-        i = 1
-        while i < len(nodes):
-            if isinstance(nodes[i], Tree):
-                ty = self.transform_helper(nodes[1])
-            elif isinstance(nodes[i], Token):
-                return_name = nodes[i].value.strip("\"")
-
-            i += 1
+        for node in nodes[1:]:
+            if isinstance(node, Tree):
+                ty = self.transform_helper(node)
+            elif isinstance(node, Token):
+                return_name = node.value.strip("\"")
 
         self.module.builder.ir(ty, llvm_ir)
 

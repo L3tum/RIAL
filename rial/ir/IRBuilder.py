@@ -3,7 +3,7 @@ from typing import Optional, List
 
 from llvmlite import ir
 
-from rial.ir.LLVMBlock import LLVMBlock, create_llvm_block
+from rial.ir.LLVMBlock import LLVMBlock
 from rial.ir.LLVMIRInstruction import LLVMIRInstruction
 from rial.ir.RIALFunction import RIALFunction
 from rial.ir.RIALIdentifiedStructType import RIALIdentifiedStructType
@@ -15,27 +15,28 @@ class IRBuilder(ir.IRBuilder):
     def create_block(self, block_name: str, parent: Optional[LLVMBlock] = None,
                      sibling: Optional[LLVMBlock] = None) -> \
             Optional[LLVMBlock]:
-        block = self.append_basic_block(block_name)
-        llvmblock = create_llvm_block(block, parent, sibling)
+        block: LLVMBlock = self.append_basic_block(block_name)
+        block.llvmblock_sibling = sibling
+        block.llvmblock_parent = parent
 
-        return llvmblock
+        return block
 
     def create_conditional_jump(self, condition: ir.Value, true_block: LLVMBlock, false_block: LLVMBlock, weights=None):
         if weights is None:
             weights = [50, 50]
-        branch = self.cbranch(condition, true_block.block, false_block.block)
+        branch = self.cbranch(condition, true_block, false_block)
         branch.set_weights(weights)
 
     def create_jump(self, block: LLVMBlock):
-        self.branch(block.block)
+        self.branch(block)
 
     def enter_block(self, block: LLVMBlock):
         self.module.current_block = block
-        self.position_at_start(block.block)
+        self.position_at_start(block)
 
     def enter_block_end(self, llvmblock: LLVMBlock):
         self.module.current_block = llvmblock
-        self.position_at_end(self.module.current_block.block)
+        self.position_at_end(self.module.current_block)
 
     def gen_no_op(self):
         from rial.compilation_manager import CompilationManager
@@ -98,6 +99,12 @@ class IRBuilder(ir.IRBuilder):
             func = candidates[0]
 
         if isinstance(func, RIALFunction):
+            if func.definition.unsafe:
+                from rial.util.only_allowed_in_unsafe import only_allowed_in_unsafe
+                with only_allowed_in_unsafe(
+                        "Calls to unsafe or external functions are only allowed in unsafe blocks and functions!"):
+                    pass
+
             args = list()
             for arg in arguments:
                 # Builtins can be passed but need to be loaded
@@ -136,6 +143,8 @@ class IRBuilder(ir.IRBuilder):
                 raise KeyError(func.name, "constructor")
 
             return variable
+
+        # TODO: Call to variable
 
         return None
 

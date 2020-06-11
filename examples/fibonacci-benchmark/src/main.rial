@@ -1,9 +1,9 @@
-unsafe{
-    private external void printf(CString format, params CString args);
-}
+private external void printf(CString format, params CString args);
 
 public void main(){
-    printf("%llu \n", fib(46uL));
+    unsafe{
+        printf("%llu \n", fib(46uL));
+    }
 }
 
 private ulong fib(ulong n){

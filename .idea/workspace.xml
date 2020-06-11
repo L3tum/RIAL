@@ -19,16 +19,17 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Moved llvm_ir builtin to be only accessible in unsafe blocks">
-      <change afterPath="$PROJECT_DIR$/examples/fibonacci-benchmark/src/main.rial" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/examples/fibonacci/src/main.rial" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/testing_clang/test.cpp" afterDir="false" />
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Bugfixes and examples&#10;&#10;- Fixed empty return not returning void&#10;- Fixed LLVM to RIAL type parsing being wrongly cached&#10;- Fixed smaller_equal being lower priority than just smaller&#10;- Added examples for iterative and recursive fibonacci&#10;&#10;(Apparently clang++-8 (using same LLVM version as we do) is around 0,2 secs faster, while g++ takes half the time for a compiled recursive fibonacci run). Realistically aiming at clang perf is &quot;enough&quot; aka doable by improving linking (mostly) and giving more hints to LLVM.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/platform_support/LinuxPlatform.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/platform_support/LinuxPlatform.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/fibonacci-benchmark/src/main.rial" beforeDir="false" afterPath="$PROJECT_DIR$/examples/fibonacci-benchmark/src/main.rial" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/ir/IRBuilder.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/IRBuilder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/ir/LLVMBlock.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/LLVMBlock.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/ir/RIALFunction.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/RIALFunction.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/ir/RIALModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/RIALModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/transformer/BuiltinTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/BuiltinTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/transformer/FunctionDeclarationTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/FunctionDeclarationTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/transformer/LoopTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/LoopTransformer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/transformer/MainTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/MainTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/transformer/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/builtin_type_to_llvm_mapper.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -263,14 +264,9 @@
       <workItem from="1591448238902" duration="5786000" />
       <workItem from="1591531464200" duration="9920000" />
       <workItem from="1591612650035" duration="162000" />
-      <workItem from="1591612828353" duration="13651000" />
-    </task>
-    <task id="LOCAL-00020" summary="Removed SingleParserState.py&#10;Added necessary additions as threadlocal storage to ParserState.py&#10;Moved necessary methods to ParserState.py&#10;(Part of an ongoing refactoring process)">
-      <created>1587294913014</created>
-      <option name="number" value="00020" />
-      <option name="presentableId" value="LOCAL-00020" />
-      <option name="project" value="LOCAL" />
-      <updated>1587294913014</updated>
+      <workItem from="1591612828353" duration="14555000" />
+      <workItem from="1591710248418" duration="3729000" />
+      <workItem from="1591871164312" duration="2690000" />
     </task>
     <task id="LOCAL-00021" summary="Moved function call logic into LLVMGen.py&#10;Added optimization that moves allocas to the top of the function in release mode">
       <created>1587303433733</created>
@@ -608,7 +604,14 @@
       <option name="project" value="LOCAL" />
       <updated>1591618753553</updated>
     </task>
-    <option name="localTasksCounter" value="69" />
+    <task id="LOCAL-00069" summary="Bugfixes and examples&#10;&#10;- Fixed empty return not returning void&#10;- Fixed LLVM to RIAL type parsing being wrongly cached&#10;- Fixed smaller_equal being lower priority than just smaller&#10;- Added examples for iterative and recursive fibonacci&#10;&#10;(Apparently clang++-8 (using same LLVM version as we do) is around 0,2 secs faster, while g++ takes half the time for a compiled recursive fibonacci run). Realistically aiming at clang perf is &quot;enough&quot; aka doable by improving linking (mostly) and giving more hints to LLVM.">
+      <created>1591655793614</created>
+      <option name="number" value="00069" />
+      <option name="presentableId" value="LOCAL-00069" />
+      <option name="project" value="LOCAL" />
+      <updated>1591655793614</updated>
+    </task>
+    <option name="localTasksCounter" value="70" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -637,7 +640,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Allow function declarations and function calls to contain reserved characters if enclosed by @&quot;[name]&quot;&#10;&#10;Closes #45" />
     <MESSAGE value="Improved grammar to improve readability of the AST Visitors" />
     <MESSAGE value="Inlined an import to avoid errors for an optional target" />
     <MESSAGE value="Implemented globals for non-constant values&#10;Refactored function finding which nets a small performance plus&#10;Fixed a bug in default constructor generation mixing up type and name&#10;Closes #37" />
@@ -662,7 +664,8 @@
     <MESSAGE value="Added support for static functions (properties is TODO)&#10;Refactored identifier parsing" />
     <MESSAGE value="Added LLVM IR instruction and builtin method call" />
     <MESSAGE value="Moved llvm_ir builtin to be only accessible in unsafe blocks" />
-    <option name="LAST_COMMIT_MESSAGE" value="Moved llvm_ir builtin to be only accessible in unsafe blocks" />
+    <MESSAGE value="Bugfixes and examples&#10;&#10;- Fixed empty return not returning void&#10;- Fixed LLVM to RIAL type parsing being wrongly cached&#10;- Fixed smaller_equal being lower priority than just smaller&#10;- Added examples for iterative and recursive fibonacci&#10;&#10;(Apparently clang++-8 (using same LLVM version as we do) is around 0,2 secs faster, while g++ takes half the time for a compiled recursive fibonacci run). Realistically aiming at clang perf is &quot;enough&quot; aka doable by improving linking (mostly) and giving more hints to LLVM." />
+    <option name="LAST_COMMIT_MESSAGE" value="Bugfixes and examples&#10;&#10;- Fixed empty return not returning void&#10;- Fixed LLVM to RIAL type parsing being wrongly cached&#10;- Fixed smaller_equal being lower priority than just smaller&#10;- Added examples for iterative and recursive fibonacci&#10;&#10;(Apparently clang++-8 (using same LLVM version as we do) is around 0,2 secs faster, while g++ takes half the time for a compiled recursive fibonacci run). Realistically aiming at clang perf is &quot;enough&quot; aka doable by improving linking (mostly) and giving more hints to LLVM." />
   </component>
   <component name="WindowStateProjectService">
     <state x="906" y="378" key="#Inspections" timestamp="1588322612153">
@@ -706,11 +709,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1590578546519" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1591618754348">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1591655795461">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591618754348" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591655795461" />
     <state x="1094" y="434" key="VcsDiffUtil.ChangesDialog" timestamp="1591553388418">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -731,11 +734,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="1089" y="614" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1587156453919" />
-    <state x="-2567" y="0" width="1293" height="1407" key="dock-window-1" timestamp="1591643059517">
+    <state x="-2567" y="0" width="1293" height="1407" key="dock-window-1" timestamp="1591871740970">
       <screen x="-3840" y="0" width="2560" height="1400" />
     </state>
     <state x="-2567" y="0" width="1293" height="1407" key="dock-window-1/0.0.2560.1400/-3840.0.2560.1400@-3840.0.2560.1400" timestamp="1590571897702" />
-    <state x="-2567" y="0" width="1293" height="1407" key="dock-window-1/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591643059517" />
+    <state x="-2567" y="0" width="1293" height="1407" key="dock-window-1/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591871740970" />
     <state x="-2447" y="332" width="489" height="559" key="dock-window-2" timestamp="1584965749099">
       <screen x="-3840" y="0" width="2560" height="1400" />
     </state>
