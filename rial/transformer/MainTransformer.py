@@ -1,5 +1,3 @@
-import sys
-
 from llvmlite import ir
 from llvmlite.ir import VoidType
 
@@ -42,37 +40,47 @@ class MainTransformer(BaseTransformer):
         index: RIALVariable = self.transform_helper(nodes[1])
 
         if isinstance(variable, ir.Type):
-            ty = variable
+            ty: ir.Type = variable
             number = index
             assert isinstance(number, RIALVariable)
 
+            name = map_llvm_to_type(ty)
+
             if isinstance(number.value, ir.Constant):
                 number = number.value.constant
+                arr_type = ir.ArrayType(ty, number)
+                allocated = self.module.builder.alloca(arr_type)
+                name = f"{name}[{number}]"
             elif number.is_variable:
                 number = self.module.builder.load(number.value)
+                arr_type = ty.as_pointer()
+                allocated = self.module.builder.alloca(ty, number)
+                # allocated = self.module.builder.gep(allocated, [Int32(0)])
+                name = f"{name}[]"
             else:
                 number = number.value
+                arr_type = ty.as_pointer()
+                allocated = self.module.builder.alloca(ty, number)
+                # allocated = self.module.builder.gep(allocated, [Int32(0)])
+                name = f"{name}[]"
 
-            name = map_llvm_to_type(ty)
-            arr_type = ir.ArrayType(ty, number)
-            allocated = self.module.builder.alloca(arr_type)
-
-            return RIALVariable(f"array_{name}[{number}]", f"{name}[{isinstance(number, int) and number or ''}]",
-                                arr_type,
-                                allocated)
+            return RIALVariable(f"array_{name}", name, arr_type, allocated)
 
         if not variable.rial_type.endswith("]"):
             raise TypeError(variable)
 
         # Check if it's a "GEP array" as we only need one index then
-        if isinstance(variable.value, ir.GEPInstr):
+        if isinstance(variable.value, ir.GEPInstr) or variable.rial_type.endswith("[]"):
             indices = [index.get_loaded_if_variable(self.module)]
         else:
             indices = [Int32(0), index.get_loaded_if_variable(self.module)]
 
         var = self.module.builder.gep(variable.value, indices)
 
-        return RIALVariable(f"{variable.name}[{index}]", variable.array_element_type, variable.llvm_type.element, var)
+        return RIALVariable(f"{variable.name}[{index}]", variable.array_element_type,
+                            isinstance(variable.llvm_type,
+                                       ir.ArrayType) and variable.llvm_type.element or variable.llvm_type.pointee,
+                            var)
 
     def variable_assignment(self, tree: Tree):
         nodes = tree.children
