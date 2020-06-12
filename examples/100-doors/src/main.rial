@@ -1,5 +1,6 @@
 private external void printf(CString format, params CString args);
 
+// From https://rosettacode.org/wiki/100_doors
 public void main(){
     var doors = bool[100];
 
