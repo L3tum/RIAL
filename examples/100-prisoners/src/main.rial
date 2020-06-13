@@ -1,0 +1,107 @@
+private external void printf(CString format, params CString args);
+
+const math = use rial:core:math;
+const rand = use rial:core:c_rand;
+
+public void main(){
+    rand.seed();
+
+    var count = 100000;
+    var result = play_random(count);
+    var res = play_optimal(count);
+
+    unsafe{
+        printf("Simulation count: %i\n", count);
+        printf("Random play wins: %f%\n", result);
+        printf("Optimal play wins: %f%\n", res);
+    }
+}
+
+private float play_random(int n){
+    var pardoned = 0;
+    var in_drawer = int[100];
+
+    for (var i = 0; i < n; i++){
+        // Randomize the cards
+        for (var r = 1; r < 100; r++){
+            var index = rand.random(0, r + 1);
+
+            if(index < 100){
+                var tmp = in_drawer[r];
+                in_drawer[r] = in_drawer[index];
+                in_drawer[index] = tmp;
+            }
+        }
+
+        var found = false;
+
+        for (var prisoner = 0; prisoner < 100; prisoner++){
+            found = false;
+
+            for(var r = 0; r < 50; r++){
+                var index = rand.random(0, 100);
+
+                if(in_drawer[index] == prisoner){
+                    found = true;
+                    break;
+                }
+            }
+
+            if(!found){
+                break;
+            }
+        }
+
+        if (found == true) {
+            pardoned++;
+        }
+    }
+
+    return ((float) pardoned) / (((float) n) * 100.0f);
+}
+
+private float play_optimal(int n){
+    var pardoned = 0;
+    var in_drawer = int[100];
+
+    for (var i = 0; i < n; i++){
+        // Randomize the cards
+        for (var r = 1; r < 100; r++){
+            var index = rand.random(0, r + 1);
+
+            if(index < 100){
+                var tmp = in_drawer[r];
+                in_drawer[r] = in_drawer[index];
+                in_drawer[index] = tmp;
+            }
+        }
+
+        var found = false;
+
+        for (var prisoner = 0; prisoner < 100; prisoner++){
+            found = false;
+            var reveal = prisoner;
+
+            for(var r = 0; r < 50; r++){
+                var card = in_drawer[reveal];
+
+                if(card == prisoner){
+                    found = true;
+                    break;
+                }
+
+                reveal = card;
+            }
+
+            if(!found){
+                break;
+            }
+        }
+
+        if (found == true) {
+            pardoned++;
+        }
+    }
+
+    return ((float) pardoned) / (((float) n) * 100.0f);
+}

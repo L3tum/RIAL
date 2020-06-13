@@ -91,8 +91,8 @@ array_access : var "[" (number|var) "]"
             | array
             | function_call
             | not_rule
+            | expression (SMALLER|BIGGER|BIGGER_EQUAL|SMALLER_EQUAL|EQUAL) expression -> equal
             | math
-            | equal
             | STRING -> string
             | CHAR -> char
             | "true" -> true
@@ -107,7 +107,6 @@ array_access : var "[" (number|var) "]"
             | "(" chained_identifier ")" expression -> cast
 
 var : chained_identifier
-equal : expression (SMALLER|BIGGER|BIGGER_EQUAL|SMALLER_EQUAL|EQUAL) expression
 math : expression (PLUS|MINUS|MUL|DIV|REM) expression
 not_rule : ("!"|"not") expression
 number: NUMBER
@@ -132,17 +131,17 @@ ACCESS_MODIFIER.2 : "private" | "public" | "internal"
 UNSAFE.2 : "unsafe"
 STATIC.2 : "static"
 
-EQUAL.20 : "=="
-BIGGER.-5 : ">"
-SMALLER.-5 : "<"
+REM.-8 : "%"
+DIV.-8 : "/"
+MUL.-8 : "*"
+MINUS.-7 : "-"
+PLUS.-7 : "+"
 BIGGER_EQUAL.-6 : ">="
 SMALLER_EQUAL.-6 : "<="
-REM.-7 : "%"
-DIV.-7 : "/"
-MUL.-7 : "*"
-MINUS.-8 : "-"
-PLUS.-8 : "+"
-ASSIGN.-9 : "="
+BIGGER.-5 : ">"
+SMALLER.-5 : "<"
+EQUAL.-4 : "=="
+ASSIGN.-8 : "="
 
 NUMBER.-3 : (PLUS|MINUS)? (HEX_INT|BIN_INT|FLOAT_SC|FLOAT|INT) ("uL"|"Ul"|"UL"|"ul"|"l"|"u"|"U"|"L"|"b"|"B")?
 FLOAT_SC.-1 : (FLOAT|INT) "e" ("-"|"+")? INT

@@ -1,5 +1,3 @@
-import sys
-
 from llvmlite import ir
 from llvmlite.ir import VoidType
 
@@ -42,37 +40,47 @@ class MainTransformer(BaseTransformer):
         index: RIALVariable = self.transform_helper(nodes[1])
 
         if isinstance(variable, ir.Type):
-            ty = variable
+            ty: ir.Type = variable
             number = index
             assert isinstance(number, RIALVariable)
 
+            name = map_llvm_to_type(ty)
+
             if isinstance(number.value, ir.Constant):
                 number = number.value.constant
+                arr_type = ir.ArrayType(ty, number)
+                allocated = self.module.builder.alloca(arr_type)
+                name = f"{name}[{number}]"
             elif number.is_variable:
                 number = self.module.builder.load(number.value)
+                arr_type = ty.as_pointer()
+                allocated = self.module.builder.alloca(ty, number)
+                allocated = self.module.builder.gep(allocated, [Int32(0)])
+                name = f"{name}[]"
             else:
                 number = number.value
+                arr_type = ty.as_pointer()
+                allocated = self.module.builder.alloca(ty, number)
+                allocated = self.module.builder.gep(allocated, [Int32(0)])
+                name = f"{name}[]"
 
-            name = map_llvm_to_type(ty)
-            arr_type = ir.ArrayType(ty, number)
-            allocated = self.module.builder.alloca(arr_type)
-
-            return RIALVariable(f"array_{name}[{number}]", f"{name}[{isinstance(number, int) and number or ''}]",
-                                arr_type,
-                                allocated)
+            return RIALVariable(f"array_{name}", name, arr_type, allocated)
 
         if not variable.rial_type.endswith("]"):
             raise TypeError(variable)
 
         # Check if it's a "GEP array" as we only need one index then
-        if isinstance(variable.value, ir.GEPInstr):
+        if isinstance(variable.value, ir.GEPInstr) or variable.rial_type.endswith("[]"):
             indices = [index.get_loaded_if_variable(self.module)]
         else:
             indices = [Int32(0), index.get_loaded_if_variable(self.module)]
 
         var = self.module.builder.gep(variable.value, indices)
 
-        return RIALVariable(f"{variable.name}[{index}]", variable.array_element_type, variable.llvm_type.element, var)
+        return RIALVariable(f"{variable.name}[{index}]", variable.array_element_type,
+                            isinstance(variable.llvm_type,
+                                       ir.ArrayType) and variable.llvm_type.element or variable.llvm_type.pointee,
+                            var)
 
     def variable_assignment(self, tree: Tree):
         nodes = tree.children
@@ -128,17 +136,17 @@ class MainTransformer(BaseTransformer):
         value = self.transform_helper(nodes[2])
 
         if isinstance(value, RIALFunction):
-            variable = self.module.builder.alloca(value.function_type)
+            variable = self.module.builder.alloca(value.function_type, name=identifier)
             self.module.builder.store(self.module.builder.load(value), variable)
             variable = RIALVariable(identifier, str(value.function_type).replace("i8*", "Char[]"), value.function_type,
-                                    variable)
+                                    variable, identified_variable=True)
         elif isinstance(value, RIALVariable):
-            if value.is_variable:
-                variable = value
-            else:
-                variable = self.module.builder.alloca(value.llvm_type)
+            if value.identified_variable or not value.is_variable:
+                variable = self.module.builder.alloca(value.llvm_type, name=identifier)
                 self.module.builder.store(value.get_loaded_if_variable(self.module), variable)
                 variable = RIALVariable(identifier, value.rial_type, value.llvm_type, variable)
+            else:
+                variable = value
         else:
             raise TypeError(value, nodes)
 

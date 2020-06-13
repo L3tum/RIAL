@@ -30,10 +30,23 @@ int test(int arr[]){
     return s;
 }
 
+int test6(int n){
+    int arr[n];
+
+   return arr[0];
+}
+
+float test7(){
+    int a = 5;
+    float fa = (float)a;
+    return fa / 10000000;
+}
+
 int main(){
     int a = 50;
     int arr[a];
     test(arr);
     struct Foo foo;
     printf(foo.b);
+    printf("%f\n", test7);
 }

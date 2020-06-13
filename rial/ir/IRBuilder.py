@@ -75,19 +75,27 @@ class IRBuilder(ir.IRBuilder):
                     continue
 
             if len(candidates) > 1:
+                candids = list()
                 for duplicate in candidates:
                     if isinstance(duplicate, RIALFunction):
                         # Check arguments
+                        if len(arguments) != len(duplicate.definition.rial_args):
+                            continue
+
                         for i, rial_arg in enumerate(duplicate.definition.rial_args):
                             if rial_arg.rial_type != arguments[i].rial_type:
                                 candidates.remove(duplicate)
                                 break
+
+                        candids.append(duplicate)
                     elif isinstance(duplicate, RIALVariable):
                         # Check arguments against function_type parsed to rial_type
                         for i, arg in duplicate.llvm_type.args:
                             if arguments[i].rial_type != map_llvm_to_type(arg.type):
                                 candidates.remove(duplicate)
                                 break
+                        candids.append(duplicate)
+                candidates = candids
 
             if len(candidates) == 1:
                 func = candidates[0]

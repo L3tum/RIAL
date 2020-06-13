@@ -7,6 +7,7 @@ from rial.transformer.builtin_type_to_llvm_mapper import map_shortcut_to_type
 
 
 class RIALVariable:
+    identified_variable: bool
     rial_type: str
     llvm_type: ir.Type
     value: ir.Value
@@ -14,7 +15,7 @@ class RIALVariable:
     access_modifier: AccessModifier
 
     def __init__(self, name: str, rial_type: str, llvm_type: ir.Type, value: Optional[ir.Value],
-                 access_modifier: AccessModifier = AccessModifier.PRIVATE):
+                 access_modifier: AccessModifier = AccessModifier.PRIVATE, identified_variable: bool = False):
         assert isinstance(name, str)
         assert isinstance(rial_type, str)
         assert isinstance(llvm_type, ir.Type)
@@ -26,6 +27,7 @@ class RIALVariable:
         self.llvm_type = llvm_type
         self.value = value
         self.access_modifier = access_modifier
+        self.identified_variable = identified_variable
 
     @property
     def is_global(self):
@@ -37,8 +39,7 @@ class RIALVariable:
             return True
         if isinstance(self.value, ir.GlobalVariable):
             return True
-        if isinstance(self.value, ir.GEPInstr) and isinstance(self.value.type,
-                                                              ir.PointerType) and not self.rial_type.endswith("]"):
+        if isinstance(self.value, ir.GEPInstr) and isinstance(self.value.type, ir.PointerType):
             return True
         if isinstance(self.value, ir.CastInstr) and (self.value.opname == "bitcast" or self.value.opname == "inttoptr"):
             return True

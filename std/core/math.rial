@@ -1,0 +1,9 @@
+public int[] range(int n){
+    var r = int[n];
+
+    for(var i = 0; i < n; i++){
+        r[i] = i;
+    }
+
+    return r;
+}

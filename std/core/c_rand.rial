@@ -1,0 +1,23 @@
+private external void srand(int seed);
+private external int time(Int8[] t);
+private external int rand();
+
+public void seed(){
+    unsafe{
+        srand(time(null));
+    }
+}
+
+public int random(){
+    unsafe{
+        return rand();
+    }
+}
+
+public int random(int max){
+    return random() % max;
+}
+
+public int random(int min, int max){
+    return (random() % (max - min)) + min;
+}

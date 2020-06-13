@@ -19,13 +19,26 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Improvements&#10;&#10;- Fixed bug in is_builtin_type determination&#10;- Added &quot;!&quot; and &quot;not&quot; statements&#10;- Changed calling convention for calls marked as &quot;#[cold]&quot; to &quot;cold&quot;&#10;- Slightly fixed a priorisation issue. Really need priorities for rules but those aren't supported&#10;- Fixed an issue with PHI not supporting strings anymore (needs more testing)&#10;- Added a 100-doors example&#10;- Fixed an issue in array_assignment&#10;- Added the remainder/c-modulo operator &quot;%&quot;">
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Park">
+      <change afterPath="$PROJECT_DIR$/examples/100-prisoners/src/main.rial" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/mir/Block.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/mir/FunctionArgument.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/mir/FunctionDeclaration.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/mir/FunctionDefinition.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/mir/MIRConstruct.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/mir/SourceSpan.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/mir/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/std/core/c_rand.rial" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/std/core/math.rial" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/examples/100-doors/src/main.rial" beforeDir="false" afterPath="$PROJECT_DIR$/examples/100-doors/src/main.rial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/compilation_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compilation_manager.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/ir/IRBuilder.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/IRBuilder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/ir/RIALVariable.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/RIALVariable.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/transformer/MainTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/MainTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/transformer/StandardOperationsTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/StandardOperationsTransformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/transformer/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/builtin_type_to_llvm_mapper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing_clang/test.c" beforeDir="false" afterPath="$PROJECT_DIR$/testing_clang/test.c" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,7 +57,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="parking_rial_variable" />
+        <entry key="$PROJECT_DIR$" value="parking2" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -73,7 +86,7 @@
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
     <property name="nodejs_package_manager_path" value="npm" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -116,6 +129,8 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.RIALVariable" />
+        <item itemvalue="Python.RIALVariable" />
         <item itemvalue="Python.RIALVariable" />
       </list>
     </recent_temporary>
@@ -263,21 +278,8 @@
       <workItem from="1591612828353" duration="14555000" />
       <workItem from="1591710248418" duration="3729000" />
       <workItem from="1591871164312" duration="11670000" />
-      <workItem from="1591957111781" duration="2962000" />
-    </task>
-    <task id="LOCAL-00023" summary="Fixed a race condition that would confuse LLVM">
-      <created>1587373346852</created>
-      <option name="number" value="00023" />
-      <option name="presentableId" value="LOCAL-00023" />
-      <option name="project" value="LOCAL" />
-      <updated>1587373346852</updated>
-    </task>
-    <task id="LOCAL-00024" summary="Fixed passing variables to functions">
-      <created>1587373855803</created>
-      <option name="number" value="00024" />
-      <option name="presentableId" value="LOCAL-00024" />
-      <option name="project" value="LOCAL" />
-      <updated>1587373855803</updated>
+      <workItem from="1591957111781" duration="13341000" />
+      <workItem from="1592044197977" duration="6310000" />
     </task>
     <task id="LOCAL-00025" summary="Fixed access control for functions">
       <created>1587374679791</created>
@@ -608,7 +610,21 @@
       <option name="project" value="LOCAL" />
       <updated>1591907439301</updated>
     </task>
-    <option name="localTasksCounter" value="72" />
+    <task id="LOCAL-00072" summary="Updated dependencies">
+      <created>1591960126214</created>
+      <option name="number" value="00072" />
+      <option name="presentableId" value="LOCAL-00072" />
+      <option name="project" value="LOCAL" />
+      <updated>1591960126215</updated>
+    </task>
+    <task id="LOCAL-00073" summary="Park">
+      <created>1591964032196</created>
+      <option name="number" value="00073" />
+      <option name="presentableId" value="LOCAL-00073" />
+      <option name="project" value="LOCAL" />
+      <updated>1591964032196</updated>
+    </task>
+    <option name="localTasksCounter" value="74" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -637,8 +653,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Implemented globals for non-constant values&#10;Refactored function finding which nets a small performance plus&#10;Fixed a bug in default constructor generation mixing up type and name&#10;Closes #37" />
-    <MESSAGE value="Implemented access modifiers for globals&#10;Fixed bugs concerning name mangling for globals&#10;Refactored global finding for easier readability" />
     <MESSAGE value="Refactorings&#10;Got the ol' tests running again" />
     <MESSAGE value="Alloca function return values to reduce allocation-related code size" />
     <MESSAGE value="Added global variable assignment&#10;Improved type handling in variables" />
@@ -662,21 +676,23 @@
     <MESSAGE value="Bugfixes and examples&#10;&#10;- Fixed empty return not returning void&#10;- Fixed LLVM to RIAL type parsing being wrongly cached&#10;- Fixed smaller_equal being lower priority than just smaller&#10;- Added examples for iterative and recursive fibonacci&#10;&#10;(Apparently clang++-8 (using same LLVM version as we do) is around 0,2 secs faster, while g++ takes half the time for a compiled recursive fibonacci run). Realistically aiming at clang perf is &quot;enough&quot; aka doable by improving linking (mostly) and giving more hints to LLVM." />
     <MESSAGE value="Improvements&#10;&#10;- Improved loop in BuiltinTransformer.py&#10;- External functions are inherently marked as unsafe and no longer require to be declared in an unsafe block&#10;- Function body creation and entering has been simplified&#10;- Calls to unsafe functions now correctly require to be in an unsafe context&#10;- Lowered LLVMBlock.py to inherit from ir.Block to simplify it&#10;- Fixed bugs in LoopTransformer.py&#10;- Fixed bugs in MainTransformer.py and updated with the simplified function body creation" />
     <MESSAGE value="Improvements&#10;&#10;- Fixed bug in is_builtin_type determination&#10;- Added &quot;!&quot; and &quot;not&quot; statements&#10;- Changed calling convention for calls marked as &quot;#[cold]&quot; to &quot;cold&quot;&#10;- Slightly fixed a priorisation issue. Really need priorities for rules but those aren't supported&#10;- Fixed an issue with PHI not supporting strings anymore (needs more testing)&#10;- Added a 100-doors example&#10;- Fixed an issue in array_assignment&#10;- Added the remainder/c-modulo operator &quot;%&quot;" />
-    <option name="LAST_COMMIT_MESSAGE" value="Improvements&#10;&#10;- Fixed bug in is_builtin_type determination&#10;- Added &quot;!&quot; and &quot;not&quot; statements&#10;- Changed calling convention for calls marked as &quot;#[cold]&quot; to &quot;cold&quot;&#10;- Slightly fixed a priorisation issue. Really need priorities for rules but those aren't supported&#10;- Fixed an issue with PHI not supporting strings anymore (needs more testing)&#10;- Added a 100-doors example&#10;- Fixed an issue in array_assignment&#10;- Added the remainder/c-modulo operator &quot;%&quot;" />
+    <MESSAGE value="Updated dependencies" />
+    <MESSAGE value="Park" />
+    <option name="LAST_COMMIT_MESSAGE" value="Park" />
   </component>
   <component name="WindowStateProjectService">
     <state x="906" y="378" key="#Inspections" timestamp="1588322612153">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="906" y="378" key="#Inspections/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588322612153" />
-    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1588331319127">
+    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1591962871955">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1588331319127" />
-    <state x="1085" y="416" key="#com.intellij.ide.util.MemberChooser" timestamp="1585056818881">
+    <state x="1051" y="503" key="#com.intellij.fileTypes.FileTypeChooser/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591962871955" />
+    <state x="1085" y="416" key="#com.intellij.ide.util.MemberChooser" timestamp="1592048690631">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="1085" y="416" key="#com.intellij.ide.util.MemberChooser/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1585056818881" />
+    <state x="1085" y="416" key="#com.intellij.ide.util.MemberChooser/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1592048690631" />
     <state x="902" y="0" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog" timestamp="1584481187738">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -690,31 +706,39 @@
     </state>
     <state x="905" y="294" key="CommitChangelistDialog2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532721340" />
     <state x="753" y="288" width="1109" height="863" key="CommitChangelistDialog2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1586767099729" />
-    <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog" timestamp="1591647382454">
+    <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog" timestamp="1591964639209">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591647382454" />
+    <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591964639209" />
     <state x="1059" y="474" key="FileChooserDialogImpl" timestamp="1590574965128">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="1059" y="474" key="FileChooserDialogImpl/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1590574965128" />
+    <state x="248" y="122" key="MergeDialog" timestamp="1591964484514">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="248" y="122" key="MergeDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591964484514" />
     <state x="1106" y="402" key="RollbackChangesDialog" timestamp="1589375108539">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="1106" y="402" key="RollbackChangesDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1589375108539" />
-    <state x="781" y="342" key="SettingsEditor" timestamp="1591958957929">
+    <state x="781" y="342" key="SettingsEditor" timestamp="1592044892214">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591958957929" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1591907440710">
+    <state x="781" y="342" key="SettingsEditor/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1592044892214" />
+    <state x="1127" y="613" key="VCS.ChangelistChooser" timestamp="1591964507776">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="1127" y="613" key="VCS.ChangelistChooser/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591964507776" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1591964033275">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591907440710" />
-    <state x="1094" y="434" key="VcsDiffUtil.ChangesDialog" timestamp="1591553388418">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591964033275" />
+    <state x="1094" y="434" key="VcsDiffUtil.ChangesDialog" timestamp="1591964107830">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="1094" y="434" key="VcsDiffUtil.ChangesDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591553388418" />
+    <state x="1094" y="434" key="VcsDiffUtil.ChangesDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591964107830" />
     <state x="97" y="126" width="2376" height="1216" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1589717472507">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -748,6 +772,10 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="976" y="432" width="737" height="616" key="find.popup/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591647441553" />
+    <state x="1060" y="413" key="git4idea.branch.GitSmartOperationDialog" timestamp="1591964473417">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="1060" y="413" key="git4idea.branch.GitSmartOperationDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591964473417" />
     <state x="1123" y="472" key="refactoring.ChangeSignatureDialog" timestamp="1586600798541">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

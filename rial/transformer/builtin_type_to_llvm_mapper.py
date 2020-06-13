@@ -51,11 +51,14 @@ def null(ty):
 
 @lru_cache(len(TYPE_TO_LLVM) + 20)
 def is_builtin_type(ty: str):
-    return map_type_to_llvm(ty) is not None
+    return map_type_to_llvm(ty) is not None and ty != "CString"
 
 
 @lru_cache(len(SHORTCUT_TO_TYPE) + 20)
 def map_shortcut_to_type(shortcut: str) -> str:
+    if shortcut.endswith("[]"):
+        return map_shortcut_to_type(shortcut.split('[')[0]) + "[]"
+
     return SHORTCUT_TO_TYPE[shortcut] if shortcut in SHORTCUT_TO_TYPE else shortcut
 
 

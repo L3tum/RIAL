@@ -65,31 +65,31 @@ class StandardOperationsTransformer(BaseTransformer):
         if op == "PLUS":
             if isinstance(left.llvm_type, ir.IntType):
                 result = self.module.builder.add(left_val, right_val)
-            elif isinstance(left.llvm_type, ir._BaseFloatType):
+            elif isinstance(left.llvm_type, ir.types._BaseFloatType):
                 result = self.module.builder.fadd(left_val, right_val)
         elif op == "MINUS":
             if isinstance(left.llvm_type, ir.IntType):
                 result = self.module.builder.sub(left_val, right_val)
-            elif isinstance(left.llvm_type, ir._BaseFloatType):
+            elif isinstance(left.llvm_type, ir.types._BaseFloatType):
                 result = self.module.builder.fsub(left_val, right_val)
         elif op == "MUL":
             if isinstance(left.llvm_type, ir.IntType):
                 result = self.module.builder.mul(left_val, right_val)
-            elif isinstance(left.llvm_type, ir._BaseFloatType):
+            elif isinstance(left.llvm_type, ir.types._BaseFloatType):
                 result = self.module.builder.fmul(left_val, right_val)
         elif op == "DIV":
             if isinstance(left.llvm_type, LLVMUIntType):
                 result = self.module.builder.udiv(left_val, right_val)
             elif isinstance(left.llvm_type, ir.IntType):
                 result = self.module.builder.sdiv(left_val, right_val)
-            elif isinstance(left.llvm_type, ir._BaseFloatType):
+            elif isinstance(left.llvm_type, ir.types._BaseFloatType):
                 result = self.module.builder.fdiv(left_val, right_val)
         elif op == "REM":
             if isinstance(left.llvm_type, LLVMUIntType):
                 result = self.module.builder.urem(left_val, right_val)
             elif isinstance(left.llvm_type, ir.IntType):
                 result = self.module.builder.srem(left_val, right_val)
-            elif isinstance(left.llvm_type, ir._BaseFloatType):
+            elif isinstance(left.llvm_type, ir.types._BaseFloatType):
                 result = self.module.builder.frem(left_val, right_val)
 
         if result is None:
