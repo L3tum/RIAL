@@ -93,6 +93,7 @@ array_access : var "[" (number|var) "]"
             | not_rule
             | expression (SMALLER|BIGGER|BIGGER_EQUAL|SMALLER_EQUAL|EQUAL) expression -> equal
             | math
+            | "c" STRING -> cstring
             | STRING -> string
             | CHAR -> char
             | "true" -> true

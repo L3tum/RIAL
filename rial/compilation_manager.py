@@ -1,4 +1,5 @@
 import os
+import sys
 from os import listdir
 from os.path import join, isfile
 from pathlib import Path
@@ -154,6 +155,9 @@ class CompilationManager:
 
         # Generate IR
         with run_with_profiling(filename, ExecutionStep.GEN_IR):
+            from rial.transformer.MIRGenerator import MIRGenerator
+            print(MIRGenerator().transform(ast).pretty())
+            sys.exit()
             from rial.transformer.DesugarTransformer import DesugarTransformer
             ast = DesugarTransformer(module).transform(ast)
 

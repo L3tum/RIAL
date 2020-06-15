@@ -19,26 +19,32 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Park">
-      <change afterPath="$PROJECT_DIR$/examples/100-prisoners/src/main.rial" afterDir="false" />
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Some bugfixes here and there&#10;Now gonna start work on the MIR to sort out the mess that is the transformation process right now">
       <change afterPath="$PROJECT_DIR$/rial/mir/Block.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/mir/BuiltinType.py" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/rial/mir/FunctionArgument.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/mir/FunctionDeclaration.py" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/rial/mir/FunctionDefinition.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/mir/GlobalDefinition.py" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/rial/mir/MIRConstruct.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/mir/Module.py" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/rial/mir/SourceSpan.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/mir/Type.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/mir/Value.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/mir/VariableDefinition.py" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/rial/mir/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/std/core/c_rand.rial" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/std/core/math.rial" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/mir/builtin_types/Array.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/mir/builtin_types/Boolean.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/mir/builtin_types/Double.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/mir/builtin_types/Float.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/mir/builtin_types/Half.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/mir/builtin_types/Integer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/mir/builtin_types/Null.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/mir/builtin_types/Str.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/mir/builtin_types/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/rial/transformer/MIRGenerator.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/compilation_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compilation_manager.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/parser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/ir/IRBuilder.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/IRBuilder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/ir/RIALVariable.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/ir/RIALVariable.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/transformer/MainTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/MainTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/transformer/StandardOperationsTransformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/StandardOperationsTransformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/transformer/builtin_type_to_llvm_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/builtin_type_to_llvm_mapper.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing_clang/test.c" beforeDir="false" afterPath="$PROJECT_DIR$/testing_clang/test.c" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -78,7 +84,7 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/std/core" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/std/builtin" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -89,19 +95,19 @@
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Tom\source\repos\RIAL\std\builtin" />
+      <recent name="C:\Users\Tom\source\repos\RIAL\std\core" />
+      <recent name="C:\Users\Tom\source\repos\RIAL\rial\util" />
+      <recent name="C:\Users\Tom\source\repos\RIAL\rial\concept" />
+      <recent name="C:\Users\Tom\source\repos\RIAL\rial" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\Tom\source\repos\RIAL\std\core" />
       <recent name="C:\Users\Tom\source\repos\RIAL\rial\ir" />
       <recent name="C:\Users\Tom\source\repos\RIAL\rial\transformer" />
       <recent name="C:\Users\Tom\source\repos\RIAL\rial\ir\metadata" />
       <recent name="C:\Users\Tom\source\repos\RIAL\rial\util" />
-    </key>
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="C:\Users\Tom\source\repos\RIAL\std\core" />
-      <recent name="C:\Users\Tom\source\repos\RIAL\std\builtin" />
-      <recent name="C:\Users\Tom\source\repos\RIAL\rial\util" />
-      <recent name="C:\Users\Tom\source\repos\RIAL\rial\concept" />
-      <recent name="C:\Users\Tom\source\repos\RIAL\rial" />
     </key>
   </component>
   <component name="RunManager">
@@ -279,14 +285,9 @@
       <workItem from="1591710248418" duration="3729000" />
       <workItem from="1591871164312" duration="11670000" />
       <workItem from="1591957111781" duration="13341000" />
-      <workItem from="1592044197977" duration="6310000" />
-    </task>
-    <task id="LOCAL-00025" summary="Fixed access control for functions">
-      <created>1587374679791</created>
-      <option name="number" value="00025" />
-      <option name="presentableId" value="LOCAL-00025" />
-      <option name="project" value="LOCAL" />
-      <updated>1587374679791</updated>
+      <workItem from="1592044197977" duration="13472000" />
+      <workItem from="1592129983506" duration="5148000" />
+      <workItem from="1592220790134" duration="4704000" />
     </task>
     <task id="LOCAL-00026" summary="Added option to use LLVM bitcode files instead of object files&#10;Switched to prefer Clang but with GCC fallback&#10;Added config validation&#10;Added struct access control&#10;Fixed config merging use a wrong order&#10;&#10;Overall Clang nets around 0.1 seconds in the testing/ test&#10;However, LLLVM bitcode produces larger binaries than using object files. Not sure why.">
       <created>1587382210690</created>
@@ -624,7 +625,14 @@
       <option name="project" value="LOCAL" />
       <updated>1591964032196</updated>
     </task>
-    <option name="localTasksCounter" value="74" />
+    <task id="LOCAL-00074" summary="Some bugfixes here and there&#10;Now gonna start work on the MIR to sort out the mess that is the transformation process right now">
+      <created>1592050646745</created>
+      <option name="number" value="00074" />
+      <option name="presentableId" value="LOCAL-00074" />
+      <option name="project" value="LOCAL" />
+      <updated>1592050646745</updated>
+    </task>
+    <option name="localTasksCounter" value="75" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -653,7 +661,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Refactorings&#10;Got the ol' tests running again" />
     <MESSAGE value="Alloca function return values to reduce allocation-related code size" />
     <MESSAGE value="Added global variable assignment&#10;Improved type handling in variables" />
     <MESSAGE value="Update&#10;Added support for globally assigning values to global variable&#10;Refactored definition finding to use the same method for functions and variables&#10;Removed separate usings and compilation_unit.py. Usings is done via RIALModule.dependencies while compilation units aren't used at all anymore.&#10;Removed duplicated code" />
@@ -678,7 +685,8 @@
     <MESSAGE value="Improvements&#10;&#10;- Fixed bug in is_builtin_type determination&#10;- Added &quot;!&quot; and &quot;not&quot; statements&#10;- Changed calling convention for calls marked as &quot;#[cold]&quot; to &quot;cold&quot;&#10;- Slightly fixed a priorisation issue. Really need priorities for rules but those aren't supported&#10;- Fixed an issue with PHI not supporting strings anymore (needs more testing)&#10;- Added a 100-doors example&#10;- Fixed an issue in array_assignment&#10;- Added the remainder/c-modulo operator &quot;%&quot;" />
     <MESSAGE value="Updated dependencies" />
     <MESSAGE value="Park" />
-    <option name="LAST_COMMIT_MESSAGE" value="Park" />
+    <MESSAGE value="Some bugfixes here and there&#10;Now gonna start work on the MIR to sort out the mess that is the transformation process right now" />
+    <option name="LAST_COMMIT_MESSAGE" value="Some bugfixes here and there&#10;Now gonna start work on the MIR to sort out the mess that is the transformation process right now" />
   </component>
   <component name="WindowStateProjectService">
     <state x="906" y="378" key="#Inspections" timestamp="1588322612153">
@@ -697,10 +705,10 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="902" y="0" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1584481187738" />
-    <state x="1010" y="447" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1590744875070">
+    <state x="1010" y="447" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1592052105212">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="1010" y="447" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1590744875070" />
+    <state x="1010" y="447" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1592052105212" />
     <state x="753" y="288" width="1109" height="863" key="CommitChangelistDialog2" timestamp="1586767099729">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -718,10 +726,10 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="248" y="122" key="MergeDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591964484514" />
-    <state x="1106" y="402" key="RollbackChangesDialog" timestamp="1589375108539">
+    <state x="1106" y="402" key="RollbackChangesDialog" timestamp="1592052849542">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="1106" y="402" key="RollbackChangesDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1589375108539" />
+    <state x="1106" y="402" key="RollbackChangesDialog/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1592052849542" />
     <state x="781" y="342" key="SettingsEditor" timestamp="1592044892214">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -730,11 +738,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="1127" y="613" key="VCS.ChangelistChooser/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591964507776" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1591964033275">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1592050648915">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591964033275" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1592050648915" />
     <state x="1094" y="434" key="VcsDiffUtil.ChangesDialog" timestamp="1591964107830">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
