@@ -19,32 +19,10 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="Some bugfixes here and there&#10;Now gonna start work on the MIR to sort out the mess that is the transformation process right now">
-      <change afterPath="$PROJECT_DIR$/rial/mir/Block.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/mir/BuiltinType.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/mir/FunctionArgument.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/mir/FunctionDefinition.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/mir/GlobalDefinition.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/mir/MIRConstruct.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/mir/Module.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/mir/SourceSpan.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/mir/Type.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/mir/Value.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/mir/VariableDefinition.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/mir/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/mir/builtin_types/Array.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/mir/builtin_types/Boolean.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/mir/builtin_types/Double.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/mir/builtin_types/Float.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/mir/builtin_types/Half.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/mir/builtin_types/Integer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/mir/builtin_types/Null.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/mir/builtin_types/Str.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/mir/builtin_types/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rial/transformer/MIRGenerator.py" afterDir="false" />
+    <list default="true" id="ba2ff22c-44e0-4f29-8c01-608e449c2203" name="Default Changelist" comment="First work on the MIR">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/compilation_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/compilation_manager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rial/concept/grammar.lark" beforeDir="false" afterPath="$PROJECT_DIR$/rial/concept/grammar.lark" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/transformer/MIRGenerator.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/transformer/MIRGenerator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rial/util/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/rial/util/util.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -63,7 +41,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="parking2" />
+        <entry key="$PROJECT_DIR$" value="master" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -287,14 +265,8 @@
       <workItem from="1591957111781" duration="13341000" />
       <workItem from="1592044197977" duration="13472000" />
       <workItem from="1592129983506" duration="5148000" />
-      <workItem from="1592220790134" duration="4704000" />
-    </task>
-    <task id="LOCAL-00026" summary="Added option to use LLVM bitcode files instead of object files&#10;Switched to prefer Clang but with GCC fallback&#10;Added config validation&#10;Added struct access control&#10;Fixed config merging use a wrong order&#10;&#10;Overall Clang nets around 0.1 seconds in the testing/ test&#10;However, LLLVM bitcode produces larger binaries than using object files. Not sure why.">
-      <created>1587382210690</created>
-      <option name="number" value="00026" />
-      <option name="presentableId" value="LOCAL-00026" />
-      <option name="project" value="LOCAL" />
-      <updated>1587382210690</updated>
+      <workItem from="1592220790134" duration="8373000" />
+      <workItem from="1592295783757" duration="1263000" />
     </task>
     <task id="LOCAL-00027" summary="Updates for caching system&#10;&#10;Fixed bug in main.py that expected release to always be set&#10;Completely removed LLVMFunction.py and instead rely on LLVM's Function and Metadata&#10;Added monkey patches to ease the above mentioned change&#10;Reworked module compilation system to better support this&#10;Removed linking in of modules. Doesn't net any benefit as far as my tests have shown so instead of reworking it the removal was easier">
       <created>1587387501961</created>
@@ -632,7 +604,14 @@
       <option name="project" value="LOCAL" />
       <updated>1592050646745</updated>
     </task>
-    <option name="localTasksCounter" value="75" />
+    <task id="LOCAL-00075" summary="First work on the MIR">
+      <created>1592227802286</created>
+      <option name="number" value="00075" />
+      <option name="presentableId" value="LOCAL-00075" />
+      <option name="project" value="LOCAL" />
+      <updated>1592227802286</updated>
+    </task>
+    <option name="localTasksCounter" value="76" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -661,7 +640,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Alloca function return values to reduce allocation-related code size" />
     <MESSAGE value="Added global variable assignment&#10;Improved type handling in variables" />
     <MESSAGE value="Update&#10;Added support for globally assigning values to global variable&#10;Refactored definition finding to use the same method for functions and variables&#10;Removed separate usings and compilation_unit.py. Usings is done via RIALModule.dependencies while compilation units aren't used at all anymore.&#10;Removed duplicated code" />
     <MESSAGE value="Fixed an issue causing the common startup script start.rial to self-reference" />
@@ -686,7 +664,8 @@
     <MESSAGE value="Updated dependencies" />
     <MESSAGE value="Park" />
     <MESSAGE value="Some bugfixes here and there&#10;Now gonna start work on the MIR to sort out the mess that is the transformation process right now" />
-    <option name="LAST_COMMIT_MESSAGE" value="Some bugfixes here and there&#10;Now gonna start work on the MIR to sort out the mess that is the transformation process right now" />
+    <MESSAGE value="First work on the MIR" />
+    <option name="LAST_COMMIT_MESSAGE" value="First work on the MIR" />
   </component>
   <component name="WindowStateProjectService">
     <state x="906" y="378" key="#Inspections" timestamp="1588322612153">
@@ -738,11 +717,11 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="1127" y="613" key="VCS.ChangelistChooser/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1591964507776" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1592050648915">
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2" timestamp="1592227803427">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400/2560.0.1280.680@0.0.2560.1400" timestamp="1586532723569" />
-    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1592050648915" />
+    <state x="872" y="433" key="Vcs.Push.Dialog.v2/0.0.2560.1400/-3840.0.2560.1400@0.0.2560.1400" timestamp="1592227803427" />
     <state x="1094" y="434" key="VcsDiffUtil.ChangesDialog" timestamp="1591964107830">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>

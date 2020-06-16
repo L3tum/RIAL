@@ -1,7 +1,7 @@
 from typing import Optional, List
 
 from rial.concept.Transformer import Transformer
-from rial.concept.parser import Token, Str
+from rial.concept.parser import Token
 from rial.mir.Block import Block
 from rial.mir.FunctionDefinition import FunctionDefinition
 from rial.mir.GlobalDefinition import GlobalDefinition
@@ -15,6 +15,7 @@ from rial.mir.builtin_types.Float import Float
 from rial.mir.builtin_types.Half import Half
 from rial.mir.builtin_types.Integer import Integer
 from rial.mir.builtin_types.Null import Null
+from rial.mir.builtin_types.Str import Str
 from rial.util.util import good_hash
 
 

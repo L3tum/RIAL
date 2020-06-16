@@ -1,12 +1,7 @@
-import hashlib
-import random
-import string
-
-from llvmlite.ir import Context
-
-
 def generate_random_name(count: int):
-    return ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=count))
+    from random import choices
+    from string import ascii_uppercase, ascii_lowercase, digits
+    return ''.join(choices(ascii_uppercase + ascii_lowercase + digits, k=count))
 
 
 def rreplace(s, old, new, occurrence=-1):
@@ -31,14 +26,5 @@ def pythonify(data: dict):
 
 
 def good_hash(w: str):
-    return hashlib.md5(w.encode()).hexdigest()
-
-
-def _get_identified_type_if_exists(self: Context, name: str):
-    if name in self.identified_types:
-        return self.identified_types[name]
-    return None
-
-
-def monkey_patch():
-    Context.get_identified_type_if_exists = _get_identified_type_if_exists
+    from hashlib import md5
+    return md5(w.encode()).hexdigest()
